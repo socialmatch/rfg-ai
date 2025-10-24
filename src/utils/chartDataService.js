@@ -141,52 +141,76 @@ export const processChartData = async (modelsData, btcPriceData = null) => {
     const labels = []
     const datasets = []
 
-    // Find the maximum number of data points across all models
-    const maxDataPoints = Math.max(...modelsData.map(model => (model.data || []).length))
+    // Collect all unique timestamps from all models
+    const allTimestamps = new Set()
+    modelsData.forEach(modelData => {
+      const records = modelData.data || []
+      records.forEach(record => {
+        if (record.wrt_time) {
+          allTimestamps.add(record.wrt_time)
+        }
+      })
+    })
 
-    // Generate time labels based on actual data records (use the first model's timestamps as reference)
-    const firstModelData = modelsData.find(model => (model.data || []).length > 0)
-    if (firstModelData && firstModelData.data.length > 0) {
-      // Use actual timestamps from the data
-      labels.push(...firstModelData.data.map(record => record.wrt_time))
+    // Sort timestamps chronologically
+    const sortedTimestamps = Array.from(allTimestamps).sort((a, b) => 
+      new Date(a).getTime() - new Date(b).getTime()
+    )
+
+    // Use sorted timestamps as labels
+    if (sortedTimestamps.length > 0) {
+      labels.push(...sortedTimestamps)
+      console.log('📊 Generated', labels.length, 'unique time labels from all models')
     } else {
-      // Fallback: generate time labels based on the actual data length
+      // Fallback if no timestamps
+      const maxDataPoints = Math.max(...modelsData.map(model => (model.data || []).length))
       for (let i = 0; i < maxDataPoints; i++) {
         const date = new Date()
-        date.setMinutes(date.getMinutes() - (maxDataPoints - 1 - i) * 5) // 5-minute intervals
+        date.setMinutes(date.getMinutes() - (maxDataPoints - 1 - i) * 5)
         labels.push(date.toISOString())
       }
     }
 
-    // Process each model's data
-    modelsData.forEach((modelData, index) => {
+    // Process each model's data with time-based alignment
+    modelsData.forEach((modelData) => {
       const records = modelData.data || []
 
       if (records.length === 0) {
         console.warn(`⚠️ No chart data for model ${modelData.uid}`)
         return
       }
-      // Use records as they are (no sorting needed)
-      // Extract available_asset values
-      // Keep null values for missing data (no filling) to create gaps in the line
-      const chartData = records.map(record => {
-        const value = parseFloat(record.balance_json.total_asset)
-        return isNaN(value) ? null : value
+
+      // Create a map of timestamp -> value for this model
+      const timestampMap = {}
+      records.forEach(record => {
+        if (record.wrt_time) {
+          const value = parseFloat(record.balance_json.total_asset)
+          timestampMap[record.wrt_time] = isNaN(value) ? null : value
+        }
       })
+
+      // Align data with all timestamps
+      // If a model doesn't have data for a timestamp, use null
+      const alignedData = labels.map(label => {
+        return timestampMap[label] !== undefined ? timestampMap[label] : null
+      })
+
+      console.log(`📊 Model ${modelData.uid}: ${records.length} records aligned to ${labels.length} timestamps, ${alignedData.filter(v => v === null).length} null values`)
 
       datasets.push({
         label: modelData.modelInfo.name || modelData.uid,
-        data: chartData,
+        data: alignedData,
         borderColor: modelData.modelInfo.color || '#3B82F6',
         backgroundColor: (modelData.modelInfo.color || '#3B82F6') + '20',
         borderWidth: 1.5,
         pointRadius: 0,
         pointHoverRadius: 0,
-        tension: 0.4, // Increased tension for smoother curves
+        tension: 0.4,
+        spanGaps: false,
         modelInfo: {
           name: modelData.modelInfo.name || modelData.uid,
           uid: modelData.uid,
-          currentValue: chartData[chartData.length - 1] || 0,
+          currentValue: alignedData[alignedData.length - 1] || 0,
           color: modelData.modelInfo.color || '#3B82F6'
         }
       })
