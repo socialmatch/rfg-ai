@@ -168,10 +168,12 @@ const modelPositions = computed(() => {
 
   // Filter based on selected model
   if (props.selectedModel && props.selectedModel !== 'ALL MODELS') {
-    const filtered = positions.filter(model =>
-      model.name.toLowerCase().includes(props.selectedModel.toLowerCase())
-    )
-    console.log('📊 Filtered positions:', filtered)
+    const filtered = positions.filter(model => {
+      console.log('📊 Comparing position model:', model.name, 'with selected:', props.selectedModel)
+      return model.name && model.name.toLowerCase() === props.selectedModel.toLowerCase()
+    })
+    console.log('📊 Filtered positions count:', filtered.length, 'from total:', positions.length)
+    // Note: Positions are not limited, show all for selected model
     return filtered
   }
 

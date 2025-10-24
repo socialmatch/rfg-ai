@@ -191,11 +191,8 @@ const trades = computed(() => {
 
   // Only use Aster Finance real data
   if (props.asterUserTrades && props.asterUserTrades.length > 0) {
-    console.log('📊 Using Aster Finance trading data, data count:', props.asterUserTrades.length)
     allTradesData = convertAsterTrades(props.asterUserTrades)
-    console.log('📊 Converted data count:', allTradesData.length)
   } else {
-    console.log('📊 No Aster Finance trading data, returning empty array')
     allTradesData = []
   }
 
@@ -204,8 +201,6 @@ const trades = computed(() => {
 
   // Filter based on selected model
   if (props.selectedModel === 'ALL MODELS') {
-    console.log('📊 Display trades for all models, max 5 per model')
-
     // Group by model, max 5 latest records per model
     const modelGroups = {}
     allTradesData.forEach(trade => {
@@ -217,20 +212,17 @@ const trades = computed(() => {
         modelGroups[modelName].push(trade)
       }
     })
-
     // Merge data from all models and sort by time
     const limitedTrades = Object.values(modelGroups).flat()
     limitedTrades.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
-
-    console.log('📊 Total trades after limit:', limitedTrades.length)
     return limitedTrades
   }
-
-  const filtered = allTradesData.filter(trade =>
-    trade.model.toLowerCase().includes(props.selectedModel.toLowerCase())
-  )
-  console.log('📊 Filtered trade count:', filtered.length)
-  return filtered
+  const filtered = allTradesData.filter(trade => {
+    return trade.model && trade.model.toLowerCase() === props.selectedModel.toLowerCase()
+  })
+  // Limit to maximum 10 trades for single model
+  const limitedFiltered = filtered.slice(0, 10)
+  return limitedFiltered
 })
 
 const totalTrades = computed(() => trades.value.length)

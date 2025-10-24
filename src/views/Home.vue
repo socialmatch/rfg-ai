@@ -30,7 +30,7 @@
           .title-container
             .back-all-btn(v-if="showBackAllButton" @click="backToAllModels") BACK TO ALL
             .title TOTAL ACCOUNT VALUE
-          .periods
+          //.periods
             button.chart-btn(:class="{ active: chartPeriod === 'all' }" @click="setChartPeriod('all')") ALL
             button.chart-btn(:class="{ active: chartPeriod === '72h' }" @click="setChartPeriod('72h')") 72H
         .chart-frame
@@ -41,7 +41,7 @@
             .icon-item(v-for="model in tradingModels" :key="model.name"
               :class="{ hovered: hoveredModel && hoveredModel.name === model.name }"
               :style="{ display: selectedModel === 'ALL MODELS' || selectedModel === model.name ? 'flex' : 'none' }"
-              @click="selectedModel = model.name; handleModelChange()")
+              @click="selectedModel = model.name")
               .icon-dot(:style="{ backgroundColor: model.color }")
               .icon-content
                 .model-image
@@ -61,7 +61,7 @@
         .filter-section(v-if="activeDetailTab !== 'readme'")
           .filter
             span.label FILTER:
-            select.select(v-model="selectedModel" @change="handleModelChange")
+            select.select(v-model="selectedModel")
               option(v-for="m in modelOptions" :key="m" :value="m") {{ m }}
           .showing Showing Last 100 Trades
         .sidebar-content
@@ -90,7 +90,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
+import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { Chart, registerables } from 'chart.js'
 import zoomPlugin from 'chartjs-plugin-zoom'
@@ -410,7 +410,7 @@ const buildChart = async () => {
       onHover: (event, activeElements) => {
         if (activeElements.length > 0) {
           const datasetIndex = activeElements[0].datasetIndex
-          const dataset = filteredDatasets[datasetIndex]
+          const dataset = chartInstance.data.datasets[datasetIndex]
           hoveredModel.value = dataset ? dataset.modelInfo : null
         } else {
           hoveredModel.value = null
@@ -419,11 +419,10 @@ const buildChart = async () => {
       onClick: (event, activeElements) => {
         if (activeElements.length > 0) {
           const datasetIndex = activeElements[0].datasetIndex
-          const dataset = filteredDatasets[datasetIndex]
+          const dataset = chartInstance.data.datasets[datasetIndex]
           if (dataset) {
-            selectedModelForChart.value = dataset.modelInfo.name
+            selectedModel.value = dataset.modelInfo.name
             showBackAllButton.value = true
-            updateChart()
           }
         }
       },
@@ -526,8 +525,10 @@ const updateChart = () => {
     filteredDatasets = datasets // Ensure all datasets are shown
   }
 
+  // Update chart data comprehensively
+  chartInstance.data.labels = labels
   chartInstance.data.datasets = filteredDatasets
-  chartInstance.update('active')
+  chartInstance.update('none')
 }
 
 // Number rolling animation component
@@ -617,12 +618,6 @@ const backToAllModels = () => {
   selectedModelForChart.value = null
   selectedModel.value = 'ALL MODELS'
   showBackAllButton.value = false
-  updateChart()
-}
-
-// Handle model selection change
-const handleModelChange = () => {
-  updateChart()
 }
 
 // Scheduled data updates
@@ -829,6 +824,12 @@ const getStatusText = () => {
   }
 }
 
+watch(selectedModel, (newVal, oldVal) => {
+  if (newVal !== oldVal) {
+    updateChart()
+  }
+})
+
 onMounted(() => {
   setTimeout(() => { connectionStatus.value = 'connected' }, 1500)
   // Load chart data first, then build chart
@@ -843,8 +844,6 @@ onMounted(() => {
   loadAsterUserTrades()
   // Load Aster Finance account balance
   loadAsterBalance()
-  // Ensure initial state is correct
-  updateChart()
 })
 
 onUnmounted(() => {
