@@ -103,7 +103,6 @@ export const getAllModelsPositions = async () => {
           : result.value.error
 
         console.error(`❌ Failed to fetch positions for ${model.name} (${model.uid}):`, error)
-
         accounts.push({
           modelInfo: model,
           data: null,
