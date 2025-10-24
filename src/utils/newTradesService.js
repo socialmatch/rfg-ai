@@ -6,7 +6,7 @@
 import { getAllModelInfo } from '../config/accounts.js'
 
 // Base API URL
-const BASE_URL = 'http://15.235.181.47:8002/aster/trades'
+const BASE_URL = 'https://testapi.rfgmeme.ai/aster/trades'
 
 // Default parameters
 const DEFAULT_SYMBOL = 'BTCUSDT'
@@ -153,7 +153,7 @@ export const processTradesData = (tradesData) => {
   const processedData = []
 
   // Process trades array
-  if (tradesData.data.trades && tradesData.data.trades.length > 0) {
+  if (tradesData.data.trades) {
     tradesData.data.trades.forEach(trade => {
       processedData.push({
         symbol: trade.symbol,

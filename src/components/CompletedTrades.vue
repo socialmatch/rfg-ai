@@ -39,7 +39,7 @@
 
 <script setup>
 import { ref, computed } from 'vue'
-import { getModelIconPath, getModelColor } from '@/config/accounts.js'
+import {getModelIconPath, getModelColor, getAccountByUid} from '@/config/accounts.js'
 
 // Get model icon
 const getModelIcon = (modelName) => {
@@ -162,7 +162,8 @@ const convertAsterTrades = (asterTrades) => {
 
     const convertedTrade = {
       id: trade.id || index + 1,
-      model: trade.modelInfo?.name || 'UNKNOWN',
+      // model: trade.modelInfo?.name || 'UNKNOWN',
+      model: getAccountByUid(trade.uid).modelName || 'UNKNOWN',
       action: `completed a ${side.toLowerCase()} trade on ${symbol}!`,
       entryPrice: price,
       exitPrice: price + (realizedPnl / Math.abs(quantity)), // Calculate exit price based on P&L

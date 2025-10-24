@@ -6,7 +6,7 @@
 import { getAllModelInfo } from '../config/accounts.js'
 
 // Base API URL
-const BASE_URL = 'http://15.235.181.47:8002/aster/balance'
+const BASE_URL = 'https://testapi.rfgmeme.ai/aster/balance'
 
 /**
  * Get balance data for a single model by UID
@@ -86,7 +86,7 @@ export const getAllModelsBalance = async () => {
     const accounts = []
     let successfulCount = 0
     let failedCount = 0
-
+    console.log('Fetching balance data for all enabled models...', results)
     results.forEach((result, index) => {
       const model = enabledModels[index]
 
@@ -103,7 +103,6 @@ export const getAllModelsBalance = async () => {
           : result.value.error
 
         console.error(`❌ Failed to fetch balance for ${model.name} (${model.uid}):`, error)
-
         accounts.push({
           modelInfo: model,
           data: null,
@@ -143,27 +142,58 @@ export const processBalanceData = (balanceData) => {
   const processedData = []
 
   // Process active balances (USDT balance)
-  if (balanceData.data.active_balances && balanceData.data.active_balances.length > 0) {
-    balanceData.data.active_balances.forEach(balance => {
-      if (balance.asset === 'USDT') {
-        processedData.push({
-          accountAlias: balance.accountAlias,
-          asset: balance.asset,
-          balance: balance.balance,
-          crossWalletBalance: balance.crossWalletBalance,
-          crossUnPnl: balance.crossUnPnl,
-          availableBalance: balance.availableBalance,
-          maxWithdrawAmount: balance.maxWithdrawAmount,
-          marginAvailable: balance.marginAvailable,
-          updateTime: balance.updateTime,
-          totalUsdtValue: balanceData.data.total_usdt_value,
-          uid: balanceData.data.uid,
-          walletName: balanceData.data.wallet_name
-        })
-      }
+  if (balanceData.data.active_balances) {
+    console.log('Processing active balances...', balanceData.data.active_balances)
+    if (balanceData.data.active_balances.length > 0) {
+      balanceData.data.active_balances.forEach(balance => {
+        if (balance.asset === 'USDT') {
+          processedData.push({
+            accountAlias: balance.accountAlias,
+            asset: balance.asset,
+            balance: balance.balance,
+            crossWalletBalance: balance.crossWalletBalance,
+            crossUnPnl: balance.crossUnPnl,
+            availableBalance: balance.availableBalance,
+            maxWithdrawAmount: balance.maxWithdrawAmount,
+            marginAvailable: balance.marginAvailable,
+            updateTime: balance.updateTime,
+            totalUsdtValue: balanceData.data.total_usdt_value,
+            uid: balanceData.data.uid,
+            walletName: balanceData.data.wallet_name
+          })
+        }
+      })
+    } else {
+      processedData.push({
+        "accountAlias": "",
+        "asset": "USDT",
+        "balance": "0",
+        "crossWalletBalance": "0",
+        "crossUnPnl": "0",
+        "availableBalance": "0",
+        "maxWithdrawAmount": "0",
+        "marginAvailable": true,
+        "updateTime": 0,
+        "uid": balanceData.data.uid,
+        "walletName": balanceData.data.wallet_name
+      })
+    }
+  } else {
+    console.warn('⚠️ No active balances found', balanceData.data.uid)
+    processedData.push({
+      "accountAlias": "",
+      "asset": "USDT",
+      "balance": "0",
+      "crossWalletBalance": "0",
+      "crossUnPnl": "0",
+      "availableBalance": "0",
+      "maxWithdrawAmount": "0",
+      "marginAvailable": true,
+      "updateTime": 0,
+      "uid": balanceData.data.uid,
+      "walletName": balanceData.data.wallet_name
     })
   }
-
   return processedData
 }
 

@@ -74,18 +74,6 @@
             :asterUserTrades="asterUserTrades"
             :asterTradesLoading="asterTradesLoading"
             :asterTradesError="asterTradesError")
-
-          // Debug info
-          .debug-info(style="background: #1a2230; padding: 8px; margin-top: 16px; border-radius: 4px; font-size: 12px; color: #94a3b8;")
-            div Debug info:
-            div activeDetailTab: {{ activeDetailTab }}
-            div asterPositions length: {{ asterPositions?.length || 0 }}
-            div asterAccountData: {{ asterAccountData ? 'has data' : 'no data' }}
-            div asterLoading: {{ asterLoading }}
-            div asterError: {{ asterError || 'no error' }}
-            div asterUserTrades length: {{ asterUserTrades?.length || 0 }}
-            div asterTradesLoading: {{ asterTradesLoading }}
-            div asterTradesError: {{ asterTradesError || 'no error' }}
   // Bottom model legend bar
   .legend-bar
     .legend-content
@@ -198,9 +186,10 @@ const loadAsterBalance = async () => {
     if (result.success) {
       const balanceData = []
       result.accounts.forEach(account => {
-        if (account.success && account.data && account.data.length > 0) {
+        if (account.success && account.data) {
           const usdtBalance = account.data.find(b => b.asset === 'USDT')
-          if (usdtBalance) {
+          console.log('USDT balance:', usdtBalance, account.modelInfo.name)
+          if (usdtBalance || account.data.length > 0) {
             balanceData.push({
               name: account.modelInfo.name,
               value: parseFloat(usdtBalance.balance),
@@ -682,15 +671,10 @@ const getCryptoIcon = (symbol) => {
 
       if (result.success) {
         // Merge trading history data from all accounts
-        const allTrades = []
+        let allTrades = []
         result.accounts.forEach(account => {
-          if (account.success && account.data && account.data.length > 0) {
-            // Add model info to each trade
-            const tradesWithModel = account.data.map(trade => ({
-              ...trade,
-              modelInfo: account.modelInfo
-            }))
-            allTrades.push(...tradesWithModel)
+          if (account.success && account.data) {
+            allTrades = allTrades.concat(account.data)
           }
         })
 
@@ -729,7 +713,7 @@ const getCryptoIcon = (symbol) => {
       const allPositions = []
 
       result.accounts.forEach(account => {
-        if (account.success && account.data && account.data.length > 0) {
+        if (account.success && account.data) {
           // Add model info to each position
           const positionsWithModel = account.data.map(position => ({
             ...position,

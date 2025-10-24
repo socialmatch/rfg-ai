@@ -6,7 +6,7 @@
 import { getAllModelInfo } from '../config/accounts.js'
 
 // Base API URL
-const BASE_URL = 'http://15.235.181.47:8002/aster/positions'
+const BASE_URL = 'https://testapi.rfgmeme.ai/aster/positions'
 
 /**
  * Get positions data for a single model by UID
@@ -142,7 +142,7 @@ export const processPositionsData = (positionsData) => {
   const processedData = []
 
   // Process positions array
-  if (positionsData.data.positions && positionsData.data.positions.length > 0) {
+  if (positionsData.data.positions) {
     positionsData.data.positions.forEach(position => {
       processedData.push({
         symbol: position.symbol,
