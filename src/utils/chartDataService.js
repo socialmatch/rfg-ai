@@ -257,12 +257,14 @@ export const processChartData = async (modelsData, btcPriceData = null) => {
 
     // Set minimum scale based on data minimum
     let yAxisMin
-    if (minValue > 9000) {
-      yAxisMin = 8000 // Set minimum to 8000 if data minimum is around 9000
+    if (minValue > 9500) {
+      yAxisMin = 9400 // Set minimum to 8000 if data minimum is around 9000
+    } else if (minValue > 9300) {
+      yAxisMin = 8200 // Set minimum to 8000 if data minimum is around 9000
     } else if (minValue > 8000) {
-      yAxisMin = 7000 // Set minimum to 7000 if data minimum is around 8000
-    } else if (minValue > 7000) {
-      yAxisMin = 6000 // Set minimum to 6000 if data minimum is around 7000
+      yAxisMin = 7800 // Set minimum to 7000 if data minimum is around 8000
+    } else if (minValue > 7500) {
+      yAxisMin = 7200 // Set minimum to 6000 if data minimum is around 7000
     } else {
       yAxisMin = Math.max(0, minValue - 1000) // Default margin of 1000
     }

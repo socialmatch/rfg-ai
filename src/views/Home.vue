@@ -226,20 +226,20 @@ const loadAsterBalance = async () => {
 
       // Sort by balance
       balanceData.sort((a, b) => b.value - a.value)
-      
+
       // Add BTC price data as a model
       try {
         const btcResult = await getBtcPriceData('BTCUSDT', '5m', 500) // Get more data for better time alignment
         if (btcResult.success && btcResult.data.length > 0) {
           // Get the first model data time to align BTC calculation
           const firstModelTime = balanceData.length > 0 ? new Date().getTime() : null // This will be updated when we have actual model data
-          
+
           // For now, use the first BTC price as initial price
           const firstPrice = parseFloat(btcResult.data[0][4])
           const btcQuantity = 10000 / firstPrice
           const latestPrice = parseFloat(btcResult.data[btcResult.data.length - 1][4])
           const latestValue = btcQuantity * latestPrice
-          
+
           balanceData.push({
             name: 'BTC Price',
             value: latestValue,
@@ -251,7 +251,7 @@ const loadAsterBalance = async () => {
       } catch (error) {
         console.warn('⚠️ Failed to load BTC price for trading models:', error)
       }
-      
+
       tradingModels.value = balanceData
       asterBalance.value = balanceData
 
@@ -374,7 +374,7 @@ const loadChartData = async () => {
 
     // Concurrently get chart data for all models and BTC price data
     const [chartResult, btcPriceResult] = await Promise.allSettled([
-      getAllModelsChartData(enabledModels, 1000),
+      getAllModelsChartData(enabledModels, 2000),
       getBtcPriceData('BTCUSDT', '5m', 500)
     ])
 
