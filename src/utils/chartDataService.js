@@ -153,7 +153,7 @@ export const processChartData = async (modelsData, btcPriceData = null) => {
     })
 
     // Sort timestamps chronologically
-    const sortedTimestamps = Array.from(allTimestamps).sort((a, b) => 
+    const sortedTimestamps = Array.from(allTimestamps).sort((a, b) =>
       new Date(a).getTime() - new Date(b).getTime()
     )
 
@@ -241,7 +241,7 @@ export const processChartData = async (modelsData, btcPriceData = null) => {
       })
 
       datasets.push({
-        label: 'BTC Price',
+        label: 'BTC',
         data: btcAlignedData,
         borderColor: '#f7931a', // BTC orange color
         backgroundColor: '#f7931a20',
@@ -252,7 +252,7 @@ export const processChartData = async (modelsData, btcPriceData = null) => {
         yAxisID: 'y', // Use same Y axis as other models
         spanGaps: false,
         modelInfo: {
-          name: 'BTC Price',
+          name: 'BTC',
           uid: 'btc_price',
           currentValue: btcAlignedData[btcAlignedData.length - 1] || 0,
           color: '#f7931a'

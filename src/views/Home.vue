@@ -229,7 +229,7 @@ const loadAsterBalance = async () => {
           const latestValue = btcQuantity * latestPrice
 
           balanceData.push({
-            name: 'BTC Price',
+            name: 'BTC',
             value: latestValue,
             change: 0, // BTC price doesn't have change data in this context
             color: '#f7931a',
@@ -440,7 +440,7 @@ const buildChart = async () => {
               return date.toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
             },
             label: (context) => {
-              if (context.dataset.label === 'BTC Price') {
+              if (context.dataset.label === 'BTC') {
                 return `${context.dataset.label}: $${context.parsed.y.toLocaleString()}`
               }
               return `${context.dataset.label}: $${context.parsed.y.toLocaleString()}`
