@@ -15,8 +15,7 @@ const BASE_URL = 'https://fapi.asterdex.com/fapi/v3'
  */
 export const getBtcPriceData = async (symbol = 'BTCUSDT', interval = '5m', limit = 500) => {
   try {
-    console.log(`🔄 Fetching BTC price data for ${symbol} with interval ${interval}, limit ${limit}`)
-    
+
     const url = new URL(`${BASE_URL}/markPriceKlines`)
     url.searchParams.append('symbol', symbol)
     url.searchParams.append('interval', interval)
@@ -34,14 +33,8 @@ export const getBtcPriceData = async (symbol = 'BTCUSDT', interval = '5m', limit
     }
 
     const data = await response.json()
-    
-    console.log(`✅ BTC price data fetched successfully:`, {
-      dataLength: data.length,
-      symbol: symbol,
-      interval: interval,
-      limit: limit
-    })
-    
+
+
     return {
       success: true,
       data: data,
@@ -83,12 +76,12 @@ export const processBtcPriceData = (priceData, modelLabels = null) => {
     // Calculate BTC quantity based on first model data time
     let firstPrice = null
     let btcQuantity = 0
-    
+
     if (modelLabels && modelLabels.length > 0) {
       // Find the BTC price at the first model data time
       const firstModelTime = new Date(modelLabels[0]).getTime()
       let minDiff = Infinity
-      
+
       priceData.forEach(candle => {
         const candleTime = candle[0]
         const diff = Math.abs(candleTime - firstModelTime)
@@ -97,7 +90,7 @@ export const processBtcPriceData = (priceData, modelLabels = null) => {
           firstPrice = parseFloat(candle[4]) // Close price at the closest time
         }
       })
-      
+
       if (firstPrice) {
         btcQuantity = 10000 / firstPrice // BTC quantity bought with $10,000
       }
@@ -106,35 +99,19 @@ export const processBtcPriceData = (priceData, modelLabels = null) => {
       firstPrice = parseFloat(priceData[0][4])
       btcQuantity = 10000 / firstPrice
     }
-    
-    console.log(`🔍 BTC calculation:`, {
-      firstPrice: firstPrice,
-      btcQuantity: btcQuantity,
-      initialInvestment: 10000,
-      firstModelTime: modelLabels ? modelLabels[0] : 'N/A'
-    })
 
     priceData.forEach(candle => {
       // Extract timestamp (open time)
       const timestamp = candle[0]
       // Extract close price (current price)
       const closePrice = parseFloat(candle[4])
-      
+
       // Calculate current value: BTC quantity * current price
       const currentValue = btcQuantity * closePrice
-      
+
       labels.push(new Date(timestamp).toISOString())
       data.push(currentValue)
     })
-
-    console.log(`🔍 Processed BTC price data:`, {
-      labelsCount: labels.length,
-      dataLength: data.length,
-      firstValue: data[0],
-      lastValue: data[data.length - 1],
-      btcQuantity: btcQuantity
-    })
-
     return {
       labels,
       data

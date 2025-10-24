@@ -107,11 +107,8 @@ async function main() {
   const activePositions = positions.filter((p: any) => parseFloat(p.positionAmt || '0') !== 0);
 
   if (activePositions.length === 0) {
-    console.log('✅ 当前没有活跃持仓');
     return;
   }
-
-  console.log(`📈 当前有 ${activePositions.length} 个活跃持仓:\n`);
   let totalPnl = 0;
 
   for (const pos of activePositions) {
@@ -121,21 +118,9 @@ async function main() {
     const markPrice = parseFloat(pos.markPrice || '0');
     const unrealizedPnl = parseFloat(pos.unRealizedProfit || '0');
     const leverage = pos.leverage || '1';
-
     const side = positionAmt > 0 ? '做多' : '做空';
     totalPnl += unrealizedPnl;
-
-    console.log(`交易对: ${symbol}`);
-    console.log(`方向: ${side}`);
-    console.log(`数量: ${Math.abs(positionAmt)}`);
-    console.log(`开仓价: ${entryPrice}`);
-    console.log(`标记价: ${markPrice}`);
-    console.log(`未实现盈亏: ${unrealizedPnl.toFixed(4)} USDT`);
-    console.log(`杠杆: ${leverage}x`);
-    console.log('-'.repeat(40));
   }
-
-  console.log(`\n💰 总未实现盈亏: ${totalPnl.toFixed(4)} USDT`);
 }
 
 main();

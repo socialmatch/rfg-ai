@@ -21,8 +21,6 @@ const DEFAULT_LIMIT = 1000
  */
 export const getModelTrades = async (uid, symbol = DEFAULT_SYMBOL, limit = DEFAULT_LIMIT) => {
   try {
-    console.log(`🔄 Fetching trades for model UID: ${uid}, symbol: ${symbol}, limit: ${limit}`)
-
     // const response = await fetch(`${BASE_URL}/${uid}?symbol=${symbol}&limit=${limit}`, {
     const response = await fetch(`${BASE_URL}/${uid}?symbol=&limit=${limit}`, {
       method: 'GET',
@@ -38,12 +36,6 @@ export const getModelTrades = async (uid, symbol = DEFAULT_SYMBOL, limit = DEFAU
     const data = await response.json()
 
     if (data.success) {
-      console.log(`✅ Trades data fetched successfully for ${uid}:`, {
-        totalTrades: data.data.total_trades,
-        tradesCount: data.data.trades?.length || 0,
-        symbol: data.data.symbol,
-        timestamp: data.data.timestamp
-      })
       return {
         success: true,
         data: data.data,
@@ -89,9 +81,6 @@ export const getAllModelsTrades = async (symbol = DEFAULT_SYMBOL, limit = DEFAUL
       }
     }
 
-    console.log(`📊 Fetching trades for ${enabledModels.length} models:`,
-      enabledModels.map(m => `${m.name} (${m.uid})`))
-
     // Fetch trades data for all models concurrently
     const promises = enabledModels.map(async (model) => {
       const result = await getModelTrades(model.uid, symbol, limit)
@@ -136,14 +125,6 @@ export const getAllModelsTrades = async (symbol = DEFAULT_SYMBOL, limit = DEFAUL
     })
 
     const overallSuccess = successfulCount > 0
-
-    console.log(`✅ Trades data fetching completed:`, {
-      totalModels: enabledModels.length,
-      successfulCount,
-      failedCount,
-      overallSuccess
-    })
-
     return {
       success: overallSuccess,
       accounts,

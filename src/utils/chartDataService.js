@@ -3,7 +3,7 @@
  * Handles chart data API requests for line charts
  */
 
-import { getBtcPriceData, processBtcPriceData } from './btcPriceService.js'
+import {processBtcPriceData} from './btcPriceService.js'
 
 const CHART_API_BASE = 'http://15.235.181.47:8002'
 
@@ -65,7 +65,6 @@ export const getModelChartData = async (uid, size = 10) => {
  */
 export const getAllModelsChartData = async (models, size = 10) => {
   try {
-    console.log('🔄 Loading chart data for all models...', models)
 
     // Filter models that have uid
     const modelsWithUid = models.filter(model => model.uid)
@@ -82,7 +81,6 @@ export const getAllModelsChartData = async (models, size = 10) => {
       }
     }
 
-    console.log('Models with UID:', modelsWithUid)
 
     // Fetch chart data for all models concurrently
     const promises = modelsWithUid.map(model => getModelChartData(model.uid, size))
@@ -109,7 +107,6 @@ export const getAllModelsChartData = async (models, size = 10) => {
       }
     })
 
-    console.log(`✅ Chart data loaded: ${successfulResults.length} successful, ${failedResults.length} failed`)
 
     return {
       success: true,
@@ -146,8 +143,7 @@ export const processChartData = async (modelsData, btcPriceData = null) => {
 
     // Find the maximum number of data points across all models
     const maxDataPoints = Math.max(...modelsData.map(model => (model.data || []).length))
-    console.log(`🔍 Maximum data points across all models: ${maxDataPoints}`)
-    
+
     // Generate time labels based on actual data records (use the first model's timestamps as reference)
     const firstModelData = modelsData.find(model => (model.data || []).length > 0)
     if (firstModelData && firstModelData.data.length > 0) {
@@ -170,32 +166,12 @@ export const processChartData = async (modelsData, btcPriceData = null) => {
         console.warn(`⚠️ No chart data for model ${modelData.uid}`)
         return
       }
-
       // Use records as they are (no sorting needed)
-      const sortedRecords = records
-
       // Extract available_asset values
-      const data = sortedRecords.map(record => {
+      // Keep null values for missing data (no filling) to create gaps in the line
+      const chartData = records.map(record => {
         const value = parseFloat(record.balance_json.total_asset)
         return isNaN(value) ? null : value
-      })
-
-      console.log(`🔍 Chart data for ${modelData.uid}:`, {
-        recordsCount: sortedRecords.length,
-        rawData: data,
-        hasNullValues: data.some(val => val === null)
-      })
-
-      // Keep null values for missing data (no filling) to create gaps in the line
-      const chartData = data
-
-      console.log(`🔍 Chart data for ${modelData.uid}:`, {
-        recordsCount: sortedRecords.length,
-        chartDataLength: chartData.length,
-        chartData: chartData,
-        nullValuesCount: chartData.filter(val => val === null).length,
-        firstValue: chartData[0],
-        lastValue: chartData[chartData.length - 1]
       })
 
       datasets.push({
@@ -219,14 +195,14 @@ export const processChartData = async (modelsData, btcPriceData = null) => {
     // Add BTC price data if available
     if (btcPriceData && btcPriceData.success && btcPriceData.data.length > 0) {
       const processedBtcData = processBtcPriceData(btcPriceData.data, labels)
-      
+
       // Align BTC price data with model data time labels
       const btcAlignedData = labels.map(label => {
         // Find the closest BTC price data point for each time label
         const targetTime = new Date(label).getTime()
         let closestPrice = null
         let minDiff = Infinity
-        
+
         processedBtcData.labels.forEach((btcLabel, index) => {
           const btcTime = new Date(btcLabel).getTime()
           const diff = Math.abs(btcTime - targetTime)
@@ -235,11 +211,11 @@ export const processChartData = async (modelsData, btcPriceData = null) => {
             closestPrice = processedBtcData.data[index]
           }
         })
-        
+
         // BTC price is already processed as portfolio value in processBtcPriceData
         return closestPrice
       })
-      
+
       datasets.push({
         label: 'BTC Price',
         data: btcAlignedData,
@@ -264,10 +240,10 @@ export const processChartData = async (modelsData, btcPriceData = null) => {
     const allValues = datasets.flatMap(dataset => dataset.data).filter(val => val !== null)
     const minValue = Math.min(...allValues)
     const maxValue = Math.max(...allValues)
-    
+
     // Calculate the range of the data
     const dataRange = maxValue - minValue
-    
+
     // Set minimum scale based on data minimum
     let yAxisMin
     if (minValue > 9000) {
@@ -279,11 +255,11 @@ export const processChartData = async (modelsData, btcPriceData = null) => {
     } else {
       yAxisMin = Math.max(0, minValue - 1000) // Default margin of 1000
     }
-    
+
     // Set maximum scale with appropriate margin
     const margin = Math.max(dataRange * 0.2, 500) // 20% margin or minimum 500
     let yAxisMax = maxValue + margin
-    
+
     // Round to nearest 500 for cleaner tick marks
     yAxisMin = Math.floor(yAxisMin / 500) * 500
     yAxisMax = Math.ceil(yAxisMax / 500) * 500

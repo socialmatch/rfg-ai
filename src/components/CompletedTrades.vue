@@ -174,12 +174,6 @@ const convertAsterTrades = (asterTrades) => {
       timestamp: tradeTime,
       commission: Math.abs(commission)
     }
-
-    console.log(`🔄 Converting trade ${index + 1}:`, {
-      original: trade,
-      converted: convertedTrade
-    })
-
     return convertedTrade
   }).sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
 }

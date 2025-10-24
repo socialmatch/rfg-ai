@@ -195,20 +195,9 @@ const sendApiRequest = async (endpoint, method = 'GET', params = {}, accountConf
  */
 export const getAccountInfo = async (accountConfig) => {
   try {
-    console.log(`Getting ${accountConfig.modelName} account info...`)
-
     // Try using real API
     try {
       const accountInfo = await sendApiRequest('/fapi/v3/account', 'GET', {}, accountConfig)
-
-      console.log(`✅ ${accountConfig.modelName} real API account info retrieved successfully:`, {
-        canTrade: accountInfo.canTrade,
-        totalWalletBalance: accountInfo.totalWalletBalance,
-        totalUnrealizedProfit: accountInfo.totalUnrealizedProfit,
-        assetsCount: accountInfo.assets?.length || 0,
-        positionsCount: accountInfo.positions?.length || 0
-      })
-
       return {
         success: true,
         data: accountInfo,
@@ -288,8 +277,6 @@ export const getAllAccountsInfo = async () => {
     const failedResults = results
       .filter(result => result.status === 'rejected' || !result.value.success)
       .map(result => result.status === 'rejected' ? result.reason : result.value)
-
-    console.log(`✅ 成功获取${successfulResults.length}个账户信息`)
     if (failedResults.length > 0) {
       console.warn(`⚠️ ${failedResults.length}个账户信息获取失败`)
     }
@@ -396,8 +383,6 @@ export const getPositions = async () => {
  */
 export const getAccountPositions = async (accountConfig) => {
   try {
-    console.log(`正在获取${accountConfig.modelName}账户持仓信息...`)
-
     try {
       const result = await getAccountInfo(accountConfig)
 
@@ -411,12 +396,6 @@ export const getAccountPositions = async (accountConfig) => {
       const activePositions = positions.filter(position =>
         parseFloat(position.positionAmt) !== 0
       )
-
-      console.log(`✅ ${accountConfig.modelName}真实API持仓获取成功:`, {
-        totalPositions: positions.length,
-        activePositions: activePositions.length
-      })
-
       return {
         success: true,
         data: {
@@ -574,8 +553,6 @@ export const testApiConnection = async () => {
  */
 export const getUserTrades = async (accountConfig, params = {}) => {
   try {
-    console.log(`正在获取${accountConfig.modelName}账户交易历史...`)
-
     // 设置默认参数
     const defaultParams = {
       limit: 1000, // 默认获取1000条记录
@@ -585,12 +562,6 @@ export const getUserTrades = async (accountConfig, params = {}) => {
     // Try using real API
     try {
       const userTrades = await sendApiRequest('/fapi/v3/userTrades', 'GET', defaultParams, accountConfig)
-
-      console.log(`✅ ${accountConfig.modelName}真实API交易历史获取成功:`, {
-        tradesCount: userTrades?.length || 0,
-        params: defaultParams
-      })
-
       return {
         success: true,
         data: userTrades || [],
@@ -654,8 +625,6 @@ export const getAllAccountsUserTrades = async (params = {}) => {
     const failedResults = results
       .filter(result => result.status === 'rejected' || !result.value.success)
       .map(result => result.status === 'rejected' ? result.reason : result.value)
-
-    console.log(`✅ 成功获取${successfulResults.length}个账户交易历史`)
     if (failedResults.length > 0) {
       console.warn(`⚠️ ${failedResults.length}个账户交易历史获取失败`)
     }
@@ -686,19 +655,12 @@ export const getAllAccountsUserTrades = async (params = {}) => {
  */
 export const getAccountBalance = async (accountConfig, params = {}) => {
   try {
-    console.log(`正在获取${accountConfig.modelName}账户余额...`)
-
     const defaultParams = {
       ...params
     }
 
     try {
       const balance = await sendApiRequest('/fapi/v3/balance', 'GET', defaultParams, accountConfig)
-
-      console.log(`✅ ${accountConfig.modelName}真实API余额获取成功:`, {
-        balanceCount: balance?.length || 0,
-        params: defaultParams
-      })
 
       return {
         success: true,
@@ -762,8 +724,6 @@ export const getAllAccountsBalance = async (params = {}) => {
     const failedResults = results
       .filter(result => result.status === 'rejected' || !result.value.success)
       .map(result => result.status === 'rejected' ? result.reason : result.value)
-
-    console.log(`✅ 成功获取${successfulResults.length}个账户余额`)
     if (failedResults.length > 0) {
       console.warn(`⚠️ ${failedResults.length}个账户余额获取失败`)
     }

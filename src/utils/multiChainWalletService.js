@@ -48,8 +48,6 @@ const CHAIN_IDS = {
  */
 export const getMultiChainWalletTokens = async (walletAddress, networks = ['ethereum', 'bsc', 'arbitrum', 'solana'], apiKey = null) => {
   try {
-    console.log(`正在获取钱包地址 ${walletAddress} 在 ${networks.join(', ')} 网络上的代币信息...`)
-
     const results = {
       success: true,
       walletAddress,

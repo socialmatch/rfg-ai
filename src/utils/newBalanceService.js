@@ -15,8 +15,6 @@ const BASE_URL = 'http://15.235.181.47:8002/aster/balance'
  */
 export const getModelBalance = async (uid) => {
   try {
-    console.log(`🔄 Fetching balance for model UID: ${uid}`)
-    
     const response = await fetch(`${BASE_URL}/${uid}`, {
       method: 'GET',
       headers: {
@@ -29,13 +27,8 @@ export const getModelBalance = async (uid) => {
     }
 
     const data = await response.json()
-    
+
     if (data.success) {
-      console.log(`✅ Balance data fetched successfully for ${uid}:`, {
-        totalUsdtValue: data.data.total_usdt_value,
-        activeBalances: data.data.active_balances?.length || 0,
-        timestamp: data.data.timestamp
-      })
       return {
         success: true,
         data: data.data,
@@ -66,10 +59,10 @@ export const getModelBalance = async (uid) => {
 export const getAllModelsBalance = async () => {
   try {
     console.log('🔄 Fetching balance data for all enabled models...')
-    
+
     // Get all enabled models with UID
     const enabledModels = getAllModelInfo().filter(model => model.enabled && model.uid)
-    
+
     if (enabledModels.length === 0) {
       console.warn('⚠️ No enabled models with UID found')
       return {
@@ -78,10 +71,6 @@ export const getAllModelsBalance = async () => {
         error: 'No enabled models with UID found'
       }
     }
-
-    console.log(`📊 Fetching balance for ${enabledModels.length} models:`, 
-      enabledModels.map(m => `${m.name} (${m.uid})`))
-
     // Fetch balance data for all models concurrently
     const promises = enabledModels.map(async (model) => {
       const result = await getModelBalance(model.uid)
@@ -92,7 +81,7 @@ export const getAllModelsBalance = async () => {
     })
 
     const results = await Promise.allSettled(promises)
-    
+
     // Process results
     const accounts = []
     let successfulCount = 0
@@ -100,7 +89,7 @@ export const getAllModelsBalance = async () => {
 
     results.forEach((result, index) => {
       const model = enabledModels[index]
-      
+
       if (result.status === 'fulfilled' && result.value.success) {
         accounts.push({
           modelInfo: model,
@@ -109,12 +98,12 @@ export const getAllModelsBalance = async () => {
         })
         successfulCount++
       } else {
-        const error = result.status === 'rejected' 
-          ? result.reason.message 
+        const error = result.status === 'rejected'
+          ? result.reason.message
           : result.value.error
-        
+
         console.error(`❌ Failed to fetch balance for ${model.name} (${model.uid}):`, error)
-        
+
         accounts.push({
           modelInfo: model,
           data: null,
@@ -126,14 +115,6 @@ export const getAllModelsBalance = async () => {
     })
 
     const overallSuccess = successfulCount > 0
-
-    console.log(`✅ Balance data fetching completed:`, {
-      totalModels: enabledModels.length,
-      successfulCount,
-      failedCount,
-      overallSuccess
-    })
-
     return {
       success: overallSuccess,
       accounts,
@@ -160,7 +141,7 @@ export const processBalanceData = (balanceData) => {
   }
 
   const processedData = []
-  
+
   // Process active balances (USDT balance)
   if (balanceData.data.active_balances && balanceData.data.active_balances.length > 0) {
     balanceData.data.active_balances.forEach(balance => {
@@ -193,7 +174,7 @@ export const processBalanceData = (balanceData) => {
 export const getAllModelsProcessedBalance = async () => {
   try {
     const result = await getAllModelsBalance()
-    
+
     if (!result.success) {
       return result
     }

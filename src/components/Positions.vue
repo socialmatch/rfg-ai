@@ -91,7 +91,6 @@ const convertAsterPositions = (asterPositions, asterAccountData) => {
   let processedCount = 0
 
   asterPositions.forEach((position, index) => {
-    console.log(`🔍 Processing position ${index}:`, position)
 
     // If positionAmt is 0, skip
     if (parseFloat(position.positionAmt) === 0) {
@@ -140,16 +139,9 @@ const convertAsterPositions = (asterPositions, asterAccountData) => {
       entryPrice: entryPrice,
       positionAmt: Math.abs(positionAmt)
     }
-
-    console.log(`✅ Convert position ${index}:`, convertedPosition)
-
     modelGroups[modelName].positions.push(convertedPosition)
     modelGroups[modelName].totalUnrealizedPnl += unrealPnl
   })
-
-  console.log(`📊 Processing completed, processed ${processedCount} valid positions`)
-  console.log('📊 Final modelGroups:', modelGroups)
-
   return Object.values(modelGroups)
 }
 
