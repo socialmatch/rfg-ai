@@ -620,22 +620,50 @@ const backToAllModels = () => {
   showBackAllButton.value = false
 }
 
-// Scheduled data updates
-let dataUpdateInterval = null
+// Scheduled data updates - separate intervals for different data types
+let balanceUpdateInterval = null
+let tradesPositionsUpdateInterval = null
 
-const startDataUpdates = () => {
-  dataUpdateInterval = setInterval(() => {
-    // Use real API data updates instead of generating mock data
-    loadChartData() // Load chart data from real API
+// Refresh model balance every 15 seconds
+const startBalanceUpdates = () => {
+  balanceUpdateInterval = setInterval(() => {
+    console.log('🔄 Refreshing model balance data...')
     loadAsterBalance()
-  }, 30000) // Update real data every 30 seconds
+  }, 15000) // Update balance every 15 seconds
+}
+
+const stopBalanceUpdates = () => {
+  if (balanceUpdateInterval) {
+    clearInterval(balanceUpdateInterval)
+    balanceUpdateInterval = null
+  }
+}
+
+// Refresh positions and trades every 20 seconds
+const startTradesPositionsUpdates = () => {
+  tradesPositionsUpdateInterval = setInterval(() => {
+    console.log('🔄 Refreshing positions and trades data...')
+    loadAsterUserTrades()
+    loadAsterAccountData() // This loads positions
+  }, 20000) // Update every 20 seconds
+}
+
+const stopTradesPositionsUpdates = () => {
+  if (tradesPositionsUpdateInterval) {
+    clearInterval(tradesPositionsUpdateInterval)
+    tradesPositionsUpdateInterval = null
+  }
+}
+
+// Legacy function for compatibility
+const startDataUpdates = () => {
+  startBalanceUpdates()
+  startTradesPositionsUpdates()
 }
 
 const stopDataUpdates = () => {
-  if (dataUpdateInterval) {
-    clearInterval(dataUpdateInterval)
-    dataUpdateInterval = null
-  }
+  stopBalanceUpdates()
+  stopTradesPositionsUpdates()
 }
 
 // Get model image
