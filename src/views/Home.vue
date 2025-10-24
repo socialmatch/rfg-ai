@@ -193,7 +193,6 @@ const loadAsterBalance = async () => {
   asterBalanceError.value = null
 
   try {
-    console.log('🔄 Loading account balance using new balance service...')
     const result = await getAllModelsProcessedBalance()
 
     if (result.success) {
@@ -271,19 +270,7 @@ const loadAsterBalance = async () => {
           uid: modelData.uid,
           walletName: modelData.walletName
         })
-        console.log(`📊 Update ${modelData.name} balance data:`, {
-          balance: modelData.balance,
-          accountAlias: modelData.accountAlias,
-          availableBalance: modelData.availableBalance,
-          totalUsdtValue: modelData.totalUsdtValue
-        })
       })
-
-      console.log('✅ Account balance loaded successfully using new service:', {
-        accountsCount: result.accounts.length,
-        balanceDataCount: balanceData.length
-      })
-
       // Update animation with real data
       updateRealDataWithAnimation(balanceData)
     } else {
@@ -360,8 +347,6 @@ const loadChartData = async () => {
   chartDataError.value = null
 
   try {
-    console.log('🔄 Loading chart data for all models...')
-
     // Get enabled models with uid
     const enabledModels = getAllModelInfo().filter(model => model.enabled && model.uid)
 
@@ -370,8 +355,6 @@ const loadChartData = async () => {
       chartDataError.value = 'No models with UID found'
       return
     }
-    console.log('Enabled models with UID:', enabledModels)
-
     // Concurrently get chart data for all models and BTC price data
     const [chartResult, btcPriceResult] = await Promise.allSettled([
       getAllModelsChartData(enabledModels, 2000),
@@ -382,34 +365,15 @@ const loadChartData = async () => {
     const btcPriceData = btcPriceResult.status === 'fulfilled' ? btcPriceResult.value : { success: false, data: [] }
 
     if (result.success) {
-      console.log('✅ Chart data loaded successfully:', {
-        totalModels: result.totalModels,
-        successfulCount: result.successfulCount,
-        failedCount: result.failedCount
-      })
-
-      console.log('🔍 BTC price data result:', {
-        success: btcPriceData.success,
-        dataLength: btcPriceData.data?.length || 0
-      })
-
       // Process chart data with BTC price data
       const processedData = await processChartData(result.models, btcPriceData)
-      console.log('🔍 Processed chart data:', {
-        labelsCount: processedData.labels.length,
-        datasetsCount: processedData.datasets.length,
-        datasetsDataLengths: processedData.datasets.map(d => d.data.length),
-        yAxisRange: processedData.yAxisRange
-      })
       chartData.value = processedData
 
       // Update chart if it exists
       if (chartInstance) {
-        console.log('🔄 Updating existing chart with new data:', chartData.value)
         chartInstance.data = chartData.value
         chartInstance.update('none')
       } else {
-        console.log('🏗️ Building new chart with data:', chartData.value)
         // Build chart if it doesn't exist
         buildChart()
       }
@@ -714,7 +678,6 @@ const getCryptoIcon = (symbol) => {
     asterTradesError.value = null
 
     try {
-      console.log('🔄 Loading trading history using new trades service...')
       const result = await getAllModelsProcessedTrades()
 
       if (result.success) {
@@ -735,19 +698,6 @@ const getCryptoIcon = (symbol) => {
         allTrades.sort((a, b) => b.time - a.time)
 
         asterUserTrades.value = allTrades
-
-        console.log('✅ Trading history loaded successfully using new service:')
-        console.log('asterUserTrades.value:', asterUserTrades.value)
-        console.log('asterUserTrades.value.length:', asterUserTrades.value.length)
-        console.log('✅ Trading history loaded successfully:', {
-          totalAccounts: result.accounts.length,
-          totalTrades: allTrades.length,
-          accounts: result.accounts.map(acc => ({
-            model: acc.modelInfo.name,
-            tradesCount: acc.success ? acc.data.length : 0,
-            success: acc.success
-          }))
-        })
       } else {
         asterTradesError.value = result.error
         console.error('❌ Trading history loading failed:', result.error)
@@ -772,7 +722,6 @@ const getCryptoIcon = (symbol) => {
   asterError.value = null
 
   try {
-    console.log('🔄 Loading account positions using new positions service...')
     const result = await getAllModelsProcessedPositions()
 
     if (result.success) {
@@ -793,19 +742,6 @@ const getCryptoIcon = (symbol) => {
       // Since we're only using positions data, we can set asterAccountData to null or empty
       asterAccountData.value = null
       asterPositions.value = allPositions
-
-      console.log('✅ Account positions loaded successfully using new service:')
-      console.log('asterPositions.value:', asterPositions.value)
-      console.log('asterPositions.value.length:', asterPositions.value.length)
-      console.log('✅ Account positions loaded successfully:', {
-        totalAccounts: result.accounts.length,
-        totalPositions: allPositions.length,
-        accounts: result.accounts.map(acc => ({
-          model: acc.modelInfo.name,
-          positionsCount: acc.success ? acc.data.length : 0,
-          success: acc.success
-        }))
-      })
     } else {
       asterError.value = result.error
       console.error('❌ Account positions loading failed:', result.error)
@@ -829,8 +765,6 @@ const getCryptoIcon = (symbol) => {
 // Aster Finance API related functions
 const fetchCryptoPrices = async () => {
   try {
-    console.log('🔄 Fetching crypto prices from Aster Finance...')
-
     // Use new Aster Finance API to get crypto prices
     const result = await getAllCryptoPrices()
 
@@ -864,8 +798,6 @@ const fetchCryptoPrices = async () => {
           }
         }
       })
-
-      console.log('✅ Aster Finance price data updated successfully:', cryptoPrices.value)
     } else {
       console.error('❌ Failed to fetch crypto prices from Aster Finance:', result.error)
     }

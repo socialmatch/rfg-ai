@@ -23,8 +23,6 @@ const SUPPORTED_CRYPTOS = [
  */
 export const getCryptoPrice = async (symbol) => {
   try {
-    console.log(`🔄 Fetching price for ${symbol}`)
-    
     const response = await fetch(`${BASE_URL}/ticker/price?symbol=${symbol}`, {
       method: 'GET',
       headers: {
@@ -37,9 +35,8 @@ export const getCryptoPrice = async (symbol) => {
     }
 
     const data = await response.json()
-    
-    console.log(`✅ Price fetched successfully for ${symbol}:`, data)
-    
+
+
     return {
       success: true,
       data: data,
@@ -63,8 +60,6 @@ export const getCryptoPrice = async (symbol) => {
  */
 export const getAllCryptoPrices = async () => {
   try {
-    console.log('🔄 Fetching prices for all supported cryptocurrencies...')
-
     // Fetch prices for all supported cryptocurrencies concurrently
     const promises = SUPPORTED_CRYPTOS.map(crypto => getCryptoPrice(crypto.symbol))
     const results = await Promise.allSettled(promises)
@@ -89,9 +84,6 @@ export const getAllCryptoPrices = async () => {
         })
       }
     })
-
-    console.log(`✅ Crypto prices loaded: ${successfulResults.length} successful, ${failedResults.length} failed`)
-
     return {
       success: true,
       prices: successfulResults,

@@ -15,8 +15,6 @@ const BASE_URL = 'http://15.235.181.47:8002/aster/positions'
  */
 export const getModelPositions = async (uid) => {
   try {
-    console.log(`🔄 Fetching positions for model UID: ${uid}`)
-    
     const response = await fetch(`${BASE_URL}/?uid=${uid}`, {
       method: 'GET',
       headers: {
@@ -29,13 +27,8 @@ export const getModelPositions = async (uid) => {
     }
 
     const data = await response.json()
-    
+
     if (data.success) {
-      console.log(`✅ Positions data fetched successfully for ${uid}:`, {
-        totalPositions: data.data.total_positions,
-        positionsCount: data.data.positions?.length || 0,
-        timestamp: data.data.timestamp
-      })
       return {
         success: true,
         data: data.data,
@@ -66,10 +59,10 @@ export const getModelPositions = async (uid) => {
 export const getAllModelsPositions = async () => {
   try {
     console.log('🔄 Fetching positions data for all enabled models...')
-    
+
     // Get all enabled models with UID
     const enabledModels = getAllModelInfo().filter(model => model.enabled && model.uid)
-    
+
     if (enabledModels.length === 0) {
       console.warn('⚠️ No enabled models with UID found')
       return {
@@ -78,10 +71,6 @@ export const getAllModelsPositions = async () => {
         error: 'No enabled models with UID found'
       }
     }
-
-    console.log(`📊 Fetching positions for ${enabledModels.length} models:`, 
-      enabledModels.map(m => `${m.name} (${m.uid})`))
-
     // Fetch positions data for all models concurrently
     const promises = enabledModels.map(async (model) => {
       const result = await getModelPositions(model.uid)
@@ -92,7 +81,7 @@ export const getAllModelsPositions = async () => {
     })
 
     const results = await Promise.allSettled(promises)
-    
+
     // Process results
     const accounts = []
     let successfulCount = 0
@@ -100,7 +89,7 @@ export const getAllModelsPositions = async () => {
 
     results.forEach((result, index) => {
       const model = enabledModels[index]
-      
+
       if (result.status === 'fulfilled' && result.value.success) {
         accounts.push({
           modelInfo: model,
@@ -109,12 +98,12 @@ export const getAllModelsPositions = async () => {
         })
         successfulCount++
       } else {
-        const error = result.status === 'rejected' 
-          ? result.reason.message 
+        const error = result.status === 'rejected'
+          ? result.reason.message
           : result.value.error
-        
+
         console.error(`❌ Failed to fetch positions for ${model.name} (${model.uid}):`, error)
-        
+
         accounts.push({
           modelInfo: model,
           data: null,
@@ -126,14 +115,6 @@ export const getAllModelsPositions = async () => {
     })
 
     const overallSuccess = successfulCount > 0
-
-    console.log(`✅ Positions data fetching completed:`, {
-      totalModels: enabledModels.length,
-      successfulCount,
-      failedCount,
-      overallSuccess
-    })
-
     return {
       success: overallSuccess,
       accounts,
@@ -160,7 +141,7 @@ export const processPositionsData = (positionsData) => {
   }
 
   const processedData = []
-  
+
   // Process positions array
   if (positionsData.data.positions && positionsData.data.positions.length > 0) {
     positionsData.data.positions.forEach(position => {
@@ -197,7 +178,7 @@ export const processPositionsData = (positionsData) => {
 export const getAllModelsProcessedPositions = async () => {
   try {
     const result = await getAllModelsPositions()
-    
+
     if (!result.success) {
       return result
     }

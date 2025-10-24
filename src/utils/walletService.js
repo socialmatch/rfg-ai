@@ -12,14 +12,12 @@ const BINANCE_API_BASE = 'https://api.binance.com'
  */
 export const getWalletTokens = async (walletAddress) => {
   try {
-    console.log(`正在获取钱包地址 ${walletAddress} 的代币信息...`)
-    
     // 获取所有支持的代币列表（从币安获取）
     const supportedTokens = await getSupportedTokens()
-    
+
     // 获取钱包余额（这里使用模拟数据，因为币安API不直接提供钱包余额查询）
     const walletBalances = await getWalletBalances(walletAddress, supportedTokens)
-    
+
     return {
       success: true,
       walletAddress,
@@ -48,7 +46,7 @@ const getSupportedTokens = async () => {
   try {
     const response = await fetch(`${BINANCE_API_BASE}/api/v3/exchangeInfo`)
     const data = await response.json()
-    
+
     // 提取USDT交易对的代币
     const usdtPairs = data.symbols
       .filter(symbol => symbol.symbol.endsWith('USDT') && symbol.status === 'TRADING')
@@ -58,7 +56,7 @@ const getSupportedTokens = async () => {
         pair: symbol.symbol,
         status: symbol.status
       }))
-    
+
     return usdtPairs
   } catch (error) {
     console.error('获取支持代币列表失败:', error)
@@ -87,9 +85,6 @@ const getWalletBalances = async (walletAddress, supportedTokens) => {
     // 1. 连接以太坊节点（如Infura、Alchemy）
     // 2. 使用Web3.js或ethers.js查询余额
     // 3. 或者使用第三方服务如Moralis、Alchemy等
-    
-    console.log(`模拟获取钱包 ${walletAddress} 的余额...`)
-    
     // 模拟钱包余额数据
     const mockBalances = [
       {
@@ -141,10 +136,10 @@ const getWalletBalances = async (walletAddress, supportedTokens) => {
         change24h: 1.5
       }
     ]
-    
+
     // 模拟API延迟
     await new Promise(resolve => setTimeout(resolve, 1000))
-    
+
     return mockBalances
   } catch (error) {
     console.error('获取钱包余额失败:', error)
@@ -161,7 +156,7 @@ export const getTokenPrice = async (symbol) => {
   try {
     const response = await fetch(`${BINANCE_API_BASE}/api/v3/ticker/24hr?symbol=${symbol}USDT`)
     const data = await response.json()
-    
+
     return {
       symbol: data.symbol.replace('USDT', ''),
       price: parseFloat(data.lastPrice),
@@ -185,7 +180,7 @@ export const getBatchTokenPrices = async (symbols) => {
   try {
     const promises = symbols.map(symbol => getTokenPrice(symbol))
     const results = await Promise.all(promises)
-    
+
     return results.filter(result => result !== null)
   } catch (error) {
     console.error('批量获取代币价格失败:', error)
@@ -202,11 +197,11 @@ export const calculateWalletValue = (tokens) => {
   const totalValueUsd = tokens.reduce((sum, token) => {
     return sum + parseFloat(token.balanceUsd || 0)
   }, 0)
-  
-  const totalValueBtc = tokens.find(token => token.symbol === 'BTC') 
+
+  const totalValueBtc = tokens.find(token => token.symbol === 'BTC')
     ? totalValueUsd / parseFloat(tokens.find(token => token.symbol === 'BTC').price)
     : 0
-  
+
   return {
     totalValueUsd: totalValueUsd.toFixed(2),
     totalValueBtc: totalValueBtc.toFixed(8),

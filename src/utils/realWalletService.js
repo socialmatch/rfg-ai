@@ -23,22 +23,20 @@ const NETWORKS = {
  */
 export const getWalletTokens = async (walletAddress, network = 'ethereum', apiKey = null) => {
   try {
-    console.log(`正在获取钱包地址 ${walletAddress} 在 ${network} 网络上的代币信息...`)
-    
     if (!apiKey) {
       console.warn('未提供Moralis API密钥，使用模拟数据')
       return getMockWalletTokens(walletAddress, network)
     }
-    
+
     // 获取钱包代币余额
     const tokens = await getWalletTokenBalances(walletAddress, network, apiKey)
-    
+
     // 获取代币价格信息
     const tokensWithPrices = await enrichTokensWithPrices(tokens)
-    
+
     // 计算总价值
     const walletValue = calculateWalletValue(tokensWithPrices)
-    
+
     return {
       success: true,
       walletAddress,
@@ -74,20 +72,20 @@ const getWalletTokenBalances = async (walletAddress, network, apiKey) => {
   try {
     const networkParam = NETWORKS[network] || 'eth'
     const url = `${MORALIS_API_BASE}/${walletAddress}/erc20?chain=${networkParam}`
-    
+
     const response = await fetch(url, {
       headers: {
         'X-API-Key': apiKey,
         'Content-Type': 'application/json'
       }
     })
-    
+
     if (!response.ok) {
       throw new Error(`API请求失败: ${response.status} ${response.statusText}`)
     }
-    
+
     const data = await response.json()
-    
+
     // 转换数据格式
     return data.result.map(token => ({
       symbol: token.symbol,
@@ -115,7 +113,7 @@ const enrichTokensWithPrices = async (tokens) => {
     // 获取代币价格
     const symbols = tokens.map(token => token.symbol)
     const prices = await getBatchTokenPrices(symbols)
-    
+
     // 合并价格信息
     return tokens.map(token => {
       const priceInfo = prices.find(p => p.symbol === token.symbol)
@@ -148,7 +146,7 @@ export const getTokenPrice = async (symbol) => {
   try {
     const response = await fetch(`${BINANCE_API_BASE}/api/v3/ticker/24hr?symbol=${symbol}USDT`)
     const data = await response.json()
-    
+
     return {
       symbol: data.symbol.replace('USDT', ''),
       price: parseFloat(data.lastPrice),
@@ -172,7 +170,7 @@ export const getBatchTokenPrices = async (symbols) => {
   try {
     const promises = symbols.map(symbol => getTokenPrice(symbol))
     const results = await Promise.all(promises)
-    
+
     return results.filter(result => result !== null)
   } catch (error) {
     console.error('批量获取代币价格失败:', error)
@@ -200,11 +198,11 @@ export const calculateWalletValue = (tokens) => {
   const totalValueUsd = tokens.reduce((sum, token) => {
     return sum + parseFloat(token.balanceUsd || 0)
   }, 0)
-  
-  const totalValueBtc = tokens.find(token => token.symbol === 'BTC') 
+
+  const totalValueBtc = tokens.find(token => token.symbol === 'BTC')
     ? totalValueUsd / parseFloat(tokens.find(token => token.symbol === 'BTC').price)
     : 0
-  
+
   return {
     totalValueUsd: totalValueUsd.toFixed(2),
     totalValueBtc: totalValueBtc.toFixed(8),
@@ -222,7 +220,7 @@ export const calculateWalletValue = (tokens) => {
 const getMockWalletTokens = async (walletAddress, network) => {
   // 模拟API延迟
   await new Promise(resolve => setTimeout(resolve, 1000))
-  
+
   const mockTokens = [
     {
       symbol: 'BTC',
@@ -267,9 +265,9 @@ const getMockWalletTokens = async (walletAddress, network) => {
       low24h: 0.99
     }
   ]
-  
+
   const walletValue = calculateWalletValue(mockTokens)
-  
+
   return {
     success: true,
     walletAddress,

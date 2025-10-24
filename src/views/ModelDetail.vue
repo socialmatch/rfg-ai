@@ -227,7 +227,7 @@ const loadModelData = async () => {
     // Get current model from route params
     const currentModelSlug = route.params.slug
     const currentModel = models.value.find(model => model.slug === currentModelSlug)
-    
+
     if (!currentModel) {
       console.error(`❌ Model not found for slug: ${currentModelSlug}`)
       error.value = 'Model not found'
@@ -236,7 +236,6 @@ const loadModelData = async () => {
 
     const accountConfig = getAccountByModelName(currentModel.name)
     if (!accountConfig || !accountConfig.enabled) {
-      console.log(`⚠️ ${currentModel.name} account not enabled or config does not exist`)
       error.value = 'Account not enabled'
       return
     }
@@ -307,12 +306,12 @@ const loadModelData = async () => {
 
         // Get initial capital from account config
         const initialCapital = accountConfig.initialCapital || 10000
-        
+
         // Calculate return percentage same as LEADERBOARD
         const accountValue = balanceData ? parseFloat(balanceData.balance) : 0
         const totalPnl = accountValue - initialCapital
         const returnPercent = initialCapital > 0 ? (totalPnl / initialCapital) * 100 : 0
-        
+
         // Update current model data directly
         const modelIndex = models.value.findIndex(m => m.slug === currentModelSlug)
         if (modelIndex !== -1) {

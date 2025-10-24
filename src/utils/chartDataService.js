@@ -3,7 +3,7 @@
  * Handles chart data API requests for line charts
  */
 
-import { getBtcPriceData, processBtcPriceData } from './btcPriceService.js'
+import {processBtcPriceData} from './btcPriceService.js'
 
 const CHART_API_BASE = 'http://15.235.181.47:8002'
 
@@ -65,7 +65,6 @@ export const getModelChartData = async (uid, size = 10) => {
  */
 export const getAllModelsChartData = async (models, size = 10) => {
   try {
-    console.log('🔄 Loading chart data for all models...', models)
 
     // Filter models that have uid
     const modelsWithUid = models.filter(model => model.uid)
@@ -82,7 +81,6 @@ export const getAllModelsChartData = async (models, size = 10) => {
       }
     }
 
-    console.log('Models with UID:', modelsWithUid)
 
     // Fetch chart data for all models concurrently
     const promises = modelsWithUid.map(model => getModelChartData(model.uid, size))
@@ -109,7 +107,6 @@ export const getAllModelsChartData = async (models, size = 10) => {
       }
     })
 
-    console.log(`✅ Chart data loaded: ${successfulResults.length} successful, ${failedResults.length} failed`)
 
     return {
       success: true,
@@ -146,7 +143,6 @@ export const processChartData = async (modelsData, btcPriceData = null) => {
 
     // Find the maximum number of data points across all models
     const maxDataPoints = Math.max(...modelsData.map(model => (model.data || []).length))
-    console.log(`🔍 Maximum data points across all models: ${maxDataPoints}`)
 
     // Generate time labels based on actual data records (use the first model's timestamps as reference)
     const firstModelData = modelsData.find(model => (model.data || []).length > 0)
@@ -170,19 +166,13 @@ export const processChartData = async (modelsData, btcPriceData = null) => {
         console.warn(`⚠️ No chart data for model ${modelData.uid}`)
         return
       }
-
       // Use records as they are (no sorting needed)
-      const sortedRecords = records
-
       // Extract available_asset values
-      const data = sortedRecords.map(record => {
+      // Keep null values for missing data (no filling) to create gaps in the line
+      const chartData = records.map(record => {
         const value = parseFloat(record.balance_json.total_asset)
         return isNaN(value) ? null : value
       })
-
-      // Keep null values for missing data (no filling) to create gaps in the line
-      const chartData = data
-
 
       datasets.push({
         label: modelData.modelInfo.name || modelData.uid,
@@ -253,18 +243,15 @@ export const processChartData = async (modelsData, btcPriceData = null) => {
 
     // Calculate the range of the data
     const dataRange = maxValue - minValue
-    console.log('maxValue - minValue', maxValue, minValue)
 
     // Set minimum scale based on data minimum
     let yAxisMin
-    if (minValue > 9500) {
-      yAxisMin = 9400 // Set minimum to 8000 if data minimum is around 9000
-    } else if (minValue > 9300) {
-      yAxisMin = 8200 // Set minimum to 8000 if data minimum is around 9000
+    if (minValue > 9000) {
+      yAxisMin = 8000 // Set minimum to 8000 if data minimum is around 9000
     } else if (minValue > 8000) {
-      yAxisMin = 7800 // Set minimum to 7000 if data minimum is around 8000
-    } else if (minValue > 7500) {
-      yAxisMin = 7200 // Set minimum to 6000 if data minimum is around 7000
+      yAxisMin = 7000 // Set minimum to 7000 if data minimum is around 8000
+    } else if (minValue > 7000) {
+      yAxisMin = 6000 // Set minimum to 6000 if data minimum is around 7000
     } else {
       yAxisMin = Math.max(0, minValue - 1000) // Default margin of 1000
     }
