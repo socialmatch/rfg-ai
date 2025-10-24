@@ -1068,7 +1068,7 @@ onUnmounted(() => {
 
 .chart-frame
   position relative
-  padding 8px 48px 6px 22px  // 右边从8px改为48px，增加40px间距
+  padding 8px 200px 6px 22px  // 右边从8px改为48px，增加40px间距
   flex 1 // fill remaining height below header
   min-height 320px
 
