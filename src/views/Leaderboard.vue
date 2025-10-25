@@ -70,7 +70,7 @@
           .bar-visual
             .bar(:style="{ height: getBarHeight(model.accountValue || 0) + '%', backgroundColor: model.color || '#64748b' }")
             .bar-value ${{ (model.accountValue || 0).toLocaleString() }}
-            .bar-icon
+            //.bar-icon
               img(:src="getModelIcon(model.name)" :alt="model.name")
           .model-info
             .bar-label(:style="{ color: model.color || '#94a3b8' }") {{ model.name }}
@@ -108,17 +108,17 @@ const getActiveCryptoIcons = () => {
     console.log('🔍 Leaderboard data is empty')
     return []
   }
-  
+
   // Get the winning model (first in the list)
   const winningModel = leaderboardData.value[0]
   console.log('🔍 Winning model:', winningModel)
   console.log('🔍 Winning model positions:', winningModel?.positions)
-  
+
   if (!winningModel || !winningModel.positions) {
     console.log('🔍 No winning model or positions found')
     return []
   }
-  
+
   // Extract unique crypto symbols from positions
   const cryptos = [...new Set(winningModel.positions.map(position => position.coin))]
   console.log('🔍 Active crypto symbols:', cryptos)
@@ -136,11 +136,11 @@ const loadLeaderboardData = async () => {
     let balanceData = getCachedData('balance')
     let tradesData = getCachedData('trades')
     let positionsData = getCachedData('positions')
-    
+
     if (balanceData) console.log('✅ Using cached balance data for leaderboard')
     if (tradesData) console.log('✅ Using cached trades data for leaderboard')
     if (positionsData) console.log('✅ Using cached positions data for leaderboard')
-    
+
     // Always fetch fresh data in background
     const fetchPromises = []
     if (!balanceData) {
@@ -161,10 +161,10 @@ const loadLeaderboardData = async () => {
         promise: getAllModelsProcessedPositions()
       })
     }
-    
+
     // Fetch missing data
     const results = await Promise.allSettled(fetchPromises.map(p => p.promise))
-    
+
     // Update with fresh data
     results.forEach((result, index) => {
       if (result.status === 'fulfilled') {
@@ -172,13 +172,13 @@ const loadLeaderboardData = async () => {
         const data = result.value
         console.log(`✅ Fetched fresh ${key} data for leaderboard`)
         setCachedData(key, data)
-        
+
         if (key === 'balance') balanceData = data
         if (key === 'trades') tradesData = data
         if (key === 'positions') positionsData = data
       }
     })
-    
+
     // Ensure we have data (from cache or fresh fetch)
     balanceData = balanceData || null
     tradesData = tradesData || null
@@ -238,17 +238,17 @@ const loadLeaderboardData = async () => {
       positionsData.accounts.forEach(account => {
         console.log('🔍 Processing account:', account.modelInfo.name, 'Success:', account.success)
         console.log('🔍 Account data structure:', account.data)
-        
+
         if (account.success && account.data) {
           // Check if positions exist in the data structure
           const positions = account.data.positions || account.data
           console.log('🔍 Positions found:', positions)
-          
+
           if (positions && positions.length > 0) {
             console.log('🔍 Account has positions:', positions.length, 'positions')
             const modelName = account.modelInfo.name
             const existingData = modelDataMap.get(modelName) || { modelInfo: account.modelInfo }
-            
+
             // Map positions data to the expected format (same as ModelDetail)
             const mappedPositions = positions.map((position, index) => ({
               id: index + 1,
@@ -287,10 +287,10 @@ const loadLeaderboardData = async () => {
       const stats = data.stats || {}
       const accountValue = balance ? parseFloat(balance.balance) : 0
       const initialCapital = data.modelInfo.initialCapital || 10000 // Default to $10,000
-      
+
       // Calculate total P&L: ACCT VALUE - Initial Capital
       const totalPnl = accountValue - initialCapital
-      
+
       // Calculate return percentage: (ACCT VALUE - Initial Capital) / Initial Capital * 100
       const returnPercent = initialCapital > 0 ? (totalPnl / initialCapital) * 100 : 0
 
@@ -322,7 +322,7 @@ const loadLeaderboardData = async () => {
         averageLoss: stats.averageLoss || 0,
         maxDrawdown: data.maxDrawdown || 0
       })
-      
+
       console.log('🔍 Built leaderboard item for', modelName, 'with positions:', data.positions || [])
     })
 
@@ -381,10 +381,10 @@ const getModelIcon = (modelName) => {
   return getModelIconPath(modelName)
 }
 
-// Determine if background color should be set (Rfg_logo image has built-in background)
+// Determine if background color should be set
+// Only GROK 4 needs background color (too similar to theme), others don't
 const shouldShowBackground = (modelName) => {
-  const iconPath = getModelIcon(modelName)
-  return !iconPath.includes('Rfg_logo')
+  return modelName === 'GROK 4'
 }
 
 // Load data when component mounts

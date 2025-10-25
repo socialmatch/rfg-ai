@@ -13,8 +13,8 @@ header.header
           .dropdown-title AI MODELS
           .dropdown-separator
           .model-item(v-for="model in models" :key="model.name" @click="goToModelDetail(model)")
-            .model-color-dot(:style="{ backgroundColor: model.color }")
-            .model-icon
+            //.model-color-dot(:style="{ backgroundColor: model.color }")
+            .model-icon(:style="shouldShowBackground(model.name) ? { backgroundColor: model.color } : {}")
               img(:src="model.icon" :alt="model.name")
             .model-name {{ model.name }}
 
@@ -40,6 +40,12 @@ const models = ref(getAllModelInfo().map(model => ({
   icon: getModelIconPath(model.name),
   color: model.color
 })))
+
+// Determine if background color should be set
+// Only GROK 4 needs background color (too similar to theme), others don't
+const shouldShowBackground = (modelName) => {
+  return modelName === 'GROK 4'
+}
 
 // 导航方法
 const goToHome = () => {

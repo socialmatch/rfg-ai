@@ -98,7 +98,7 @@ export const ACCOUNT_CONFIGS = [
     modelName: 'GEMINI 2.5 PRO',
     modelSlug: 'gemini-2-5-pro',
     modelColor: '#64748b', // 灰色
-    modelIcon: 'Gemini_logo.webp',
+    modelIcon: 'Gemini_logo.png',
     uid: 'gemini',
     initialCapital: 10000, // 初始本金 $10,000
     "user_address": "0x40743b7420c019832e7b90be608981394d6a220d",
@@ -120,7 +120,7 @@ export const ACCOUNT_CONFIGS = [
     modelName: 'GROK 4',
     modelSlug: 'grok-4',
     modelColor: '#0ee1e6', // 深灰色
-    modelIcon: 'Grok_logo.webp',
+    modelIcon: 'Grok_logo.png',
     uid: 'grok',
     initialCapital: 10000, // 初始本金 $10,000
     "user_address": "0xc08ebbb03dfa1fc3e240836e04f25c8c0070cd11",

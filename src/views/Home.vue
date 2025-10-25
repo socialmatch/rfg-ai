@@ -42,7 +42,7 @@
               :class="{ hovered: hoveredModel && hoveredModel.name === model.name }"
               :style="{ display: selectedModel === 'ALL MODELS' || selectedModel === model.name ? 'flex' : 'none' }"
               @click="selectedModel = model.name")
-              .icon-dot(:style="{ backgroundColor: model.color }")
+              //.icon-dot(:style="{ backgroundColor: model.color }")
               .icon-content
                 .model-image
                   img(v-if="!model.isBtcPrice" :src="getModelImage(model.name)" :alt="model.name")
@@ -79,8 +79,8 @@
     .legend-content
        .legend-item(v-for="legend in legends" :key="legend.name"
          :style="{ display: selectedModel === 'ALL MODELS' || selectedModel === legend.name ? 'flex' : 'none' }")
-         .legend-dot(:style="{ backgroundColor: legend.color }")
-         .legend-name {{ legend.name }}
+         //.legend-dot(:style="{ backgroundColor: legend.color }")
+         .legend-name(:style="{ color: legend.color }") {{ legend.name }}
          .legend-value ${{ legend.value.toLocaleString() }}
 
   // Connection status
@@ -108,6 +108,7 @@ import { getAllModelsChartData, processChartData } from '@/utils/chartDataServic
 import { getAllCryptoPrices } from '@/utils/cryptoPriceService.js'
 import { getBtcPriceData } from '@/utils/btcPriceService.js'
 import { getCachedData, setCachedData } from '@/utils/dataCache.js'
+import { getCryptoIcon } from '@/utils/cryptoIcons.js'
 
 Chart.register(...registerables, zoomPlugin)
 
@@ -206,7 +207,7 @@ const loadAsterBalance = async () => {
         }
       }
     })
-    
+
     balanceData.sort((a, b) => b.value - a.value)
 
     // Add BTC price data as a model
@@ -229,10 +230,10 @@ const loadAsterBalance = async () => {
     } catch (error) {
       console.warn('⚠️ Failed to load BTC price for trading models:', error)
     }
-    
+
     tradingModels.value = balanceData
     asterBalance.value = balanceData
-    
+
     // Update balance data in config file
     balanceData.forEach(modelData => {
       updateAccountBalance(modelData.name, {
@@ -250,7 +251,7 @@ const loadAsterBalance = async () => {
         walletName: modelData.walletName
       })
     })
-    
+
     updateRealDataWithAnimation(balanceData)
   }
 
@@ -270,12 +271,12 @@ const loadAsterBalance = async () => {
   try {
     console.log('🔄 Fetching fresh balance data in background...')
     const result = await getAllModelsProcessedBalance()
-    
+
     // Cache the result
     if (result.success) {
       setCachedData('balance', result)
       console.log('✅ Updated cache with fresh balance data')
-      
+
       // Process and update UI with fresh data
       await processAndUpdateData(result)
     } else {
@@ -653,27 +654,27 @@ const loadCryptoPricesAsync = async () => {
 // Main sequential data loading function
 const loadAllData = async () => {
   console.log('🔄 Starting sequential data load...')
-  
+
   // Start crypto prices async request (doesn't block)
   loadCryptoPricesAsync()
-  
+
   try {
     // Step 1: Load chart data and BTC price
     console.log('📊 Step 1: Loading chart data and BTC price...')
     await loadChartData()
-    
+
     // Step 2: Load all models balance
     console.log('💰 Step 2: Loading all models balance...')
     await loadAsterBalance()
-    
+
     // Step 3: Load all models trades
     console.log('📈 Step 3: Loading all models trades...')
     await loadAsterUserTrades()
-    
+
     // Step 4: Load all models positions
     console.log('📍 Step 4: Loading all models positions...')
     await loadAsterAccountData()
-    
+
     console.log('✅ All data loaded successfully')
   } catch (error) {
     console.error('❌ Error loading data:', error)
@@ -709,19 +710,6 @@ const getModelImage = (modelName) => {
   return getModelIconPath(modelName)
 }
 
-// Get crypto icon
-const getCryptoIcon = (symbol) => {
-  const iconMap = {
-    'BTC': new URL('../assets/images/btc.svg', import.meta.url).href,
-    'ETH': new URL('../assets/images/eth.svg', import.meta.url).href,
-    'SOL': new URL('../assets/images/sol.svg', import.meta.url).href,
-    'BNB': new URL('../assets/images/bnb.svg', import.meta.url).href,
-    'DOGE': new URL('../assets/images/doge.svg', import.meta.url).href,
-    'XRP': new URL('../assets/images/xrp.svg', import.meta.url).href
-  }
-  return iconMap[symbol] || new URL('../assets/images/btc.svg', import.meta.url).href
-}
-
   // Get trading history using new trades service
   const loadAsterUserTrades = async () => {
     // Helper function to process trades data
@@ -752,12 +740,12 @@ const getCryptoIcon = (symbol) => {
     try {
       console.log('🔄 Fetching fresh trades data in background...')
       const result = await getAllModelsProcessedTrades()
-      
+
       // Cache the result
       if (result.success) {
         setCachedData('trades', result)
         console.log('✅ Updated cache with fresh trades data')
-        
+
         // Process and update UI with fresh data
         processTradesData(result)
       } else {
@@ -812,12 +800,12 @@ const getCryptoIcon = (symbol) => {
     try {
       console.log('🔄 Fetching fresh positions data in background...')
       const result = await getAllModelsProcessedPositions()
-      
+
       // Cache the result
       if (result.success) {
         setCachedData('positions', result)
         console.log('✅ Updated cache with fresh positions data')
-        
+
         // Process and update UI with fresh data
         processPositionsData(result)
       } else {
@@ -931,10 +919,10 @@ watch(selectedModel, (newVal, oldVal) => {
 
 onMounted(() => {
   setTimeout(() => { connectionStatus.value = 'connected' }, 1500)
-  
+
   // Load all data sequentially
   loadAllData()
-  
+
   // Start auto refresh for balance (every 15s) and crypto prices (every 5s)
   startDataUpdates()
   startPriceUpdates()
@@ -1162,7 +1150,7 @@ onUnmounted(() => {
 
 .chart-frame
   position relative
-  padding 8px 200px 6px 22px  // 右边从8px改为48px，增加40px间距
+  padding 8px 180px 6px 22px  // 右边从8px改为48px，增加40px间距
   flex 1 // fill remaining height below header
   min-height 320px
 

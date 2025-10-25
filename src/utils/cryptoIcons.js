@@ -6,14 +6,14 @@
 // 支持的币种列表
 export const SUPPORTED_CRYPTOS = ['BNB', 'BTC', 'XRP', 'SOL', 'ETH', 'DOGE']
 
-// 币种图标映射
+// 币种图标映射 (使用 tokens 目录下的 PNG 格式图标)
 const cryptoIconMap = {
-  'BNB': 'bnb.svg',
-  'BTC': 'btc.svg',
-  'XRP': 'xrp.svg',
-  'SOL': 'sol.svg',
-  'ETH': 'eth.svg',
-  'DOGE': 'doge.svg'
+  'BNB': 'tokens/bnb.png',
+  'BTC': 'tokens/btc.png',
+  'XRP': 'tokens/xrp.png',
+  'SOL': 'tokens/sol.png',
+  'ETH': 'tokens/eth.png',
+  'DOGE': 'tokens/doge.png'
 }
 
 /**

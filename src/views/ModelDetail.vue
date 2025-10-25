@@ -211,10 +211,10 @@ const currentModel = computed(() => {
   return models.value.find(model => model.slug === slug) || models.value[0]
 })
 
-// Determine if background color should be set (Rfg_logo image has built-in background)
+// Determine if background color should be set
+// Only GROK 4 needs background color (too similar to theme), others don't
 const shouldShowBackground = (modelName) => {
-  const iconPath = getModelIconPath(modelName)
-  return !iconPath.includes('Rfg_logo')
+  return modelName === 'GROK 4'
 }
 
 // Dynamically get model data
@@ -224,7 +224,7 @@ const loadModelData = async () => {
     console.log('⏸️ Already loading, skipping...')
     return
   }
-  
+
   loading.value = true
   error.value = null
 
@@ -247,7 +247,7 @@ const loadModelData = async () => {
       uid: accountConfig?.uid,
       modelName: accountConfig?.modelName
     })
-    
+
     if (!accountConfig || !accountConfig.enabled) {
       error.value = 'Account not enabled'
       return
@@ -261,7 +261,7 @@ const loadModelData = async () => {
       const cachedBalance = getCachedApiData('aster/balance', accountConfig.uid)
       const cachedTrades = getCachedApiData('aster/trades', accountConfig.uid)
       const cachedPositions = getCachedApiData('aster/positions', accountConfig.uid)
-      
+
       if (cachedBalance) {
         console.log(`✅ Using cached balance data for ${currentModel.name}`)
         balanceResult = { status: 'fulfilled', value: { success: true, data: cachedBalance } }
@@ -280,7 +280,7 @@ const loadModelData = async () => {
       } else {
         console.log(`⚠️ No cached positions data for ${currentModel.name}, will fetch`)
       }
-      
+
       // Helper function to process and update model data
       const processAndUpdateModelData = (balance, trades, positions) => {
         try {
@@ -398,14 +398,14 @@ const loadModelData = async () => {
                 }))
             }
           }
-          
+
           loading.value = false // Stop loading when data is processed
           console.log(`✅ Model data updated for ${currentModel.name}`)
         } catch (error) {
           console.error(`❌ Error processing data for ${currentModel.name}:`, error)
         }
       }
-      
+
       // If we have cached data, process and display it immediately
       if (cachedBalance || cachedTrades || cachedPositions) {
         console.log(`⚡ Processing cached data immediately for ${currentModel.name}`)
@@ -414,24 +414,24 @@ const loadModelData = async () => {
         // No cache, keep loading state until fresh data arrives
         loading.value = true
       }
-      
+
       // Always fetch fresh data in background (even if we have cache)
       const fetchPromises = [
         { key: 'balance', promise: getModelBalance(accountConfig.uid, true) }, // Skip cache
         { key: 'trades', promise: getModelTrades(accountConfig.uid, 'BTCUSDT', 25, true) }, // Skip cache
         { key: 'positions', promise: getModelPositions(accountConfig.uid, true) } // Skip cache
       ]
-      
+
       const results = await Promise.allSettled(fetchPromises.map(p => p.promise))
-      
+
       // Update with fresh data
       results.forEach((result, index) => {
         const key = fetchPromises[index].key
-        
+
         if (result.status === 'fulfilled') {
           const data = result.value
           console.log(`✅ Fetched fresh ${key} data for ${currentModel.name}:`, data)
-          
+
           // Cache using API-specific names
           if (key === 'balance' && data.success) {
             setCachedApiData('aster/balance', accountConfig.uid, data.data)
@@ -452,7 +452,7 @@ const loadModelData = async () => {
           console.error(`❌ ${key} fetch failed for ${currentModel.name}:`, result.reason)
         }
       })
-      
+
       // Ensure we have results (from cache or fresh fetch)
       balanceResult = balanceResult || { status: 'fulfilled', value: null }
       tradesResult = tradesResult || { status: 'fulfilled', value: null }

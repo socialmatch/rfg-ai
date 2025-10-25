@@ -51,10 +51,10 @@ const getModelColorEvent = (modelName) => {
   return getModelColor(modelName)
 }
 
-// Determine if background color should be set (Rfg_logo image has built-in background)
+// Determine if background color should be set
+// Only GROK 4 needs background color (too similar to theme), others don't
 const shouldShowBackground = (modelName) => {
-  const iconPath = getModelIcon(modelName)
-  return !iconPath.includes('Rfg_logo')
+  return modelName === 'GROK 4'
 }
 
 const props = defineProps({
