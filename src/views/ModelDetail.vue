@@ -162,7 +162,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import Header from '@/components/Header.vue'
 import { getAllModelInfo, getModelIconPath, getAccountBalanceData, getAccountByModelName } from '@/config/accounts.js'
@@ -171,6 +171,7 @@ import { getModelPositions } from '@/utils/newPositionsService.js'
 import { getModelTrades } from '@/utils/newTradesService.js'
 import { calculateTradingStats, calculateSharpeRatio, calculateMaxDrawdown } from '@/utils/tradingStatsCalculator.js'
 import { getCryptoIcon } from '@/utils/cryptoIcons.js'
+import { getCachedApiData, setCachedApiData } from '@/utils/dataCache.js'
 
 const route = useRoute()
 
@@ -218,6 +219,12 @@ const shouldShowBackground = (modelName) => {
 
 // Dynamically get model data
 const loadModelData = async () => {
+  // Prevent multiple simultaneous loads
+  if (loading.value) {
+    console.log('⏸️ Already loading, skipping...')
+    return
+  }
+  
   loading.value = true
   error.value = null
 
@@ -235,18 +242,86 @@ const loadModelData = async () => {
     }
 
     const accountConfig = getAccountByModelName(currentModel.name)
+    console.log(`🔍 Account config for ${currentModel.name}:`, {
+      enabled: accountConfig?.enabled,
+      uid: accountConfig?.uid,
+      modelName: accountConfig?.modelName
+    })
+    
     if (!accountConfig || !accountConfig.enabled) {
       error.value = 'Account not enabled'
       return
     }
 
     try {
-      // Only get data for the current model
-      const [balanceResult, tradesResult, positionsResult] = await Promise.allSettled([
-        getModelBalance(accountConfig.uid),
-        getModelTrades(accountConfig.uid, 'BTCUSDT', 25), // Get trades using new service
-        getModelPositions(accountConfig.uid) // Get position data using new service
-      ])
+      // Check cache first for this model
+      console.log(`🔍 Loading data for model: ${currentModel.name}, UID: ${accountConfig.uid}`)
+      let balanceResult, tradesResult, positionsResult
+      const cachedBalance = getCachedApiData('aster/balance', accountConfig.uid)
+      const cachedTrades = getCachedApiData('aster/trades', accountConfig.uid)
+      const cachedPositions = getCachedApiData('aster/positions', accountConfig.uid)
+      
+      if (cachedBalance) {
+        console.log(`✅ Using cached balance data for ${currentModel.name}`)
+        balanceResult = { status: 'fulfilled', value: { success: true, data: cachedBalance } }
+      } else {
+        console.log(`⚠️ No cached balance data for ${currentModel.name}, will fetch`)
+      }
+      if (cachedTrades) {
+        console.log(`✅ Using cached trades data for ${currentModel.name}`)
+        tradesResult = { status: 'fulfilled', value: { success: true, data: cachedTrades } }
+      } else {
+        console.log(`⚠️ No cached trades data for ${currentModel.name}, will fetch`)
+      }
+      if (cachedPositions) {
+        console.log(`✅ Using cached positions data for ${currentModel.name}`)
+        positionsResult = { status: 'fulfilled', value: { success: true, data: cachedPositions } }
+      } else {
+        console.log(`⚠️ No cached positions data for ${currentModel.name}, will fetch`)
+      }
+      
+      // Always fetch fresh data in background (even if we have cache)
+      const fetchPromises = [
+        { key: 'balance', promise: getModelBalance(accountConfig.uid, true) }, // Skip cache
+        { key: 'trades', promise: getModelTrades(accountConfig.uid, 'BTCUSDT', 25, true) }, // Skip cache
+        { key: 'positions', promise: getModelPositions(accountConfig.uid, true) } // Skip cache
+      ]
+      
+      const results = await Promise.allSettled(fetchPromises.map(p => p.promise))
+      
+      // Update with fresh data
+      results.forEach((result, index) => {
+        const key = fetchPromises[index].key
+        
+        if (result.status === 'fulfilled') {
+          const data = result.value
+          console.log(`✅ Fetched fresh ${key} data for ${currentModel.name}:`, data)
+          
+          // Cache using API-specific names
+          if (key === 'balance' && data.success) {
+            setCachedApiData('aster/balance', accountConfig.uid, data.data)
+            balanceResult = result
+            console.log(`✅ Updated balance result for ${currentModel.name}`)
+          } else if (key === 'trades' && data.success) {
+            setCachedApiData('aster/trades', accountConfig.uid, data.data)
+            tradesResult = result
+            console.log(`✅ Updated trades result for ${currentModel.name}`)
+          } else if (key === 'positions' && data.success) {
+            setCachedApiData('aster/positions', accountConfig.uid, data.data)
+            positionsResult = result
+            console.log(`✅ Updated positions result for ${currentModel.name}`)
+          } else {
+            console.log(`⚠️ ${key} fetch succeeded but data.success = false:`, data)
+          }
+        } else {
+          console.error(`❌ ${key} fetch failed for ${currentModel.name}:`, result.reason)
+        }
+      })
+      
+      // Ensure we have results (from cache or fresh fetch)
+      balanceResult = balanceResult || { status: 'fulfilled', value: null }
+      tradesResult = tradesResult || { status: 'fulfilled', value: null }
+      positionsResult = positionsResult || { status: 'fulfilled', value: null }
 
         // Process balance data
         let balanceData = null
@@ -413,6 +488,14 @@ const formatQuantity = (value) => {
 // Load data when component mounts
 onMounted(() => {
   loadModelData()
+})
+
+// Watch for route changes (when switching between models)
+watch(() => route.params.slug, (newSlug, oldSlug) => {
+  if (newSlug !== oldSlug) {
+    console.log(`🔄 Route changed from ${oldSlug} to ${newSlug}, reloading data...`)
+    loadModelData()
+  }
 })
 </script>
 

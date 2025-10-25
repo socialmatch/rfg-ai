@@ -90,6 +90,7 @@ import { getAllModelsProcessedTrades } from '@/utils/newTradesService.js'
 import { getAllModelsProcessedPositions } from '@/utils/newPositionsService.js'
 import { calculateTradingStats, calculateSharpeRatio, calculateMaxDrawdown } from '@/utils/tradingStatsCalculator.js'
 import { getCryptoIcon } from '@/utils/cryptoIcons.js'
+import { getCachedData, setCachedData } from '@/utils/dataCache.js'
 
 const router = useRouter()
 
@@ -131,16 +132,57 @@ const loadLeaderboardData = async () => {
   try {
     console.log('🔄 Loading leaderboard data...')
 
-    // Concurrently get balance, trading history, and positions data
-    const [balanceResult, tradesResult, positionsResult] = await Promise.allSettled([
-      getAllModelsProcessedBalance(),
-      getAllModelsProcessedTrades(),
-      getAllModelsProcessedPositions()
-    ])
-
-    const balanceData = balanceResult.status === 'fulfilled' ? balanceResult.value : null
-    const tradesData = tradesResult.status === 'fulfilled' ? tradesResult.value : null
-    const positionsData = positionsResult.status === 'fulfilled' ? positionsResult.value : null
+    // Check cache first for each data type and use it immediately
+    let balanceData = getCachedData('balance')
+    let tradesData = getCachedData('trades')
+    let positionsData = getCachedData('positions')
+    
+    if (balanceData) console.log('✅ Using cached balance data for leaderboard')
+    if (tradesData) console.log('✅ Using cached trades data for leaderboard')
+    if (positionsData) console.log('✅ Using cached positions data for leaderboard')
+    
+    // Always fetch fresh data in background
+    const fetchPromises = []
+    if (!balanceData) {
+      fetchPromises.push({
+        key: 'balance',
+        promise: getAllModelsProcessedBalance()
+      })
+    }
+    if (!tradesData) {
+      fetchPromises.push({
+        key: 'trades',
+        promise: getAllModelsProcessedTrades()
+      })
+    }
+    if (!positionsData) {
+      fetchPromises.push({
+        key: 'positions',
+        promise: getAllModelsProcessedPositions()
+      })
+    }
+    
+    // Fetch missing data
+    const results = await Promise.allSettled(fetchPromises.map(p => p.promise))
+    
+    // Update with fresh data
+    results.forEach((result, index) => {
+      if (result.status === 'fulfilled') {
+        const key = fetchPromises[index].key
+        const data = result.value
+        console.log(`✅ Fetched fresh ${key} data for leaderboard`)
+        setCachedData(key, data)
+        
+        if (key === 'balance') balanceData = data
+        if (key === 'trades') tradesData = data
+        if (key === 'positions') positionsData = data
+      }
+    })
+    
+    // Ensure we have data (from cache or fresh fetch)
+    balanceData = balanceData || null
+    tradesData = tradesData || null
+    positionsData = positionsData || null
 
     // Build model data mapping
     const modelDataMap = new Map()

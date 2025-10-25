@@ -107,6 +107,7 @@ import { getAllModelInfo, getModelIconPath, updateAccountBalance } from '@/confi
 import { getAllModelsChartData, processChartData } from '@/utils/chartDataService.js'
 import { getAllCryptoPrices } from '@/utils/cryptoPriceService.js'
 import { getBtcPriceData } from '@/utils/btcPriceService.js'
+import { getCachedData, setCachedData } from '@/utils/dataCache.js'
 
 Chart.register(...registerables, zoomPlugin)
 
@@ -177,91 +178,106 @@ const defaultModel = {
 
 // Load account balance data using new balance service
 const loadAsterBalance = async () => {
-  asterBalanceLoading.value = true
-  asterBalanceError.value = null
-
-  try {
-    const result = await getAllModelsProcessedBalance()
-
-    if (result.success) {
-      const balanceData = []
-      result.accounts.forEach(account => {
-        if (account.success && account.data) {
-          const usdtBalance = account.data.find(b => b.asset === 'USDT')
-          console.log('USDT balance:', usdtBalance, account.modelInfo.name)
-          if (usdtBalance || account.data.length > 0) {
-            balanceData.push({
-              name: account.modelInfo.name,
-              value: parseFloat(usdtBalance.balance),
-              change: parseFloat(usdtBalance.crossUnPnl), // Use unrealized P&L as change
-              color: account.modelInfo.color,
-              accountAlias: usdtBalance.accountAlias,
-              asset: usdtBalance.asset,
-              balance: usdtBalance.balance,
-              crossWalletBalance: usdtBalance.crossWalletBalance,
-              crossUnPnl: usdtBalance.crossUnPnl,
-              availableBalance: usdtBalance.availableBalance,
-              maxWithdrawAmount: usdtBalance.maxWithdrawAmount,
-              marginAvailable: usdtBalance.marginAvailable,
-              updateTime: usdtBalance.updateTime,
-              totalUsdtValue: usdtBalance.totalUsdtValue,
-              uid: usdtBalance.uid,
-              walletName: usdtBalance.walletName
-            })
-          }
-        }
-      })
-
-      // Sort by balance
-      balanceData.sort((a, b) => b.value - a.value)
-
-      // Add BTC price data as a model
-      try {
-        const btcResult = await getBtcPriceData('BTCUSDT', '5m', 500) // Get more data for better time alignment
-        if (btcResult.success && btcResult.data.length > 0) {
-          // Get the first model data time to align BTC calculation
-          const firstModelTime = balanceData.length > 0 ? new Date().getTime() : null // This will be updated when we have actual model data
-
-          // For now, use the first BTC price as initial price
-          const firstPrice = parseFloat(btcResult.data[0][4])
-          const btcQuantity = 10000 / firstPrice
-          const latestPrice = parseFloat(btcResult.data[btcResult.data.length - 1][4])
-          const latestValue = btcQuantity * latestPrice
-
+  // Helper function to process and update UI with data
+  const processAndUpdateData = async (result) => {
+    const balanceData = []
+    result.accounts.forEach(account => {
+      if (account.success && account.data) {
+        const usdtBalance = account.data.find(b => b.asset === 'USDT')
+        if (usdtBalance || account.data.length > 0) {
           balanceData.push({
-            name: 'BTC',
-            value: latestValue,
-            change: 0, // BTC price doesn't have change data in this context
-            color: '#f7931a',
-            isBtcPrice: true
+            name: account.modelInfo.name,
+            value: parseFloat(usdtBalance.balance),
+            change: parseFloat(usdtBalance.crossUnPnl),
+            color: account.modelInfo.color,
+            accountAlias: usdtBalance.accountAlias,
+            asset: usdtBalance.asset,
+            balance: usdtBalance.balance,
+            crossWalletBalance: usdtBalance.crossWalletBalance,
+            crossUnPnl: usdtBalance.crossUnPnl,
+            availableBalance: usdtBalance.availableBalance,
+            maxWithdrawAmount: usdtBalance.maxWithdrawAmount,
+            marginAvailable: usdtBalance.marginAvailable,
+            updateTime: usdtBalance.updateTime,
+            totalUsdtValue: usdtBalance.totalUsdtValue,
+            uid: usdtBalance.uid,
+            walletName: usdtBalance.walletName
           })
         }
-      } catch (error) {
-        console.warn('⚠️ Failed to load BTC price for trading models:', error)
       }
+    })
+    
+    balanceData.sort((a, b) => b.value - a.value)
 
-      tradingModels.value = balanceData
-      asterBalance.value = balanceData
+    // Add BTC price data as a model
+    try {
+      const btcResult = await getBtcPriceData('BTCUSDT', '5m', 500)
+      if (btcResult.success && btcResult.data.length > 0) {
+        const firstPrice = parseFloat(btcResult.data[0][4])
+        const btcQuantity = 10000 / firstPrice
+        const latestPrice = parseFloat(btcResult.data[btcResult.data.length - 1][4])
+        const latestValue = btcQuantity * latestPrice
 
-      // Update balance data in config file
-      balanceData.forEach(modelData => {
-        updateAccountBalance(modelData.name, {
-          accountAlias: modelData.accountAlias,
-          asset: modelData.asset,
-          balance: modelData.balance,
-          crossWalletBalance: modelData.crossWalletBalance,
-          crossUnPnl: modelData.crossUnPnl,
-          availableBalance: modelData.availableBalance,
-          maxWithdrawAmount: modelData.maxWithdrawAmount,
-          marginAvailable: modelData.marginAvailable,
-          updateTime: modelData.updateTime,
-          totalUsdtValue: modelData.totalUsdtValue,
-          uid: modelData.uid,
-          walletName: modelData.walletName
+        balanceData.push({
+          name: 'BTC',
+          value: latestValue,
+          change: 0,
+          color: '#f7931a',
+          isBtcPrice: true
         })
+      }
+    } catch (error) {
+      console.warn('⚠️ Failed to load BTC price for trading models:', error)
+    }
+    
+    tradingModels.value = balanceData
+    asterBalance.value = balanceData
+    
+    // Update balance data in config file
+    balanceData.forEach(modelData => {
+      updateAccountBalance(modelData.name, {
+        accountAlias: modelData.accountAlias,
+        asset: modelData.asset,
+        balance: modelData.balance,
+        crossWalletBalance: modelData.crossWalletBalance,
+        crossUnPnl: modelData.crossUnPnl,
+        availableBalance: modelData.availableBalance,
+        maxWithdrawAmount: modelData.maxWithdrawAmount,
+        marginAvailable: modelData.marginAvailable,
+        updateTime: modelData.updateTime,
+        totalUsdtValue: modelData.totalUsdtValue,
+        uid: modelData.uid,
+        walletName: modelData.walletName
       })
-      // Update animation with real data
-      updateRealDataWithAnimation(balanceData)
+    })
+    
+    updateRealDataWithAnimation(balanceData)
+  }
+
+  // Step 1: Check cache first and use it immediately if exists
+  const cachedData = getCachedData('balance')
+  if (cachedData) {
+    console.log('✅ Using cached balance data, will update with fresh data in background')
+    await processAndUpdateData(cachedData)
+    asterBalanceLoading.value = false // Set to false since we have cached data
+  } else {
+    asterBalanceLoading.value = true
+  }
+
+  asterBalanceError.value = null
+
+  // Step 2: Fetch fresh data in background (whether we have cache or not)
+  try {
+    console.log('🔄 Fetching fresh balance data in background...')
+    const result = await getAllModelsProcessedBalance()
+    
+    // Cache the result
+    if (result.success) {
+      setCachedData('balance', result)
+      console.log('✅ Updated cache with fresh balance data')
+      
+      // Process and update UI with fresh data
+      await processAndUpdateData(result)
     } else {
       asterBalanceError.value = result.error
       console.error('❌ Account balance loading failed:', result.error)
@@ -346,7 +362,7 @@ const loadChartData = async () => {
     }
     // Concurrently get chart data for all models and BTC price data
     const [chartResult, btcPriceResult] = await Promise.allSettled([
-      getAllModelsChartData(enabledModels, 2000),
+      getAllModelsChartData(enabledModels, 10000),
       getBtcPriceData('BTCUSDT', '5m', 500)
     ])
 
@@ -622,7 +638,47 @@ const backToAllModels = () => {
 
 // Scheduled data updates - separate intervals for different data types
 let balanceUpdateInterval = null
-let tradesPositionsUpdateInterval = null
+
+// Load crypto prices asynchronously (fast, non-blocking)
+const loadCryptoPricesAsync = async () => {
+  console.log('🚀 Loading crypto prices asynchronously...')
+  try {
+    await fetchCryptoPrices()
+    console.log('✅ Crypto prices loaded')
+  } catch (error) {
+    console.error('❌ Error loading crypto prices:', error)
+  }
+}
+
+// Main sequential data loading function
+const loadAllData = async () => {
+  console.log('🔄 Starting sequential data load...')
+  
+  // Start crypto prices async request (doesn't block)
+  loadCryptoPricesAsync()
+  
+  try {
+    // Step 1: Load chart data and BTC price
+    console.log('📊 Step 1: Loading chart data and BTC price...')
+    await loadChartData()
+    
+    // Step 2: Load all models balance
+    console.log('💰 Step 2: Loading all models balance...')
+    await loadAsterBalance()
+    
+    // Step 3: Load all models trades
+    console.log('📈 Step 3: Loading all models trades...')
+    await loadAsterUserTrades()
+    
+    // Step 4: Load all models positions
+    console.log('📍 Step 4: Loading all models positions...')
+    await loadAsterAccountData()
+    
+    console.log('✅ All data loaded successfully')
+  } catch (error) {
+    console.error('❌ Error loading data:', error)
+  }
+}
 
 // Refresh model balance every 15 seconds
 const startBalanceUpdates = () => {
@@ -639,31 +695,13 @@ const stopBalanceUpdates = () => {
   }
 }
 
-// Refresh positions and trades every 20 seconds
-const startTradesPositionsUpdates = () => {
-  tradesPositionsUpdateInterval = setInterval(() => {
-    console.log('🔄 Refreshing positions and trades data...')
-    loadAsterUserTrades()
-    loadAsterAccountData() // This loads positions
-  }, 20000) // Update every 20 seconds
-}
-
-const stopTradesPositionsUpdates = () => {
-  if (tradesPositionsUpdateInterval) {
-    clearInterval(tradesPositionsUpdateInterval)
-    tradesPositionsUpdateInterval = null
-  }
-}
-
-// Legacy function for compatibility
+// Legacy function for compatibility - removed trades/positions auto refresh
 const startDataUpdates = () => {
   startBalanceUpdates()
-  startTradesPositionsUpdates()
 }
 
 const stopDataUpdates = () => {
   stopBalanceUpdates()
-  stopTradesPositionsUpdates()
 }
 
 // Get model image
@@ -686,25 +724,42 @@ const getCryptoIcon = (symbol) => {
 
   // Get trading history using new trades service
   const loadAsterUserTrades = async () => {
-    asterTradesLoading.value = true
+    // Helper function to process trades data
+    const processTradesData = (result) => {
+      let allTrades = []
+      result.accounts.forEach(account => {
+        if (account.success && account.data) {
+          allTrades = allTrades.concat(account.data)
+        }
+      })
+      allTrades.sort((a, b) => b.time - a.time)
+      asterUserTrades.value = allTrades
+    }
+
+    // Step 1: Check cache first and use it immediately
+    const cachedData = getCachedData('trades')
+    if (cachedData) {
+      console.log('✅ Using cached trades data, will update with fresh data in background')
+      processTradesData(cachedData)
+      asterTradesLoading.value = false
+    } else {
+      asterTradesLoading.value = true
+    }
+
     asterTradesError.value = null
 
+    // Step 2: Fetch fresh data in background
     try {
+      console.log('🔄 Fetching fresh trades data in background...')
       const result = await getAllModelsProcessedTrades()
-
+      
+      // Cache the result
       if (result.success) {
-        // Merge trading history data from all accounts
-        let allTrades = []
-        result.accounts.forEach(account => {
-          if (account.success && account.data) {
-            allTrades = allTrades.concat(account.data)
-          }
-        })
-
-        // Sort by time (newest first)
-        allTrades.sort((a, b) => b.time - a.time)
-
-        asterUserTrades.value = allTrades
+        setCachedData('trades', result)
+        console.log('✅ Updated cache with fresh trades data')
+        
+        // Process and update UI with fresh data
+        processTradesData(result)
       } else {
         asterTradesError.value = result.error
         console.error('❌ Trading history loading failed:', result.error)
@@ -725,19 +780,11 @@ const getCryptoIcon = (symbol) => {
 
   // Get account positions data using new positions service
   const loadAsterAccountData = async () => {
-  asterLoading.value = true
-  asterError.value = null
-
-  try {
-    const result = await getAllModelsProcessedPositions()
-
-    if (result.success) {
-      // Merge positions data from all accounts
+    // Helper function to process positions data
+    const processPositionsData = (result) => {
       const allPositions = []
-
       result.accounts.forEach(account => {
         if (account.success && account.data) {
-          // Add model info to each position
           const positionsWithModel = account.data.map(position => ({
             ...position,
             modelInfo: account.modelInfo
@@ -745,29 +792,53 @@ const getCryptoIcon = (symbol) => {
           allPositions.push(...positionsWithModel)
         }
       })
-
-      // Since we're only using positions data, we can set asterAccountData to null or empty
       asterAccountData.value = null
       asterPositions.value = allPositions
+    }
+
+    // Step 1: Check cache first and use it immediately
+    const cachedData = getCachedData('positions')
+    if (cachedData) {
+      console.log('✅ Using cached positions data, will update with fresh data in background')
+      processPositionsData(cachedData)
+      asterLoading.value = false
     } else {
-      asterError.value = result.error
-      console.error('❌ Account positions loading failed:', result.error)
+      asterLoading.value = true
+    }
+
+    asterError.value = null
+
+    // Step 2: Fetch fresh data in background
+    try {
+      console.log('🔄 Fetching fresh positions data in background...')
+      const result = await getAllModelsProcessedPositions()
+      
+      // Cache the result
+      if (result.success) {
+        setCachedData('positions', result)
+        console.log('✅ Updated cache with fresh positions data')
+        
+        // Process and update UI with fresh data
+        processPositionsData(result)
+      } else {
+        asterError.value = result.error
+        console.error('❌ Account positions loading failed:', result.error)
+
+        // Keep empty arrays instead of mock data
+        asterAccountData.value = null
+        asterPositions.value = []
+      }
+    } catch (error) {
+      asterError.value = error.message
+      console.error('❌ Account positions loading exception:', error)
 
       // Keep empty arrays instead of mock data
       asterAccountData.value = null
       asterPositions.value = []
+    } finally {
+      asterLoading.value = false
     }
-  } catch (error) {
-    asterError.value = error.message
-    console.error('❌ Account positions loading exception:', error)
-
-    // Keep empty arrays instead of mock data
-    asterAccountData.value = null
-    asterPositions.value = []
-  } finally {
-    asterLoading.value = false
   }
-}
 
 // Aster Finance API related functions
 const fetchCryptoPrices = async () => {
@@ -817,11 +888,11 @@ const fetchCryptoPrices = async () => {
 let priceUpdateInterval = null
 
 const startPriceUpdates = () => {
-  // Get data immediately once
-  fetchCryptoPrices()
-
   // Update price every 5 seconds
-  priceUpdateInterval = setInterval(fetchCryptoPrices, 5000)
+  priceUpdateInterval = setInterval(() => {
+    console.log('🔄 Refreshing crypto prices...')
+    fetchCryptoPrices()
+  }, 5000)
 }
 
 const stopPriceUpdates = () => {
@@ -860,18 +931,13 @@ watch(selectedModel, (newVal, oldVal) => {
 
 onMounted(() => {
   setTimeout(() => { connectionStatus.value = 'connected' }, 1500)
-  // Load chart data first, then build chart
-  loadChartData()
-  // Start data updates
+  
+  // Load all data sequentially
+  loadAllData()
+  
+  // Start auto refresh for balance (every 15s) and crypto prices (every 5s)
   startDataUpdates()
-  // Start price updates
   startPriceUpdates()
-  // Load Aster Finance account info
-  loadAsterAccountData()
-  // Load Aster Finance trading history
-  loadAsterUserTrades()
-  // Load Aster Finance account balance
-  loadAsterBalance()
 })
 
 onUnmounted(() => {

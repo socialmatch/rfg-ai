@@ -58,14 +58,13 @@ export const getModelChartData = async (uid, size = 10) => {
 }
 
 /**
- * Get chart data for all models
+ * Get chart data for all models (single request with multiple UIDs)
  * @param {Array} models - Array of model objects with uid
- * @param {number} size - Number of records to fetch per model
+ * @param {number} size - Number of records to fetch (default: 10000)
  * @returns {Promise<Object>} All models chart data
  */
-export const getAllModelsChartData = async (models, size = 10) => {
+export const getAllModelsChartData = async (models, size = 10000) => {
   try {
-
     // Filter models that have uid
     const modelsWithUid = models.filter(model => model.uid)
 
@@ -81,40 +80,91 @@ export const getAllModelsChartData = async (models, size = 10) => {
       }
     }
 
+    // Join all UIDs with comma
+    const uidsString = modelsWithUid.map(model => model.uid).join(',')
 
-    // Fetch chart data for all models sequentially (one after another)
-    console.log(`🔄 Fetching chart data for ${modelsWithUid.length} models sequentially...`)
+    console.log(`🔄 Fetching chart data for ${modelsWithUid.length} models in a single request...`)
+    console.log(`📋 UIDs: ${uidsString}`)
+
+    // Single API request with multiple UIDs
+    const response = await fetch(`${CHART_API_BASE}/app/v1/trader_balance_record`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        uid: uidsString,
+        size: size
+      })
+    })
+
+    if (!response.ok) {
+      throw new Error(`Chart API request failed: ${response.status} ${response.statusText}`)
+    }
+
+    const result = await response.json()
+
+    // Log the response structure for debugging
+    console.log('📥 API Response:', {
+      success: result.success,
+      hasData: !!result.data,
+      dataType: Array.isArray(result.data) ? 'array' : typeof result.data,
+      dataLength: Array.isArray(result.data) ? result.data.length : 'N/A'
+    })
+
+    if (!result.data) {
+      throw new Error(result.message || 'Invalid response from API')
+    }
+
+    // Separate data by uid - data is an array of objects with uid as key
+    const recordsByUid = {}
+    const modelInfoMap = {}
+
+    // Create model info map for quick lookup
+    modelsWithUid.forEach(model => {
+      modelInfoMap[model.uid] = model
+      recordsByUid[model.uid] = []
+    })
+
+    // Extract records from the grouped data structure
+    // result.data is an array like [{ rfg_ai: [...records] }, { deepseek: [...records] }, ...]
+    if (Array.isArray(result.data)) {
+      result.data.forEach(groupObj => {
+        // Each groupObj has uid as key and array of records as value
+        Object.keys(groupObj).forEach(uid => {
+          if (recordsByUid[uid] && Array.isArray(groupObj[uid])) {
+            recordsByUid[uid] = groupObj[uid]
+            console.log(`📊 Extracted ${groupObj[uid].length} records for ${uid}`)
+          }
+        })
+      })
+    }
+
+    // Process results
     const successfulResults = []
     const failedResults = []
 
-    for (const model of modelsWithUid) {
-      try {
-        const result = await getModelChartData(model.uid, size)
-        console.log(`✅ ${model.name} (${model.uid}): completed`)
-        
-        if (result.success) {
-          successfulResults.push({
-            modelInfo: model,
-            data: result.data.reverse(),
-            uid: result.uid
-          })
-        } else {
-          failedResults.push({
-            modelInfo: model,
-            error: result.error,
-            uid: model.uid
-          })
-        }
-      } catch (error) {
-        console.error(`❌ ${model.name} (${model.uid}): failed -`, error.message)
+    modelsWithUid.forEach(model => {
+      const modelRecords = recordsByUid[model.uid] || []
+
+      if (modelRecords.length > 0) {
+        successfulResults.push({
+          modelInfo: model,
+          data: modelRecords.reverse(), // Reverse to get chronological order
+          uid: model.uid
+        })
+        console.log(`✅ ${model.name} (${model.uid}): ${modelRecords.length} records`)
+      } else {
+        console.warn(`⚠️ ${model.name} (${model.uid}): No records found`)
         failedResults.push({
           modelInfo: model,
-          error: error.message,
+          error: 'No records found',
           uid: model.uid
         })
       }
-    }
+    })
 
+    console.log(`📊 Successfully fetched data for ${successfulResults.length}/${modelsWithUid.length} models`)
 
     return {
       success: true,
