@@ -82,30 +82,38 @@ export const getAllModelsChartData = async (models, size = 10) => {
     }
 
 
-    // Fetch chart data for all models concurrently
-    const promises = modelsWithUid.map(model => getModelChartData(model.uid, size))
-    const results = await Promise.allSettled(promises)
-
+    // Fetch chart data for all models sequentially (one after another)
+    console.log(`🔄 Fetching chart data for ${modelsWithUid.length} models sequentially...`)
     const successfulResults = []
     const failedResults = []
 
-    results.forEach((result, index) => {
-      const model = modelsWithUid[index]
-
-      if (result.status === 'fulfilled' && result.value.success) {
-        successfulResults.push({
-          modelInfo: model,
-          data: result.value.data.reverse(),
-          uid: result.value.uid
-        })
-      } else {
+    for (const model of modelsWithUid) {
+      try {
+        const result = await getModelChartData(model.uid, size)
+        console.log(`✅ ${model.name} (${model.uid}): completed`)
+        
+        if (result.success) {
+          successfulResults.push({
+            modelInfo: model,
+            data: result.data.reverse(),
+            uid: result.uid
+          })
+        } else {
+          failedResults.push({
+            modelInfo: model,
+            error: result.error,
+            uid: model.uid
+          })
+        }
+      } catch (error) {
+        console.error(`❌ ${model.name} (${model.uid}): failed -`, error.message)
         failedResults.push({
           modelInfo: model,
-          error: result.status === 'fulfilled' ? result.value.error : result.reason.message,
+          error: error.message,
           uid: model.uid
         })
       }
-    })
+    }
 
 
     return {

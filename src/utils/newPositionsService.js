@@ -71,47 +71,45 @@ export const getAllModelsPositions = async () => {
         error: 'No enabled models with UID found'
       }
     }
-    // Fetch positions data for all models concurrently
-    const promises = enabledModels.map(async (model) => {
-      const result = await getModelPositions(model.uid)
-      return {
-        modelInfo: model,
-        ...result
-      }
-    })
-
-    const results = await Promise.allSettled(promises)
-
-    // Process results
+    // Fetch positions data for all models sequentially (one after another)
+    console.log(`🔄 Fetching positions data for ${enabledModels.length} models sequentially...`)
     const accounts = []
     let successfulCount = 0
     let failedCount = 0
 
-    results.forEach((result, index) => {
-      const model = enabledModels[index]
-
-      if (result.status === 'fulfilled' && result.value.success) {
-        accounts.push({
-          modelInfo: model,
-          data: result.value.data,
-          success: true
-        })
-        successfulCount++
-      } else {
-        const error = result.status === 'rejected'
-          ? result.reason.message
-          : result.value.error
-
-        console.error(`❌ Failed to fetch positions for ${model.name} (${model.uid}):`, error)
+    for (const model of enabledModels) {
+      try {
+        const result = await getModelPositions(model.uid)
+        console.log(`✅ ${model.name} (${model.uid}): completed`)
+        
+        if (result.success) {
+          accounts.push({
+            modelInfo: model,
+            data: result.data,
+            success: true
+          })
+          successfulCount++
+        } else {
+          console.error(`❌ Failed to fetch positions for ${model.name} (${model.uid}):`, result.error)
+          accounts.push({
+            modelInfo: model,
+            data: null,
+            success: false,
+            error: result.error
+          })
+          failedCount++
+        }
+      } catch (error) {
+        console.error(`❌ Failed to fetch positions for ${model.name} (${model.uid}):`, error.message)
         accounts.push({
           modelInfo: model,
           data: null,
           success: false,
-          error: error
+          error: error.message
         })
         failedCount++
       }
-    })
+    }
 
     const overallSuccess = successfulCount > 0
     return {
