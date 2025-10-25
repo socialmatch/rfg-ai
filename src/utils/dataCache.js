@@ -28,14 +28,6 @@ const CACHE_TTL = {
   positions: 20000  // 20 seconds
 }
 
-// API-specific TTL mapping
-const API_CACHE_TTL = {
-  'aster/balance': 15000,
-  'aster/trades': 60000,
-  'aster/positions': 20000,
-  'app/v1/trader_balance_record': 15000
-}
-
 /**
  * Get cached data if still valid
  * @param {string} key - Cache key ('balance', 'trades', 'positions')
@@ -131,13 +123,6 @@ export const getCachedApiData = (apiName, modelUid) => {
   }
   
   const age = Date.now() - cached.timestamp
-  const ttl = API_CACHE_TTL[apiName] || 15000
-  
-  if (age > ttl) {
-    console.log(`⏰ Cache expired for ${cacheKey} (age: ${age}ms, ttl: ${ttl}ms)`)
-    return null
-  }
-  
   console.log(`✅ Cache hit for ${cacheKey} (age: ${age}ms)`)
   return cached.data
 }

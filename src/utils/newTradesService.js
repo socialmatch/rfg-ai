@@ -102,12 +102,29 @@ export const getAllModelsTrades = async (symbol = DEFAULT_SYMBOL, limit = DEFAUL
       }
     }
     
-    // Check if all models have cached data
+    // Check if all models have cached data (no TTL check, always use cache if available)
     if (!skipCache) {
-      const cachedResult = getAllModelsCachedData('aster/trades', enabledModels)
-      if (cachedResult) {
+      const allModelsHaveCache = enabledModels.every(model => {
+        return getCachedApiData('aster/trades', model.uid) !== null
+      })
+      
+      if (allModelsHaveCache) {
         console.log(`✅ Using cached trades for all ${enabledModels.length} models`)
-        return cachedResult
+        const results = []
+        enabledModels.forEach(model => {
+          const cached = getCachedApiData('aster/trades', model.uid)
+          if (cached) {
+            results.push({
+              modelInfo: model,
+              data: cached,
+              success: true
+            })
+          }
+        })
+        return {
+          success: true,
+          accounts: results
+        }
       }
     }
     

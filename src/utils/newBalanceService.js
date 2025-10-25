@@ -96,12 +96,29 @@ export const getAllModelsBalance = async (skipCache = false) => {
       }
     }
     
-    // Check if all models have cached data
+    // Check if all models have cached data (no TTL check, always use cache if available)
     if (!skipCache) {
-      const cachedResult = getAllModelsCachedData('aster/balance', enabledModels)
-      if (cachedResult) {
+      const allModelsHaveCache = enabledModels.every(model => {
+        return getCachedApiData('aster/balance', model.uid) !== null
+      })
+      
+      if (allModelsHaveCache) {
         console.log(`✅ Using cached balance for all ${enabledModels.length} models`)
-        return cachedResult
+        const results = []
+        enabledModels.forEach(model => {
+          const cached = getCachedApiData('aster/balance', model.uid)
+          if (cached) {
+            results.push({
+              modelInfo: model,
+              data: cached,
+              success: true
+            })
+          }
+        })
+        return {
+          success: true,
+          accounts: results
+        }
       }
     }
     

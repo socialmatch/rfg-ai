@@ -94,12 +94,29 @@ export const getAllModelsPositions = async (skipCache = false) => {
       }
     }
     
-    // Check if all models have cached data
+    // Check if all models have cached data (no TTL check, always use cache if available)
     if (!skipCache) {
-      const cachedResult = getAllModelsCachedData('aster/positions', enabledModels)
-      if (cachedResult) {
+      const allModelsHaveCache = enabledModels.every(model => {
+        return getCachedApiData('aster/positions', model.uid) !== null
+      })
+      
+      if (allModelsHaveCache) {
         console.log(`✅ Using cached positions for all ${enabledModels.length} models`)
-        return cachedResult
+        const results = []
+        enabledModels.forEach(model => {
+          const cached = getCachedApiData('aster/positions', model.uid)
+          if (cached) {
+            results.push({
+              modelInfo: model,
+              data: cached,
+              success: true
+            })
+          }
+        })
+        return {
+          success: true,
+          accounts: results
+        }
       }
     }
     

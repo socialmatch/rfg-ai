@@ -257,6 +257,7 @@ const loadModelData = async () => {
       // Check cache first for this model
       console.log(`🔍 Loading data for model: ${currentModel.name}, UID: ${accountConfig.uid}`)
       let balanceResult, tradesResult, positionsResult
+      // Get cached data (always use cache if available, no TTL check)
       const cachedBalance = getCachedApiData('aster/balance', accountConfig.uid)
       const cachedTrades = getCachedApiData('aster/trades', accountConfig.uid)
       const cachedPositions = getCachedApiData('aster/positions', accountConfig.uid)
@@ -278,6 +279,140 @@ const loadModelData = async () => {
         positionsResult = { status: 'fulfilled', value: { success: true, data: cachedPositions } }
       } else {
         console.log(`⚠️ No cached positions data for ${currentModel.name}, will fetch`)
+      }
+      
+      // Helper function to process and update model data
+      const processAndUpdateModelData = (balance, trades, positions) => {
+        try {
+          // Process balance data
+          let balanceData = null
+          if (balance && balance.status === 'fulfilled' && balance.value.success) {
+            const apiData = balance.value.data
+            if (apiData.active_balances && apiData.active_balances.length > 0) {
+              balanceData = apiData.active_balances.find(b => b.asset === 'USDT')
+              if (balanceData) {
+                balanceData.totalUsdtValue = apiData.total_usdt_value
+                balanceData.uid = apiData.uid
+                balanceData.walletName = apiData.wallet_name
+              }
+            }
+          }
+
+          // Process trading history
+          let tradesData = []
+          if (trades && trades.status === 'fulfilled' && trades.value.success) {
+            const apiData = trades.value.data
+            if (apiData.trades && apiData.trades.length > 0) {
+              tradesData = apiData.trades.map(trade => ({
+                ...trade,
+                uid: apiData.uid,
+                walletName: apiData.wallet_name,
+                totalTrades: apiData.total_trades,
+                statistics: apiData.statistics
+              }))
+            }
+          }
+
+          // Process position data
+          let positionsData = []
+          if (positions && positions.status === 'fulfilled' && positions.value.success) {
+            const apiData = positions.value.data
+            if (apiData.positions && apiData.positions.length > 0) {
+              positionsData = apiData.positions.map(position => ({
+                ...position,
+                uid: apiData.uid,
+                walletName: apiData.wallet_name,
+                totalPositions: apiData.total_positions
+              }))
+            }
+          }
+
+          // Calculate statistics
+          const stats = calculateTradingStats(tradesData)
+          const sharpeRatio = calculateSharpeRatio(tradesData)
+          const maxDrawdown = calculateMaxDrawdown(tradesData)
+
+          const initialCapital = accountConfig.initialCapital || 10000
+          const accountValue = balanceData ? parseFloat(balanceData.balance) : 0
+          const totalPnl = accountValue - initialCapital
+          const returnPercent = initialCapital > 0 ? (totalPnl / initialCapital) * 100 : 0
+
+          // Update model data
+          const modelIndex = models.value.findIndex(m => m.slug === currentModelSlug)
+          if (modelIndex !== -1) {
+            models.value[modelIndex] = {
+              ...models.value[modelIndex],
+              accountValue: accountValue,
+              availableCash: balanceData ? parseFloat(balanceData.availableBalance) : 0,
+              totalPnl: totalPnl,
+              totalUnrealizedPnl: balanceData ? parseFloat(balanceData.crossUnPnl) : 0,
+              totalFees: stats.totalCommission || 0,
+              netRealized: stats.totalProfit || 0,
+              returnPercent: returnPercent,
+              averageLeverage: tradesData.length > 0 ? (tradesData.reduce((sum, trade) => sum + parseFloat(trade.leverage || 1), 0) / tradesData.length).toFixed(1) : '0.0',
+              averageConfidence: stats.winRate || 0,
+              biggestWin: stats.biggestWin || 0,
+              biggestLoss: stats.biggestLoss || 0,
+              holdTimes: {
+                long: stats.totalTrades > 0 ? Math.round((stats.longTrades / stats.totalTrades) * 100) : 0,
+                short: stats.totalTrades > 0 ? Math.round((stats.shortTrades / stats.totalTrades) * 100) : 0,
+                flat: 0
+              },
+              totalTrades: stats.totalTrades || 0,
+              winRate: stats.winRate || 0,
+              winTrades: stats.winTrades || 0,
+              lossTrades: stats.lossTrades || 0,
+              averageWin: stats.averageWin || 0,
+              averageLoss: stats.averageLoss || 0,
+              profitLossRatio: stats.profitLossRatio || 0,
+              sharpeRatio: sharpeRatio || 0,
+              maxDrawdown: maxDrawdown || 0,
+              positions: positionsData.map((position, index) => ({
+                id: index + 1,
+                coin: position.symbol ? position.symbol.replace('USDT', '') : 'UNKNOWN',
+                entryTime: new Date(position.updateTime || Date.now()).toLocaleTimeString(),
+                entryPrice: parseFloat(position.entryPrice || 0),
+                side: parseFloat(position.positionAmt || 0) >= 0 ? 'LONG' : 'SHORT',
+                quantity: Math.abs(parseFloat(position.positionAmt || 0)),
+                leverage: parseFloat(position.leverage || 1),
+                liquidationPrice: parseFloat(position.liquidationPrice || 0),
+                margin: parseFloat(position.isolatedMargin || 0),
+                unrealPnl: parseFloat(position.unRealizedProfit || 0),
+                notional: parseFloat(position.notional || 0)
+              })),
+              recentTrades: tradesData
+                .sort((a, b) => new Date(b.time) - new Date(a.time))
+                .slice(0, 25)
+                .map((trade, index) => ({
+                  id: index + 1,
+                  side: trade.side === 'BUY' ? 'LONG' : 'SHORT',
+                  coin: trade.symbol.replace('USDT', ''),
+                  entryPrice: parseFloat(trade.price),
+                  exitPrice: parseFloat(trade.price),
+                  quantity: parseFloat(trade.qty),
+                  holdingTime: '1h 30m',
+                  notionalEntry: parseFloat(trade.quoteQty),
+                  notionalExit: parseFloat(trade.quoteQty),
+                  totalFees: Math.abs(parseFloat(trade.commission)),
+                  netPnl: parseFloat(trade.realizedPnl)
+                }))
+            }
+          }
+          
+          loading.value = false // Stop loading when data is processed
+          console.log(`✅ Model data updated for ${currentModel.name}`)
+        } catch (error) {
+          console.error(`❌ Error processing data for ${currentModel.name}:`, error)
+        }
+      }
+      
+      // If we have cached data, process and display it immediately
+      if (cachedBalance || cachedTrades || cachedPositions) {
+        console.log(`⚡ Processing cached data immediately for ${currentModel.name}`)
+        processAndUpdateModelData(balanceResult, tradesResult, positionsResult)
+      } else {
+        // No cache, keep loading state until fresh data arrives
+        loading.value = true
       }
       
       // Always fetch fresh data in background (even if we have cache)
@@ -323,142 +458,16 @@ const loadModelData = async () => {
       tradesResult = tradesResult || { status: 'fulfilled', value: null }
       positionsResult = positionsResult || { status: 'fulfilled', value: null }
 
-        // Process balance data
-        let balanceData = null
-        if (balanceResult.status === 'fulfilled' && balanceResult.value.success) {
-          // New API returns data in different structure
-          const apiData = balanceResult.value.data
-          if (apiData.active_balances && apiData.active_balances.length > 0) {
-            balanceData = apiData.active_balances.find(b => b.asset === 'USDT')
-            if (balanceData) {
-              // Add additional fields from new API
-              balanceData.totalUsdtValue = apiData.total_usdt_value
-              balanceData.uid = apiData.uid
-              balanceData.walletName = apiData.wallet_name
-            }
-          }
-        }
-
-        // Process account info - no longer needed since we only use positions data
-        let accountData = null
-
-        // Process trading history using new service
-        let tradesData = []
-        if (tradesResult.status === 'fulfilled' && tradesResult.value.success) {
-          // New API returns data in different structure
-          const apiData = tradesResult.value.data
-          if (apiData.trades && apiData.trades.length > 0) {
-            tradesData = apiData.trades.map(trade => ({
-              ...trade,
-              uid: apiData.uid,
-              walletName: apiData.wallet_name,
-              totalTrades: apiData.total_trades,
-              statistics: apiData.statistics
-            }))
-          }
-        }
-
-        // Process position data using new service
-        let positionsData = []
-        if (positionsResult.status === 'fulfilled' && positionsResult.value.success) {
-          // New API returns data in different structure
-          const apiData = positionsResult.value.data
-          if (apiData.positions && apiData.positions.length > 0) {
-            positionsData = apiData.positions.map(position => ({
-              ...position,
-              uid: apiData.uid,
-              walletName: apiData.wallet_name,
-              totalPositions: apiData.total_positions
-            }))
-          }
-        }
-
-        // Calculate trading statistics
-        const stats = calculateTradingStats(tradesData)
-        const sharpeRatio = calculateSharpeRatio(tradesData)
-        const maxDrawdown = calculateMaxDrawdown(tradesData)
-        console.log('tradesData', tradesData)
-
-        // Get initial capital from account config
-        const initialCapital = accountConfig.initialCapital || 10000
-
-        // Calculate return percentage same as LEADERBOARD
-        const accountValue = balanceData ? parseFloat(balanceData.balance) : 0
-        const totalPnl = accountValue - initialCapital
-        const returnPercent = initialCapital > 0 ? (totalPnl / initialCapital) * 100 : 0
-
-        // Update current model data directly
-        const modelIndex = models.value.findIndex(m => m.slug === currentModelSlug)
-        if (modelIndex !== -1) {
-          models.value[modelIndex] = {
-            ...models.value[modelIndex],
-            accountValue: accountValue,
-            availableCash: balanceData ? parseFloat(balanceData.availableBalance) : 0,
-            // Calculate total P&L same as LEADERBOARD: ACCT VALUE - Initial Capital
-            totalPnl: totalPnl,
-            totalUnrealizedPnl: balanceData ? parseFloat(balanceData.crossUnPnl) : 0,
-            // Use real commission data from trading stats, same as LEADERBOARD
-            totalFees: stats.totalCommission || 0,
-            netRealized: stats.totalProfit || 0,
-            // Add return percentage calculation
-            returnPercent: returnPercent,
-            // 使用真实的交易统计数据
-            averageLeverage: tradesData.length > 0 ? (tradesData.reduce((sum, trade) => sum + parseFloat(trade.leverage || 1), 0) / tradesData.length).toFixed(1) : '0.0',
-            averageConfidence: stats.winRate || 0, // Use win rate as confidence
-            biggestWin: stats.biggestWin || 0,
-            biggestLoss: stats.biggestLoss || 0,
-            holdTimes: {
-              long: stats.totalTrades > 0 ? Math.round((stats.longTrades / stats.totalTrades) * 100) : 0,
-              short: stats.totalTrades > 0 ? Math.round((stats.shortTrades / stats.totalTrades) * 100) : 0,
-              flat: 0 // Temporarily set to 0
-            },
-            // New detailed statistics
-            totalTrades: stats.totalTrades || 0,
-            winRate: stats.winRate || 0,
-            winTrades: stats.winTrades || 0,
-            lossTrades: stats.lossTrades || 0,
-            averageWin: stats.averageWin || 0,
-            averageLoss: stats.averageLoss || 0,
-            profitLossRatio: stats.profitLossRatio || 0,
-            sharpeRatio: sharpeRatio || 0,
-            maxDrawdown: maxDrawdown || 0,
-            // Update position data - use real position API data
-            positions: positionsData.map((position, index) => ({
-              id: index + 1,
-              coin: position.symbol ? position.symbol.replace('USDT', '') : 'UNKNOWN',
-              entryTime: new Date(position.updateTime || Date.now()).toLocaleTimeString(),
-              entryPrice: parseFloat(position.entryPrice || 0),
-              side: parseFloat(position.positionAmt || 0) >= 0 ? 'LONG' : 'SHORT', // Passed positionAmt determines side
-              quantity: Math.abs(parseFloat(position.positionAmt || 0)),
-              leverage: parseFloat(position.leverage || 1),
-              liquidationPrice: parseFloat(position.liquidationPrice || 0),
-              margin: parseFloat(position.isolatedMargin || 0), // Use isolatedMargin as margin
-              unrealPnl: parseFloat(position.unRealizedProfit || 0), // Fixed field name
-              notional: parseFloat(position.notional || 0) // Add notional field
-            })),
-            // Update trading history - sort by time (newest first) then take first 25
-            recentTrades: tradesData
-              .sort((a, b) => new Date(b.time) - new Date(a.time)) // Sort by time, newest first
-              .slice(0, 25)
-              .map((trade, index) => ({
-                id: index + 1,
-                side: trade.side === 'BUY' ? 'LONG' : 'SHORT',
-                coin: trade.symbol.replace('USDT', ''),
-                entryPrice: parseFloat(trade.price),
-                exitPrice: parseFloat(trade.price), // Temporarily use same price
-                quantity: parseFloat(trade.qty),
-                holdingTime: '1h 30m', // Temporarily use fixed value
-                notionalEntry: parseFloat(trade.quoteQty),
-                notionalExit: parseFloat(trade.quoteQty),
-                totalFees: Math.abs(parseFloat(trade.commission)),
-                netPnl: parseFloat(trade.realizedPnl)
-              }))
-          }
-        }
-      } catch (error) {
-        console.error(`❌ Failed to get ${currentModel.name} data:`, error)
-        error.value = `Failed to load data: ${error.message}`
+      // Process fresh data (only if we didn't process cached data already)
+      if (!cachedBalance && !cachedTrades && !cachedPositions) {
+        console.log(`📥 Processing fresh data for ${currentModel.name}`)
+        processAndUpdateModelData(balanceResult, tradesResult, positionsResult)
       }
+    } catch (error) {
+      console.error(`❌ Failed to get ${currentModel.name} data:`, error)
+      error.value = `Failed to load data: ${error.message}`
+      loading.value = false
+    }
 
     console.log('✅ Model detail data loaded successfully')
   } catch (error) {
