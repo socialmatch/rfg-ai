@@ -6,7 +6,7 @@
 import { getAllModelInfo } from '../config/accounts.js'
 
 // Base API URL
-const BASE_URL = 'https://testapi.rfgmeme.ai/aster/balance'
+const BASE_URL = 'https://testapi1.rfgmeme.ai/aster/balance'
 
 /**
  * Get balance data for a single model by UID

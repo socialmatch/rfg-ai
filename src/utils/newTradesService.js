@@ -6,7 +6,7 @@
 import { getAllModelInfo } from '../config/accounts.js'
 
 // Base API URL
-const BASE_URL = 'https://testapi.rfgmeme.ai/aster/trades'
+const BASE_URL = 'https://testapi1.rfgmeme.ai/aster/trades'
 
 // Default parameters
 const DEFAULT_SYMBOL = 'BTCUSDT'

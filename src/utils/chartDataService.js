@@ -5,7 +5,7 @@
 
 import {processBtcPriceData} from './btcPriceService.js'
 
-const CHART_API_BASE = 'https://testapi.rfgmeme.ai'
+const CHART_API_BASE = 'https://testapi1.rfgmeme.ai'
 
 /**
  * Get chart data for a single model
