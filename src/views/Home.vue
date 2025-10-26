@@ -40,11 +40,11 @@
           .right-icons
             .icon-item(v-for="model in tradingModels" :key="model.name"
               :class="{ hovered: hoveredModel && hoveredModel.name === model.name }"
-              :style="{ display: selectedModel === 'ALL MODELS' || selectedModel === model.name ? 'flex' : 'none' }"
+              :style="{ display: selectedModel === 'ALL MODELS' || selectedModel === model.name ? 'flex' : 'none', borderColor: model.color, boxShadow: (hoveredModel && hoveredModel.name === model.name) ? `0 4px 12px ${model.color}33` : 'none' }"
               @click="selectedModel = model.name")
               //.icon-dot(:style="{ backgroundColor: model.color }")
               .icon-content
-                .model-image
+                .model-image(:style="!model.isBtcPrice && shouldShowBackground(model.name) ? { backgroundColor: model.color } : {}")
                   img(v-if="!model.isBtcPrice" :src="getModelImage(model.name)" :alt="model.name")
                   .btc-icon(v-else) ₿
                 .model-value(v-if="!model.isBtcPrice") ${{ (model.balance ? parseFloat(model.balance) : model.value).toLocaleString() }}
@@ -710,6 +710,12 @@ const getModelImage = (modelName) => {
   return getModelIconPath(modelName)
 }
 
+// Determine if background color should be set
+// Only GROK 4 needs background color (too similar to theme), others don't
+const shouldShowBackground = (modelName) => {
+  return modelName === 'GROK 4'
+}
+
   // Get trading history using new trades service
   const loadAsterUserTrades = async () => {
     // Helper function to process trades data
@@ -1186,17 +1192,15 @@ onUnmounted(() => {
   gap 8px
   padding 6px 8px
   background rgba(15, 23, 42, 0.9)
-  border 1px solid #2b3444
+  border 1px solid
   border-radius 6px
   cursor pointer
   transition all 0.2s ease
   min-width 140px
 
   &:hover, &.hovered
-    border-color #3b82f6
     background rgba(15, 23, 42, 0.95)
     transform scale(1.05)
-    box-shadow 0 4px 12px rgba(59, 130, 246, 0.3)
 
 .icon-dot
   width 8px
