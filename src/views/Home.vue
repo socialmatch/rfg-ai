@@ -7,11 +7,11 @@
     .ticker-content
       .ticker-left
         .ticker-item(v-for="crypto in cryptoPrices" :key="crypto.symbol")
-          .crypto-icon
-            img(:src="getCryptoIcon(crypto.symbol)" :alt="crypto.symbol")
-          .crypto-info
+          .icon-sym-row
+            .crypto-icon
+              img(:src="getCryptoIcon(crypto.symbol)" :alt="crypto.symbol")
             .sym {{ crypto.symbol }}
-            .price ${{ crypto.price.toLocaleString() }}
+          .price ${{ crypto.price.toLocaleString() }}
       .ticker-right
         .performance-summary
           .highest HIGHEST: {{ highestModel.name }}
@@ -87,7 +87,7 @@
            .legend-value ${{ legend.value.toLocaleString() }}
 
   // Connection status
-  .connection-status
+  //.connection-status
     .status-indicator(:class="connectionStatus")
     span.status-text {{ getStatusText() }}
 </template>
@@ -1036,8 +1036,8 @@ onUnmounted(() => {
 
 .ticker-item
   display flex
-  align-items center
-  gap 12px
+  flex-direction column
+  gap 4px
   color #e5e7eb
   white-space nowrap
   font-weight 600
@@ -1051,6 +1051,11 @@ onUnmounted(() => {
   &:hover
     background rgba(255, 255, 255, 0.08)
     border-color rgba(255, 255, 255, 0.2)
+
+.icon-sym-row
+  display flex
+  align-items center
+  gap 8px
 
 .crypto-icon
   width 24px
