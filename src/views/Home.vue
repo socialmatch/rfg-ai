@@ -90,6 +90,26 @@
   //.connection-status
     .status-indicator(:class="connectionStatus")
     span.status-text {{ getStatusText() }}
+
+  // Mobile modal for sidebar content
+  .mobile-modal(v-if="showMobileModal" @click="closeMobileModal")
+    .modal-overlay(@click.stop="")
+      .modal-header
+        .modal-title {{ getModalTitle() }}
+        .modal-close(@click="closeMobileModal") ✕
+      .modal-filter(v-if="activeDetailTab === 'trades' || activeDetailTab === 'positions'")
+        select.select(v-model="selectedModel")
+          option(v-for="m in modelOptions" :key="m" :value="m") {{ m }}
+      .modal-body
+        component(:is="getActiveDetailComponent()"
+          :selectedModel="selectedModel"
+          :asterPositions="asterPositions"
+          :asterAccountData="asterAccountData"
+          :asterLoading="asterLoading"
+          :asterError="asterError"
+          :asterUserTrades="asterUserTrades"
+          :asterTradesLoading="asterTradesLoading"
+          :asterTradesError="asterTradesError")
 </template>
 
 <script setup>
@@ -121,6 +141,7 @@ const activeTab = ref('live')
 const activeDetailTab = ref('trades')
 const chartPeriod = ref('all')
 const connectionStatus = ref('connecting')
+const showMobileModal = ref(false)
 const chartCanvas = ref(null)
 let chartInstance = null
 let resizeObserver = null
@@ -719,123 +740,123 @@ const shouldShowBackground = (modelName) => {
   return modelName === 'GROK 4'
 }
 
-  // Get trading history using new trades service
-  const loadAsterUserTrades = async () => {
-    // Helper function to process trades data
-    const processTradesData = (result) => {
-      let allTrades = []
-      result.accounts.forEach(account => {
-        if (account.success && account.data) {
-          allTrades = allTrades.concat(account.data)
-        }
-      })
-      allTrades.sort((a, b) => b.time - a.time)
-      asterUserTrades.value = allTrades
-    }
-
-    // Step 1: Check cache first and use it immediately
-    const cachedData = getCachedData('trades')
-    if (cachedData) {
-      console.log('✅ Using cached trades data, will update with fresh data in background')
-      processTradesData(cachedData)
-      asterTradesLoading.value = false
-    } else {
-      asterTradesLoading.value = true
-    }
-
-    asterTradesError.value = null
-
-    // Step 2: Fetch fresh data in background
-    try {
-      console.log('🔄 Fetching fresh trades data in background...')
-      const result = await getAllModelsProcessedTrades()
-
-      // Cache the result
-      if (result.success) {
-        setCachedData('trades', result)
-        console.log('✅ Updated cache with fresh trades data')
-
-        // Process and update UI with fresh data
-        processTradesData(result)
-      } else {
-        asterTradesError.value = result.error
-        console.error('❌ Trading history loading failed:', result.error)
-
-        // Keep empty array instead of mock data
-        asterUserTrades.value = []
+// Get trading history using new trades service
+const loadAsterUserTrades = async () => {
+  // Helper function to process trades data
+  const processTradesData = (result) => {
+    let allTrades = []
+    result.accounts.forEach(account => {
+      if (account.success && account.data) {
+        allTrades = allTrades.concat(account.data)
       }
-    } catch (error) {
-      asterTradesError.value = error.message
-      console.error('❌ Trading history loading exception:', error)
+    })
+    allTrades.sort((a, b) => b.time - a.time)
+    asterUserTrades.value = allTrades
+  }
+
+  // Step 1: Check cache first and use it immediately
+  const cachedData = getCachedData('trades')
+  if (cachedData) {
+    console.log('✅ Using cached trades data, will update with fresh data in background')
+    processTradesData(cachedData)
+    asterTradesLoading.value = false
+  } else {
+    asterTradesLoading.value = true
+  }
+
+  asterTradesError.value = null
+
+  // Step 2: Fetch fresh data in background
+  try {
+    console.log('🔄 Fetching fresh trades data in background...')
+    const result = await getAllModelsProcessedTrades()
+
+    // Cache the result
+    if (result.success) {
+      setCachedData('trades', result)
+      console.log('✅ Updated cache with fresh trades data')
+
+      // Process and update UI with fresh data
+      processTradesData(result)
+    } else {
+      asterTradesError.value = result.error
+      console.error('❌ Trading history loading failed:', result.error)
 
       // Keep empty array instead of mock data
       asterUserTrades.value = []
-    } finally {
-      asterTradesLoading.value = false
     }
+  } catch (error) {
+    asterTradesError.value = error.message
+    console.error('❌ Trading history loading exception:', error)
+
+    // Keep empty array instead of mock data
+    asterUserTrades.value = []
+  } finally {
+    asterTradesLoading.value = false
+  }
+}
+
+// Get account positions data using new positions service
+const loadAsterAccountData = async () => {
+  // Helper function to process positions data
+  const processPositionsData = (result) => {
+    const allPositions = []
+    result.accounts.forEach(account => {
+      if (account.success && account.data) {
+        const positionsWithModel = account.data.map(position => ({
+          ...position,
+          modelInfo: account.modelInfo
+        }))
+        allPositions.push(...positionsWithModel)
+      }
+    })
+    asterAccountData.value = null
+    asterPositions.value = allPositions
   }
 
-  // Get account positions data using new positions service
-  const loadAsterAccountData = async () => {
-    // Helper function to process positions data
-    const processPositionsData = (result) => {
-      const allPositions = []
-      result.accounts.forEach(account => {
-        if (account.success && account.data) {
-          const positionsWithModel = account.data.map(position => ({
-            ...position,
-            modelInfo: account.modelInfo
-          }))
-          allPositions.push(...positionsWithModel)
-        }
-      })
-      asterAccountData.value = null
-      asterPositions.value = allPositions
-    }
+  // Step 1: Check cache first and use it immediately
+  const cachedData = getCachedData('positions')
+  if (cachedData) {
+    console.log('✅ Using cached positions data, will update with fresh data in background')
+    processPositionsData(cachedData)
+    asterLoading.value = false
+  } else {
+    asterLoading.value = true
+  }
 
-    // Step 1: Check cache first and use it immediately
-    const cachedData = getCachedData('positions')
-    if (cachedData) {
-      console.log('✅ Using cached positions data, will update with fresh data in background')
-      processPositionsData(cachedData)
-      asterLoading.value = false
+  asterError.value = null
+
+  // Step 2: Fetch fresh data in background
+  try {
+    console.log('🔄 Fetching fresh positions data in background...')
+    const result = await getAllModelsProcessedPositions()
+
+    // Cache the result
+    if (result.success) {
+      setCachedData('positions', result)
+      console.log('✅ Updated cache with fresh positions data')
+
+      // Process and update UI with fresh data
+      processPositionsData(result)
     } else {
-      asterLoading.value = true
-    }
-
-    asterError.value = null
-
-    // Step 2: Fetch fresh data in background
-    try {
-      console.log('🔄 Fetching fresh positions data in background...')
-      const result = await getAllModelsProcessedPositions()
-
-      // Cache the result
-      if (result.success) {
-        setCachedData('positions', result)
-        console.log('✅ Updated cache with fresh positions data')
-
-        // Process and update UI with fresh data
-        processPositionsData(result)
-      } else {
-        asterError.value = result.error
-        console.error('❌ Account positions loading failed:', result.error)
-
-        // Keep empty arrays instead of mock data
-        asterAccountData.value = null
-        asterPositions.value = []
-      }
-    } catch (error) {
-      asterError.value = error.message
-      console.error('❌ Account positions loading exception:', error)
+      asterError.value = result.error
+      console.error('❌ Account positions loading failed:', result.error)
 
       // Keep empty arrays instead of mock data
       asterAccountData.value = null
       asterPositions.value = []
-    } finally {
-      asterLoading.value = false
     }
+  } catch (error) {
+    asterError.value = error.message
+    console.error('❌ Account positions loading exception:', error)
+
+    // Keep empty arrays instead of mock data
+    asterAccountData.value = null
+    asterPositions.value = []
+  } finally {
+    asterLoading.value = false
   }
+}
 
 // Aster Finance API related functions
 const fetchCryptoPrices = async () => {
@@ -900,7 +921,28 @@ const stopPriceUpdates = () => {
 }
 
 const setActiveTab = (tab) => { activeTab.value = tab }
-const setActiveDetailTab = (tab) => { activeDetailTab.value = tab }
+const setActiveDetailTab = (tab) => {
+  activeDetailTab.value = tab
+
+  // Open modal on mobile (screen width <= 960px)
+  if (window.innerWidth <= 960) {
+    showMobileModal.value = true
+  }
+}
+
+const closeMobileModal = () => {
+  showMobileModal.value = false
+}
+
+const getModalTitle = () => {
+  switch (activeDetailTab.value) {
+    case 'trades': return 'COMPLETED TRADES'
+    case 'positions': return 'POSITIONS'
+    case 'readme': return 'README.TXT'
+    default: return 'DETAILS'
+  }
+}
+
 const setChartPeriod = (period) => { chartPeriod.value = period }
 const goToLeaderboard = () => { router.push('/leaderboard') }
 const joinWaitlist = () => { alert('Join waitlist feature to be implemented') }
@@ -1421,6 +1463,250 @@ onUnmounted(() => {
   background #10b981
 .status-disconnected
   background #ef4444
+
+// Mobile responsive styles
+@media (max-width: 960px)
+  .home-container
+    min-height auto
+    padding-bottom 0
+
+  .ticker-content
+    padding 8px 12px
+    flex-direction column
+    align-items flex-start
+    gap 12px
+
+  .ticker-left
+    width 100%
+    display grid
+    grid-template-columns repeat(3, 1fr)
+    gap 8px
+
+  .ticker-item
+    min-width 0
+    padding 6px 8px
+    font-size 10px
+
+    .icon-sym-row
+      gap 6px
+
+    .crypto-icon
+      width 20px
+      height 20px
+
+      img
+        width 16px
+        height 16px
+
+    .sym
+      font-size 10px
+
+    .price
+      font-size 11px
+
+  .ticker-right
+    width 100%
+    flex-wrap wrap
+    gap 8px
+
+  .performance-summary
+    flex 1 1 100%
+
+    .highest, .lowest
+      font-size 10px
+      padding 6px 8px
+      min-width 120px
+
+      .value-row
+        gap 6px
+
+      .rolling-value, .positive, .negative
+        font-size 10px
+
+  .main-content
+    padding 8px 12px 16px
+
+  .main-grid
+    grid-template-columns 1fr
+    height auto
+    gap 12px
+
+  .left-panel
+    order 1
+    width 100%
+
+  .right-panel
+    order 2
+    height auto
+    padding 25px 0
+    border 1px solid #2b3444
+
+  // Hide filter-section and sidebar content on mobile
+  .filter-section
+    display none
+
+  .sidebar-content
+    display none
+
+  .chart-frame
+    height 400px !important
+    width 100%
+    padding 8px
+    flex none !important
+
+  .chart-canvas
+    width 100%
+    height 100% !important
+
+  .right-icons
+    bottom 10px
+
+    .icon-item
+      min-width 100px
+      padding 4px 6px
+      gap 6px
+
+      .model-value
+        font-size 10px
+
+      .model-image
+        width 16px
+        height 16px
+
+  .legend-bar
+    position relative
+    bottom auto
+
+  .legend-content
+    padding 8px 12px
+    display grid
+    grid-template-columns repeat(2, 1fr)
+    gap 8px
+
+  .legend-item
+    padding 6px 8px
+
+  .legend-name
+    font-size 11px
+
+  .legend-value
+    font-size 10px
+
+  .sidebar-tabs
+    display grid
+    grid-template-columns repeat(2, 1fr)
+    gap 8px
+    border-bottom none
+    padding 8px
+
+  .sidebar-tabs .tab
+    padding 12px
+    font-size 12px
+    text-align center
+    border 1px solid #2b3444
+    border-radius 4px
+    background #1a2230
+    font-weight 700
+
+    &.active
+      background #3b82f6
+      border-color #3b82f6
+      color #ffffff
+
+  .connection-status
+    bottom 64px
+    right 12px
+    padding 4px 8px
+
+  .status-text
+    font-size 11px
+
+// Mobile modal styles
+@media (max-width: 960px)
+  .mobile-modal
+    position fixed
+    top 0
+    left 0
+    right 0
+    bottom 0
+    background rgba(0, 0, 0, 0.7)
+    z-index 100
+    display flex
+    align-items center
+    justify-content center
+    padding 20px
+
+  .modal-overlay
+    background #1a2230
+    border 1px solid #2b3444
+    border-radius 12px
+    width 100%
+    max-width 600px
+    height 80vh
+    display flex
+    flex-direction column
+    overflow hidden
+
+  .modal-header
+    display flex
+    justify-content space-between
+    align-items center
+    padding 16px 20px
+    border-bottom 1px solid #2b3444
+    background #0f172a
+
+  .modal-title
+    font-size 14px
+    font-weight 700
+    color #f8fafc
+
+  .modal-close
+    width 24px
+    height 24px
+    display flex
+    align-items center
+    justify-content center
+    cursor pointer
+    border-radius 4px
+    background rgba(255, 255, 255, 0.1)
+    color #94a3b8
+    font-size 18px
+    transition all 0.2s ease
+
+    &:hover
+      background rgba(255, 255, 255, 0.2)
+      color #f8fafc
+
+  .modal-filter
+    padding 12px 20px
+    border-bottom 1px solid #2b3444
+    background #0f172a
+
+    .select
+      width 100%
+      padding 8px 12px
+      border-radius 6px
+      background #1a2230
+      border 1px solid #2b3444
+      color #f8fafc
+      font-size 14px
+
+      &:focus
+        outline none
+        border-color #3b82f6
+
+  .modal-body
+    flex 1
+    overflow-y auto
+    padding 0
+
+  .modal-footer
+    display none
+
+  // Show sidebar content in desktop view only
+  @media (min-width: 961px)
+    .mobile-modal
+      display none !important
 
 </style>
 

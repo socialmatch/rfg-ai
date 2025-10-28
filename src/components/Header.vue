@@ -19,7 +19,6 @@ header.header
             .model-name {{ model.name }}
 
     .header-actions
-      button.btn-primary(@click="joinWaitlist") JOIN THE PLATFORM WAITLIST
       button.btn-secondary(@click="aboutRFGAI") ABOUT RFG.AI
 </template>
 
@@ -75,10 +74,6 @@ const handleDropdownEnter = () => {
     hideTimeout = null
   }
   showModelsDropdown.value = true
-}
-
-const joinWaitlist = () => {
-  alert('加入等待列表功能待实现')
 }
 
 const aboutRFGAI = () => {
@@ -211,4 +206,61 @@ const aboutRFGAI = () => {
   &:hover
     border-color #3b82f6
     color #3b82f6
+
+// Mobile responsive styles
+@media (max-width: 960px)
+  .header
+    padding 10px 0
+
+  .header-content
+    flex-wrap wrap
+    gap 10px 0
+
+  // Top row: Logo + Actions (first row)
+  .logo
+    flex 0 1 auto
+    min-width 0
+    
+    h1
+      font-size 16px
+      line-height 1.2
+
+  .header-actions
+    flex 0 0 auto
+    gap 8px
+
+    .btn-secondary
+      font-size 10px
+      padding 6px 10px
+      white-space nowrap
+
+  // Bottom row: Navigation (second row)
+  .nav
+    order 10
+    width 100%
+    gap 12px
+    justify-content center
+    margin-top 6px
+    padding-top 6px
+    border-top 1px solid #2b3444
+
+  .nav-item
+    font-size 11px
+    flex-shrink 0
+
+  .models-dropdown
+    left -16px
+    right -16px
+    width auto
+    min-width auto
+
+    .model-item
+      padding 10px 16px
+
+      .model-icon
+        width 20px
+        height 20px
+
+      .model-name
+        font-size 13px
 </style>

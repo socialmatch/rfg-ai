@@ -173,4 +173,44 @@ const getBarHeight = (value, data) => {
       flex 1
       min-height 4px
       border-radius 2px 2px 0 0
+
+// Mobile responsive styles
+@media (max-width: 960px)
+  .page-title
+    font-size 32px
+    padding 20px 15px 10px
+    margin-bottom 20px
+
+  .models-grid
+    padding 0 15px 20px
+    grid-template-columns 1fr
+    gap 16px
+
+  .model-card
+    padding 16px
+
+    &:hover
+      transform none
+
+  .model-header
+    .model-icon
+      width 40px
+      height 40px
+
+    .model-name
+      font-size 18px
+
+  .model-stats
+    gap 12px
+    grid-template-columns 1fr 1fr
+
+    .stat-item
+      .label
+        font-size 11px
+
+      .value
+        font-size 13px
+
+  .model-chart
+    height 60px
 </style>

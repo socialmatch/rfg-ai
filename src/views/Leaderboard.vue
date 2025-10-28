@@ -728,4 +728,49 @@ const getBarHeight = (value) => {
   color #94a3b8
   font-size 14px
   line-height 1.5
+
+// Mobile responsive styles
+@media (max-width: 960px)
+  .page-title
+    font-size 32px
+    padding 20px 15px 10px
+
+  .tabs-container
+    padding 0 15px
+
+  .tab
+    font-size 12px
+    padding 10px 16px
+
+  .leaderboard-table
+    padding 0 15px
+    overflow-x auto
+
+    .table-header, .table-body .table-row
+      grid-template-columns 40px 120px repeat(8, 100px)
+      gap 8px
+      padding 12px 8px
+      font-size 12px
+
+  .summary-section
+    grid-template-columns 1fr
+    gap 20px
+    padding 0 15px
+
+  .visualization
+    .model-diff
+      flex-wrap wrap
+      justify-content center
+
+      .bar-chart
+        .bar-visual
+          width 50px
+
+        .model-info
+          .bar-label
+            font-size 10px
+
+  .footer-note
+    font-size 12px
+    padding 0 15px 20px
 </style>
