@@ -27,22 +27,22 @@
     .table-body
       .table-row(v-for="(model, index) in leaderboardData" :key="model.name" :class="{ 'alternate': index % 2 === 1 }")
         .col.rank {{ model.rank }}
-        .col.model
+        .col.model(:data-rank="model.rank")
           .model-icon(:style="shouldShowBackground(model.name) ? { backgroundColor: model.color } : {}")
             img(:src="getModelIcon(model.name)" :alt="model.name")
           .model-name {{ model.name }}
-        .col.account-value ${{ (model.accountValue || 0).toLocaleString() }}
-        .col.return-percent(:class="(model.returnPercent || 0) >= 0 ? 'positive' : 'negative'")
+        .col(data-label="ACCT VALUE").account-value ${{ (model.accountValue || 0).toLocaleString() }}
+        .col.return-percent(:class="(model.returnPercent || 0) >= 0 ? 'positive' : 'negative'" data-label="RETURN %")
           | {{ (model.returnPercent || 0) >= 0 ? '+' : '' }}{{ (model.returnPercent || 0).toFixed(2) }}%
-        .col.total-pnl(:class="(model.totalPnl || 0) >= 0 ? 'positive' : 'negative'")
+        .col(:class="(model.totalPnl || 0) >= 0 ? 'positive' : 'negative'" data-label="TOTAL P&L").total-pnl
           | ${{ (model.totalPnl || 0).toLocaleString() }}
-        .col.fees ${{ Math.abs(model.fees || 0).toFixed(2) }}
-        .col.win-rate {{ (model.winRate || 0).toFixed(1) }}%
-        .col.biggest-win(:class="(model.biggestWin || 0) >= 0 ? 'positive' : 'negative'")
+        .col(data-label="FEES").fees ${{ Math.abs(model.fees || 0).toFixed(2) }}
+        .col(data-label="WIN RATE").win-rate {{ (model.winRate || 0).toFixed(1) }}%
+        .col(:class="(model.biggestWin || 0) >= 0 ? 'positive' : 'negative'" data-label="BIGGEST WIN").biggest-win
           | ${{ (model.biggestWin || 0).toFixed(2) }}
-        .col.biggest-loss(:class="(model.biggestLoss || 0) >= 0 ? 'positive' : 'negative'")
+        .col(:class="(model.biggestLoss || 0) >= 0 ? 'positive' : 'negative'" data-label="BIGGEST LOSS").biggest-loss
           | ${{ (model.biggestLoss || 0).toFixed(2) }}
-        .col.trades {{ model.trades || 0 }}
+        .col(data-label="TRADES").trades {{ model.trades || 0 }}
 
   // Bottom statistics and visualization
   .summary-section
@@ -70,7 +70,7 @@
           .bar-visual
             .bar(:style="{ height: getBarHeight(model.accountValue || 0) + '%', backgroundColor: model.color || '#64748b' }")
             .bar-value ${{ (model.accountValue || 0).toLocaleString() }}
-            //.bar-icon
+            .bar-icon
               img(:src="getModelIcon(model.name)" :alt="model.name")
           .model-info
             .bar-label(:style="{ color: model.color || '#94a3b8' }") {{ model.name }}
@@ -732,7 +732,7 @@ const getBarHeight = (value) => {
 // Mobile responsive styles
 @media (max-width: 960px)
   .page-title
-    font-size 32px
+    font-size 24px
     padding 20px 15px 10px
 
   .tabs-container
@@ -744,33 +744,116 @@ const getBarHeight = (value) => {
 
   .leaderboard-table
     padding 0 15px
-    overflow-x auto
-
-    .table-header, .table-body .table-row
-      grid-template-columns 40px 120px repeat(8, 100px)
-      gap 8px
-      padding 12px 8px
-      font-size 12px
+    
+    // Hide table headers on mobile
+    .table-header
+      display none
+    
+    .table-body
+      .table-row
+        background #1a2230
+        border 1px solid #2b3444
+        border-radius 8px
+        margin-bottom 12px
+        padding 12px
+        
+        // Card layout
+        display flex
+        flex-direction column
+        gap 8px
+        
+        // Hide alternate background
+        &.alternate
+          background #1a2230
+        
+        .col
+          display flex
+          justify-content space-between
+          align-items center
+          padding 4px 0
+          
+          &:not(.model):not(.rank):before
+            content attr(data-label)
+            color #94a3b8
+            font-size 11px
+            font-weight 600
+          
+          &.rank
+            display none
+          
+          &.model
+            order -1
+            gap 8px
+            padding-bottom 8px
+            border-bottom 1px solid #2b3444
+            margin-bottom 4px
+            
+            &:before
+              content 'RANK #' attr(data-rank)
+              color #3b82f6
+              font-size 12px
+              font-weight 700
+            
+          &.account-value, &.return-percent, &.total-pnl
+            font-size 13px
+            
+          &.fees, &.win-rate, &.biggest-win, &.biggest-loss, &.trades
+            font-size 12px
 
   .summary-section
     grid-template-columns 1fr
-    gap 20px
+    gap 16px
     padding 0 15px
+
+  .summary-info
+    .summary-item
+      margin-bottom 20px
+      
+      .label
+        font-size 14px
+      
+      .value
+        font-size 14px
 
   .visualization
     .model-diff
-      flex-wrap wrap
-      justify-content center
+      display flex
+      flex-wrap nowrap
+      overflow-x auto
+      gap 8px
+      padding-bottom 10px
 
       .bar-chart
+        flex-shrink 0
+        min-width 50px
+        
         .bar-visual
-          width 50px
+          width 40px
+          height 150px
+          
+          .bar
+            min-height 8px
+          
+          .bar-icon
+            display flex
+            align-items center
+            justify-content center
+            width 28px
+            height 28px
+            margin 8px auto 0
+            border-radius 4px
+            
+            img
+              width 100%
+              height 100%
+              object-fit contain
 
         .model-info
+          margin-top 6px
+          display flex
+          flex-direction column
+          align-items center
+          
           .bar-label
-            font-size 10px
-
-  .footer-note
-    font-size 12px
-    padding 0 15px 20px
+            display none
 </style>
