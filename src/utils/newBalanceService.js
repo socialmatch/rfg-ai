@@ -190,59 +190,28 @@ export const processBalanceData = (balanceData) => {
 
   const processedData = []
 
-  // Process active balances (USDT balance)
-  if (balanceData.data.active_balances) {
-    console.log('Processing active balances...', balanceData.data.active_balances)
-    if (balanceData.data.active_balances.length > 0) {
-      balanceData.data.active_balances.forEach(balance => {
-        if (balance.asset === 'USDT') {
-          processedData.push({
-            accountAlias: balance.accountAlias,
-            asset: balance.asset,
-            balance: balance.balance,
-            crossWalletBalance: balance.crossWalletBalance,
-            crossUnPnl: balance.crossUnPnl,
-            availableBalance: balance.availableBalance,
-            maxWithdrawAmount: balance.maxWithdrawAmount,
-            marginAvailable: balance.marginAvailable,
-            updateTime: balance.updateTime,
-            totalUsdtValue: balanceData.data.total_usdt_value,
-            uid: balanceData.data.uid,
-            walletName: balanceData.data.wallet_name
-          })
-        }
-      })
-    } else {
-      processedData.push({
-        "accountAlias": "",
-        "asset": "USDT",
-        "balance": "0",
-        "crossWalletBalance": "0",
-        "crossUnPnl": "0",
-        "availableBalance": "0",
-        "maxWithdrawAmount": "0",
-        "marginAvailable": true,
-        "updateTime": 0,
-        "uid": balanceData.data.uid,
-        "walletName": balanceData.data.wallet_name
-      })
-    }
-  } else {
-    console.warn('⚠️ No active balances found', balanceData.data.uid)
-    processedData.push({
-      "accountAlias": "",
-      "asset": "USDT",
-      "balance": "0",
-      "crossWalletBalance": "0",
-      "crossUnPnl": "0",
-      "availableBalance": "0",
-      "maxWithdrawAmount": "0",
-      "marginAvailable": true,
-      "updateTime": 0,
-      "uid": balanceData.data.uid,
-      "walletName": balanceData.data.wallet_name
-    })
-  }
+  // New API structure: directly use data from response
+  const data = balanceData.data
+
+  // Create a USDT balance entry from the new structure
+  processedData.push({
+    "accountAlias": data.mark || "",
+    "asset": "USDT",
+    "balance": data.total_value ? data.total_value.toString() : "0",
+    "crossWalletBalance": data.total_value ? data.total_value.toString() : "0",
+    "crossUnPnl": (data.total_value - data.available_cash) ? (data.total_value - data.available_cash).toString() : "0",
+    "availableBalance": data.available_cash ? data.available_cash.toString() : "0",
+    "maxWithdrawAmount": data.available_cash ? data.available_cash.toString() : "0",
+    "marginAvailable": true,
+    "updateTime": data.timestamp || 0,
+    "totalUsdtValue": data.total_value || 0,
+    "uid": data.uid,
+    "walletName": data.wallet_name,
+    // New fields for POSITIONS display
+    "availableCash": data.available_cash || 0,
+    "totalValue": data.total_value || 0
+  })
+
   return processedData
 }
 
@@ -261,7 +230,7 @@ export const getAllModelsProcessedBalance = async () => {
     // Process each account's balance data
     const processedAccounts = result.accounts.map(account => ({
       modelInfo: account.modelInfo,
-      data: account.success ? processBalanceData(account) : [],
+      data: account.success ? processBalanceData({ data: account.data }) : [],
       success: account.success,
       error: account.error || null
     }))

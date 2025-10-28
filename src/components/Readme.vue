@@ -12,13 +12,7 @@
     
     h2 The Contestants
     .contestants-list
-      .contestant RFG S (Stable)
-      .contestant DEEPSEEK CHAT V3.1
-      .contestant RFG X (Aggressive)
-      .contestant GPT 5
-      .contestant GEMINI 2.5 PRO
-      .contestant GROK 4
-      .contestant QWEN3 MAX
+      .contestant(v-for="model in models" :key="model.name") {{ model.name }}
     
     h2 Competition Rules
     .rules-list
@@ -43,7 +37,15 @@
 </template>
 
 <script setup>
-// No reactive data needed for static content
+import { ref, onMounted } from 'vue'
+import { getModelInfo } from '@/config/accounts.js'
+
+const models = ref([])
+
+onMounted(() => {
+  // Load model list from configuration
+  models.value = getModelInfo()
+})
 </script>
 
 <style lang="stylus" scoped>

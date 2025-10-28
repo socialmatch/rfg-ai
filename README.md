@@ -4,7 +4,7 @@ An AI trading platform built with Vue3, Tailwind CSS, Vite, Pug, and Stylus.
 
 ## Features
 
-- 🤖 **AI Trading Models**: 7 intelligent trading algorithms with real-time performance tracking
+- 🤖 **AI Trading Models**: 6 intelligent trading algorithms with real-time performance tracking
 - 📊 **Real-time Data**: Live cryptocurrency price updates and account balance monitoring
 - 📈 **Trading Charts**: Interactive charts with real API data and performance analysis
 - 💬 **AI Chat**: Real-time conversations with trading models
@@ -14,15 +14,14 @@ An AI trading platform built with Vue3, Tailwind CSS, Vite, Pug, and Stylus.
 
 ## AI Trading Models
 
-The platform includes 7 AI trading models:
+The platform includes 6 AI trading models:
 
-1. **RFG S (Stable)** - Conservative trading strategy with steady performance
+1. **RFG** - Stable and conservative trading strategy with steady performance
 2. **DEEPSEEK CHAT V3.1** - Advanced language model with trading capabilities
-3. **RFG X (Aggressive)** - High-risk, high-reward trading strategy
-4. **GPT 5** - OpenAI's latest model with sophisticated market analysis
-5. **GEMINI 2.5 PRO** - Google's advanced AI with multi-modal trading insights
-6. **GROK 4** - X.AI's cutting-edge model with real-time market adaptation
-7. **QWEN3 MAX** - Alibaba's flagship model with comprehensive market understanding
+3. **GPT 5** - OpenAI's latest model with sophisticated market analysis
+4. **GEMINI 2.5 PRO** - Google's advanced AI with multi-modal trading insights
+5. **GROK 4** - X.AI's cutting-edge model with real-time market adaptation
+6. **QWEN3 MAX** - Alibaba's flagship model with comprehensive market understanding
 
 Each model is connected to real trading accounts and provides live performance data.
 

@@ -16,7 +16,7 @@ const BASE_URL = 'https://testapi1.rfgmeme.ai/aster/positions'
  */
 export const getModelPositions = async (uid, skipCache = false) => {
   const API_NAME = 'aster/positions'
-  
+
   // Check cache first if not skipping
   if (!skipCache) {
     const cached = getCachedApiData(API_NAME, uid)
@@ -30,10 +30,10 @@ export const getModelPositions = async (uid, skipCache = false) => {
       }
     }
   }
-  
+
   try {
     console.log(`🔄 Fetching positions for ${uid}...`)
-    const response = await fetch(`${BASE_URL}/?uid=${uid}`, {
+    const response = await fetch(`${BASE_URL}/${uid}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -49,7 +49,7 @@ export const getModelPositions = async (uid, skipCache = false) => {
     if (data.success) {
       // Cache the result
       setCachedApiData(API_NAME, uid, data.data)
-      
+
       return {
         success: true,
         data: data.data,
@@ -93,13 +93,13 @@ export const getAllModelsPositions = async (skipCache = false) => {
         error: 'No enabled models with UID found'
       }
     }
-    
+
     // Check if all models have cached data (no TTL check, always use cache if available)
     if (!skipCache) {
       const allModelsHaveCache = enabledModels.every(model => {
         return getCachedApiData('aster/positions', model.uid) !== null
       })
-      
+
       if (allModelsHaveCache) {
         console.log(`✅ Using cached positions for all ${enabledModels.length} models`)
         const results = []
@@ -119,7 +119,7 @@ export const getAllModelsPositions = async (skipCache = false) => {
         }
       }
     }
-    
+
     // Fetch positions data for all models sequentially
     console.log(`🔄 Fetching positions for ${enabledModels.length} models...`)
     const accounts = []
@@ -130,7 +130,7 @@ export const getAllModelsPositions = async (skipCache = false) => {
       try {
         const result = await getModelPositions(model.uid, skipCache)
         console.log(`✅ ${model.name} (${model.uid}): ${result.fromCache ? 'from cache' : 'fetched'}`)
-        
+
         if (result.success) {
           accounts.push({
             modelInfo: model,

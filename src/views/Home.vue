@@ -206,6 +206,8 @@ const loadAsterBalance = async () => {
   // Helper function to process and update UI with data
   const processAndUpdateData = async (result) => {
     const balanceData = []
+    const accountDataList = []
+    
     result.accounts.forEach(account => {
       if (account.success && account.data) {
         const usdtBalance = account.data.find(b => b.asset === 'USDT')
@@ -221,6 +223,7 @@ const loadAsterBalance = async () => {
             crossWalletBalance: usdtBalance.crossWalletBalance,
             crossUnPnl: usdtBalance.crossUnPnl,
             availableBalance: usdtBalance.availableBalance,
+            availableCash: usdtBalance.availableCash || usdtBalance.availableBalance,
             maxWithdrawAmount: usdtBalance.maxWithdrawAmount,
             marginAvailable: usdtBalance.marginAvailable,
             updateTime: usdtBalance.updateTime,
@@ -228,9 +231,20 @@ const loadAsterBalance = async () => {
             uid: usdtBalance.uid,
             walletName: usdtBalance.walletName
           })
+          
+          // Build account data for Positions component
+          accountDataList.push({
+            modelInfo: account.modelInfo,
+            availableBalance: usdtBalance.availableBalance,
+            availableCash: usdtBalance.availableCash || usdtBalance.availableBalance,
+            totalValue: usdtBalance.totalValue || usdtBalance.balance
+          })
         }
       }
     })
+    
+    // Set account data for Positions component
+    asterAccountData.value = accountDataList
 
     balanceData.sort((a, b) => b.value - a.value)
 
