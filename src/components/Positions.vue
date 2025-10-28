@@ -259,7 +259,7 @@ watch(() => modelPositions.value, (newPositions) => {
   display grid
   grid-template-columns 1fr 1fr 1fr 1fr 1fr
   gap 8px
-  padding 8px 0
+  padding 8px
   border-bottom 1px solid #2b3444
   margin-bottom 8px
 
@@ -273,7 +273,7 @@ watch(() => modelPositions.value, (newPositions) => {
     display grid
     grid-template-columns 1fr 1fr 1fr 1fr 1fr
     gap 8px
-    padding 6px 0
+    padding 6px 2px
     border-bottom 1px solid #1a2230
 
     &:last-child

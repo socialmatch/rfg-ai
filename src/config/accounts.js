@@ -7,7 +7,7 @@
 export const ACCOUNT_CONFIGS = [
   {
     id: 'rfg-stable',
-    modelName: 'RFG S (Stable)',
+    modelName: 'RFG',
     modelSlug: 'rfg-stable',
     modelColor: '#10b981',
     modelIcon: 'Rfg_logo.png',
@@ -49,28 +49,28 @@ export const ACCOUNT_CONFIGS = [
     marginAvailable: true,
     updateTime: 0
   },
-  {
-    id: 'rfg-x-aggressive',
-    modelName: 'RFG X（Aggressive）',
-    modelSlug: 'rfg-x-aggressive',
-    modelColor: '#6d28d9', // 橙色
-    modelIcon: 'Rfg_logo.png',
-    uid: 'rfg_ai_x',
-    initialCapital: 10000, // 初始本金 $10,000
-    "user_address": "0x9362ce38dedefeeb03439d7e36e0949f13ae8aaa",
-    "signer_address": "0x41e4d0D232fe922417127e047cF3801552744158",
-    enabled: true,
-    // 账户余额相关字段（从API获取后会更新）
-    accountAlias: "RfgX",
-    asset: "USDT",
-    balance: "0.00000000",
-    crossWalletBalance: "0.00000000",
-    crossUnPnl: "0.00000000",
-    availableBalance: "0.00000000",
-    maxWithdrawAmount: "0.00000000",
-    marginAvailable: true,
-    updateTime: 0
-  },
+  // {
+  //   id: 'rfg-x-aggressive',
+  //   modelName: 'RFG X（Aggressive）',
+  //   modelSlug: 'rfg-x-aggressive',
+  //   modelColor: '#6d28d9', // 橙色
+  //   modelIcon: 'Rfg_logo.png',
+  //   uid: 'rfg_ai_x',
+  //   initialCapital: 10000, // 初始本金 $10,000
+  //   "user_address": "0x9362ce38dedefeeb03439d7e36e0949f13ae8aaa",
+  //   "signer_address": "0x41e4d0D232fe922417127e047cF3801552744158",
+  //   enabled: true,
+  //   // 账户余额相关字段（从API获取后会更新）
+  //   accountAlias: "RfgX",
+  //   asset: "USDT",
+  //   balance: "0.00000000",
+  //   crossWalletBalance: "0.00000000",
+  //   crossUnPnl: "0.00000000",
+  //   availableBalance: "0.00000000",
+  //   maxWithdrawAmount: "0.00000000",
+  //   marginAvailable: true,
+  //   updateTime: 0
+  // },
   {
     id: 'gpt-5',
     modelName: 'GPT 5',

@@ -14,12 +14,14 @@
             .price ${{ crypto.price.toLocaleString() }}
       .ticker-right
         .performance-summary
-          .highest HIGHEST: {{ highestModel.name }} $
-            span.rolling-value {{ highestModel.value.toLocaleString() }}
-            span.positive +{{ highestModel.change.toFixed(2) }}%
-          .lowest LOWEST: {{ lowestModel.name }} $
-            span.rolling-value {{ lowestModel.value.toLocaleString() }}
-            span.negative {{ lowestModel.change.toFixed(2) }}%
+          .highest HIGHEST: {{ highestModel.name }}
+            .value-row
+              span.rolling-value ${{ highestModel.value.toLocaleString() }}
+              span.positive +{{ highestModel.change.toFixed(2) }}%
+          .lowest LOWEST: {{ lowestModel.name }}
+            .value-row
+              span.rolling-value ${{ lowestModel.value.toLocaleString() }}
+              span.negative {{ lowestModel.change.toFixed(2) }}%
 
   // Main area: left chart + right sidebar
   main.main-content
@@ -46,8 +48,8 @@
               .icon-content
                 .model-image(:style="!model.isBtcPrice && shouldShowBackground(model.name) ? { backgroundColor: model.color } : {}")
                   img(v-if="!model.isBtcPrice" :src="getModelImage(model.name)" :alt="model.name")
-                  .btc-icon(v-else) ₿
-                .model-value(v-if="!model.isBtcPrice") ${{ (model.balance ? parseFloat(model.balance) : model.value).toLocaleString() }}
+                  img(v-else :src="getCryptoIcon('BTC')" alt="BTC")
+                .model-value ${{ (model.balance ? parseFloat(model.balance) : model.value).toLocaleString() }}
           .x-axis
             .tick(v-for="tick in xAxisTicks" :key="tick") {{ tick }}
 
@@ -80,8 +82,9 @@
        .legend-item(v-for="legend in legends" :key="legend.name"
          :style="{ display: selectedModel === 'ALL MODELS' || selectedModel === legend.name ? 'flex' : 'none' }")
          //.legend-dot(:style="{ backgroundColor: legend.color }")
-         .legend-name(:style="{ color: legend.color }") {{ legend.name }}
-         .legend-value ${{ legend.value.toLocaleString() }}
+         .legend-content-inner
+           .legend-name(:style="{ color: legend.color }") {{ legend.name }}
+           .legend-value ${{ legend.value.toLocaleString() }}
 
   // Connection status
   .connection-status
@@ -617,8 +620,8 @@ const updateRealDataWithAnimation = (newBalanceData) => {
 
   // Add rolling animation to numbers in performance-summary
   nextTick(() => {
-    const highestValueElement = document.querySelector('.performance-summary .highest .rolling-value')
-    const lowestValueElement = document.querySelector('.performance-summary .lowest .rolling-value')
+    const highestValueElement = document.querySelector('.performance-summary .highest .value-row .rolling-value')
+    const lowestValueElement = document.querySelector('.performance-summary .lowest .value-row .rolling-value')
 
     if (highestValueElement && highestModel.value.value !== prevHighestValue) {
       createRollingNumber(highestValueElement, prevHighestValue, highestModel.value.value, 800)
@@ -1226,18 +1229,6 @@ onUnmounted(() => {
     object-fit contain
     border-radius 2px
 
-  .btc-icon
-    width 100%
-    height 100%
-    display flex
-    align-items center
-    justify-content center
-    background-color #f7931a
-    border-radius 2px
-    color #ffffff
-    font-size 12px
-    font-weight bold
-
 .model-value
   color #f8fafc
   font-size 12px
@@ -1270,8 +1261,16 @@ onUnmounted(() => {
     font-size 12px
     font-weight 700
     margin 0
+    display flex
+    flex-direction column
+    gap 4px
 
-  .rolling-value
+  .value-row
+    display flex
+    align-items center
+    gap 8px
+
+  .rolling-value, .positive, .negative
     color #f8fafc
     font-weight 800
     font-family 'JetBrains Mono', monospace
@@ -1368,6 +1367,11 @@ onUnmounted(() => {
   padding 8px 10px
   border-radius 4px
 
+.legend-content-inner
+  display flex
+  flex-direction column
+  gap 4px
+
 .legend-dot
   width 10px
   height 10px
@@ -1379,7 +1383,6 @@ onUnmounted(() => {
   font-size 12px
 
 .legend-value
-  margin-left auto
   color #f8fafc
   font-family 'JetBrains Mono', monospace
   font-weight 700
