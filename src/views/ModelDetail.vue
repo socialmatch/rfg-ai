@@ -18,27 +18,26 @@
     .model-info
       .model-icon(:style="shouldShowBackground(currentModel.name) ? { backgroundColor: currentModel.color } : {}")
         img(:src="currentModel.icon" :alt="currentModel.name")
-      .model-details
-        .model-name {{ currentModel.name }}
-        .model-stats
-          .stat-item
-            .label Total Account Value
-            .value ${{ currentModel.accountValue.toLocaleString() }}
-          .stat-item
-            .label Available Cash
-            .value ${{ currentModel.availableCash.toLocaleString() }}
-          .stat-item
-            .label Total P&L
-            .value(:class="currentModel.totalPnl >= 0 ? 'positive' : 'negative'")
-              | ${{ currentModel.totalPnl.toLocaleString() }}
-          .stat-item
-            .label Total Fees
-            .value(:class="(currentModel.totalFees || 0) >= 0 ? 'positive' : 'negative'")
-              | ${{ formatCurrency(currentModel.totalFees) }}
-          .stat-item
-            .label RETURN %
-            .value(:class="(currentModel.returnPercent || 0) >= 0 ? 'positive' : 'negative'")
-              | {{ (currentModel.returnPercent || 0) >= 0 ? '+' : '' }}{{ (currentModel.returnPercent || 0).toFixed(2) }}%
+      .model-name {{ currentModel.name }}
+    .model-stats
+      .stat-item
+        .label Total Account Value
+        .value ${{ currentModel.accountValue.toLocaleString() }}
+      .stat-item
+        .label Available Cash
+        .value ${{ currentModel.availableCash.toLocaleString() }}
+      .stat-item
+        .label Total P&L
+        .value(:class="currentModel.totalPnl >= 0 ? 'positive' : 'negative'")
+          | ${{ currentModel.totalPnl.toLocaleString() }}
+      .stat-item
+        .label Total Fees
+        .value(:class="(currentModel.totalFees || 0) >= 0 ? 'positive' : 'negative'")
+          | ${{ formatCurrency(currentModel.totalFees) }}
+      .stat-item
+        .label RETURN %
+        .value(:class="(currentModel.returnPercent || 0) >= 0 ? 'positive' : 'negative'")
+          | {{ (currentModel.returnPercent || 0) >= 0 ? '+' : '' }}{{ (currentModel.returnPercent || 0).toFixed(2) }}%
 
   // Statistics
   .stats-section
@@ -137,21 +136,21 @@
 
       .table-body
         .table-row(v-for="trade in currentModel.recentTrades" :key="trade.id")
-          .col
+          .col(data-label="SIDE")
             .side(:class="trade.side.toLowerCase()") {{ trade.side }}
-          .col
+          .col(data-label="COIN")
             .coin-info
               .coin-icon
                 img(:src="getCryptoIcon(trade.coin)" :alt="trade.coin" v-if="getCryptoIcon(trade.coin)")
               .coin-name {{ trade.coin }}
-          .col ${{ formatCurrency(trade.entryPrice) }}
-          .col ${{ formatCurrency(trade.exitPrice) }}
-          .col {{ formatQuantity(trade.quantity) }}
-          .col {{ trade.holdingTime }}
-          .col ${{ formatCurrency(trade.notionalEntry) }}
-          .col ${{ formatCurrency(trade.notionalExit) }}
-          .col ${{ formatCurrency(trade.totalFees) }}
-          .col(:class="trade.netPnl >= 0 ? 'positive' : 'negative'")
+          .col(data-label="ENTRY PRICE") ${{ formatCurrency(trade.entryPrice) }}
+          .col(data-label="EXIT PRICE") ${{ formatCurrency(trade.exitPrice) }}
+          .col(data-label="QUANTITY") {{ formatQuantity(trade.quantity) }}
+          .col(data-label="HOLDING TIME") {{ trade.holdingTime }}
+          .col(data-label="NOTIONAL ENTRY") ${{ formatCurrency(trade.notionalEntry) }}
+          .col(data-label="NOTIONAL EXIT") ${{ formatCurrency(trade.notionalExit) }}
+          .col(data-label="TOTAL FEES") ${{ formatCurrency(trade.totalFees) }}
+          .col(:class="trade.netPnl >= 0 ? 'positive' : 'negative'" data-label="NET P&L")
             | ${{ formatCurrency(trade.netPnl) }}
 
       // No trades data state
@@ -606,7 +605,13 @@ watch(() => route.params.slug, (newSlug, oldSlug) => {
 .model-info
   display flex
   align-items center
-  gap 24px
+  gap 16px
+  margin-bottom 0
+
+.model-name
+  font-size 32px
+  font-weight 700
+  color #f8fafc
 
 .model-icon
   width 80px
@@ -622,13 +627,6 @@ watch(() => route.params.slug, (newSlug, oldSlug) => {
     height 56px
     border-radius 50%
     object-fit cover
-
-.model-details
-  .model-name
-    font-size 32px
-    font-weight 700
-    color #f8fafc
-    margin-bottom 16px
 
 .model-stats
   display flex
@@ -951,4 +949,189 @@ watch(() => route.params.slug, (newSlug, oldSlug) => {
 
   &.negative
     color #ef4444
+
+// Mobile responsive styles
+@media (max-width: 960px)
+  .model-header
+    padding 20px 0
+    flex-direction column
+    gap 0
+
+    .model-info
+      gap 0
+
+      .model-icon
+        width 44px
+        height 44px
+        padding 0
+        margin-right 12px
+
+        img
+          width 44px
+          height 44px
+
+    .model-details
+      .model-name
+        font-size 24px
+        margin-bottom 12px
+
+    .model-stats
+      gap 16px
+
+      .stat-item
+        .label
+          font-size 12px
+
+        .value
+          font-size 14px
+
+  .stats-section
+    padding 0 0 30px
+
+    .stats-grid
+      grid-template-columns repeat(2, 1fr)
+      gap 16px
+      margin-bottom 24px
+
+      .stat-card
+        padding 16px
+
+        .stat-label
+          font-size 12px
+
+        .stat-value
+          font-size 18px
+
+    .hold-times
+      padding 16px
+
+      .hold-times-title
+        font-size 16px
+        margin-bottom 12px
+
+    .hold-times-grid
+      gap 16px
+
+      .hold-time-item
+        .label
+          font-size 12px
+
+        .value
+          font-size 16px
+
+  .positions-section
+    padding 0 0 30px
+
+    .section-header
+      margin-bottom 16px
+
+    .section-title
+      font-size 18px
+
+    .total-pnl
+      font-size 13px
+
+    .positions-grid
+      grid-template-columns 1fr
+      gap 12px
+
+    .position-card
+      padding 16px
+
+    .position-header
+      margin-bottom 16px
+
+    .coin-info
+      gap 8px
+
+      .coin-icon
+        width 24px
+        height 24px
+
+      .coin-name
+        font-size 14px
+
+    .position-details
+      grid-template-columns repeat(2, 1fr)
+      gap 8px
+
+    .detail-row
+      .label
+        font-size 11px
+
+      .value
+        font-size 13px
+
+  .trades-section
+    padding 0 0 30px
+
+    .section-title
+      font-size 18px
+      margin-bottom 16px
+
+    .trades-table
+      .table-header
+        display none
+
+    .table-body
+      .table-row
+        background #1a2230
+        border 1px solid #2b3444
+        border-radius 8px
+        margin-bottom 12px
+        padding 12px
+        display flex
+        flex-direction row
+        flex-wrap wrap
+        gap 8px
+
+        &:last-child
+          margin-bottom 0
+
+        .col
+          flex-basis calc(50% - 4px)
+          display flex
+          justify-content space-between
+          align-items center
+          padding 4px 0
+          font-size 12px
+
+          &:not(:first-child):not(:nth-child(2)):before
+            content attr(data-label)
+            color #94a3b8
+            font-size 11px
+            font-weight 600
+            margin-right 8px
+
+          &:first-child
+            flex-basis 100%
+            padding-bottom 8px
+            border-bottom 1px solid #2b3444
+            margin-bottom 4px
+
+          &:nth-child(2)
+            flex-basis 100%
+            padding-bottom 8px
+            border-bottom 1px solid #2b3444
+            margin-bottom 4px
+
+          .side
+            padding 3px 6px
+            font-size 9px
+
+          .coin-info
+            gap 6px
+
+            .coin-icon
+              width 20px
+              height 20px
+
+            .coin-name
+              font-size 12px
+
+          &.positive
+            color #10b981
+
+          &.negative
+            color #ef4444
 </style>

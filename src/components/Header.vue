@@ -7,12 +7,14 @@ header.header
     nav.nav
       .nav-item(@click="goToHome" :class="{ active: $route.name === 'home' }") LIVE
       .nav-item(@click="goToLeaderboard" :class="{ active: $route.name === 'leaderboard' }") LEADERBOARD
-      .nav-item(@mouseenter="showModelsDropdown = true" @mouseleave="handleMouseLeave" :class="{ active: $route.name === 'models' || $route.name === 'model-detail' }")
+      .nav-item(@click="handleModelsClick" @mouseenter="!isMobile && (showModelsDropdown = true)" @mouseleave="!isMobile && handleMouseLeave" :class="{ active: $route.name === 'models' || $route.name === 'model-detail' }")
         | MODELS
-        .models-dropdown(v-if="showModelsDropdown" @mouseenter="handleDropdownEnter" @mouseleave="showModelsDropdown = false")
+        // 移动端背景遮罩
+        .dropdown-backdrop(v-if="showModelsDropdown && isMobile" @click.stop="showModelsDropdown = false")
+        .models-dropdown(v-if="showModelsDropdown" @mouseenter="!isMobile && handleDropdownEnter" @mouseleave="!isMobile && (showModelsDropdown = false)")
           .dropdown-title AI MODELS
           .dropdown-separator
-          .model-item(v-for="model in models" :key="model.name" @click="goToModelDetail(model)")
+          .model-item(v-for="model in models" :key="model.name" @click.stop="goToModelDetail(model)")
             //.model-color-dot(:style="{ backgroundColor: model.color }")
             .model-icon(:style="shouldShowBackground(model.name) ? { backgroundColor: model.color } : {}")
               img(:src="model.icon" :alt="model.name")
@@ -23,14 +25,29 @@ header.header
 </template>
 
 <script setup>
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, onMounted, onUnmounted, watch } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 
 import { getAllModelInfo, getModelIconPath } from '@/config/accounts.js'
 
 const router = useRouter()
+const route = useRoute()
 const showModelsDropdown = ref(false)
 let hideTimeout = null
+
+// 检测是否为移动端
+const isMobile = ref(false)
+
+// 检查窗口大小
+const checkMobile = () => {
+  isMobile.value = window.innerWidth <= 960
+}
+
+// 监听窗口大小变化
+if (typeof window !== 'undefined') {
+  window.addEventListener('resize', checkMobile)
+  checkMobile() // 初始检查
+}
 
 // 从配置文件获取模型数据
 const models = ref(getAllModelInfo().map(model => ({
@@ -60,6 +77,16 @@ const goToModelDetail = (model) => {
   router.push(`/models/${model.slug}`)
 }
 
+// 处理移动端点击事件
+const handleModelsClick = (event) => {
+  if (isMobile.value) {
+    // 移动端：切换显示/隐藏下拉菜单
+    event.stopPropagation()
+    showModelsDropdown.value = !showModelsDropdown.value
+  }
+  // PC端：不做任何操作，让 hover 事件处理
+}
+
 const handleMouseLeave = () => {
   // 使用延时关闭，给用户时间移动到弹窗上
   hideTimeout = setTimeout(() => {
@@ -79,6 +106,35 @@ const handleDropdownEnter = () => {
 const aboutRFGAI = () => {
   alert('关于 RFG AI 功能待实现')
 }
+
+// 处理点击外部关闭下拉菜单（移动端）
+const handleDocumentClick = (event) => {
+  if (isMobile.value && showModelsDropdown.value) {
+    const modelsNavItem = event.target.closest('.nav-item')
+    const dropdown = event.target.closest('.models-dropdown')
+    
+    if (!modelsNavItem && !dropdown) {
+      showModelsDropdown.value = false
+    }
+  }
+}
+
+// 生命周期钩子
+onMounted(() => {
+  document.addEventListener('click', handleDocumentClick)
+})
+
+onUnmounted(() => {
+  document.removeEventListener('click', handleDocumentClick)
+  if (typeof window !== 'undefined') {
+    window.removeEventListener('resize', checkMobile)
+  }
+})
+
+// 监听路由变化，关闭下拉菜单
+watch(() => route.path, () => {
+  showModelsDropdown.value = false
+})
 </script>
 
 <style lang="stylus" scoped>
@@ -116,6 +172,22 @@ const aboutRFGAI = () => {
 
   &.active
     color #3b82f6
+
+.dropdown-backdrop
+  position fixed
+  top 0
+  left 0
+  right 0
+  bottom 0
+  background rgba(0, 0, 0, 0.5)
+  z-index 999
+  animation fadeIn 0.3s ease-out
+
+  @keyframes fadeIn
+    from
+      opacity 0
+    to
+      opacity 1
 
 .models-dropdown
   position absolute
@@ -211,6 +283,11 @@ const aboutRFGAI = () => {
 @media (max-width: 960px)
   .header
     padding 10px 0
+    position relative
+
+  .dropdown-backdrop
+    top 100%
+    margin-top 10px
 
   .header-content
     flex-wrap wrap
@@ -249,10 +326,33 @@ const aboutRFGAI = () => {
     flex-shrink 0
 
   .models-dropdown
-    left -16px
-    right -16px
-    width auto
+    position fixed
+    left 16px
+    right 16px
+    top 100px
+    width calc(100% - 32px)
     min-width auto
+    max-height 45vh
+    overflow-y auto
+    margin-top 0
+    border-radius 12px 12px 0 0
+    transform translateY(0)
+    animation slideUp 0.3s ease-out
+    z-index 1000
+
+    @keyframes slideUp
+      from
+        transform translateY(100%)
+      to
+        transform translateY(0)
+
+    .dropdown-title
+      padding 12px 16px
+      font-size 13px
+      position sticky
+      top 0
+      background #1a2230
+      z-index 10
 
     .model-item
       padding 10px 16px

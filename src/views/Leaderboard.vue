@@ -69,7 +69,7 @@
         .bar-chart(v-for="model in leaderboardData" :key="model.name")
           .bar-visual
             .bar(:style="{ height: getBarHeight(model.accountValue || 0) + '%', backgroundColor: model.color || '#64748b' }")
-            .bar-value ${{ (model.accountValue || 0).toLocaleString() }}
+            .bar-value ${{ formatBarValue(model.accountValue) }}
             .bar-icon
               img(:src="getModelIcon(model.name)" :alt="model.name")
           .model-info
@@ -396,6 +396,17 @@ const getBarHeight = (value) => {
   if (leaderboardData.value.length === 0) return 0
   const maxValue = Math.max(...leaderboardData.value.map(m => m.accountValue || 0))
   return maxValue > 0 ? (value / maxValue) * 100 : 0
+}
+
+const formatBarValue = (value) => {
+  const numValue = value || 0
+  // Check if on mobile (window width <= 960px)
+  if (typeof window !== 'undefined' && window.innerWidth <= 960) {
+    // Mobile: round to integer
+    return Math.round(numValue).toLocaleString()
+  }
+  // Desktop: keep original format (may have decimals)
+  return numValue.toLocaleString()
 }
 </script>
 
@@ -759,7 +770,8 @@ const getBarHeight = (value) => {
         
         // Card layout
         display flex
-        flex-direction column
+        flex-direction row
+        flex-wrap wrap
         gap 8px
         
         // Hide alternate background
@@ -771,6 +783,7 @@ const getBarHeight = (value) => {
           justify-content space-between
           align-items center
           padding 4px 0
+          flex-basis calc(50% - 4px)
           
           &:not(.model):not(.rank):before
             content attr(data-label)
@@ -783,10 +796,12 @@ const getBarHeight = (value) => {
           
           &.model
             order -1
+            width 100%
             gap 8px
             padding-bottom 8px
             border-bottom 1px solid #2b3444
             margin-bottom 4px
+            flex-basis 100%
             
             &:before
               content 'RANK #' attr(data-rank)
@@ -803,44 +818,58 @@ const getBarHeight = (value) => {
   .summary-section
     grid-template-columns 1fr
     gap 16px
-    padding 0 15px
+    padding 0
 
   .summary-info
+    padding 16px
+    
     .summary-item
-      margin-bottom 20px
+      margin-bottom 16px
+      flex-direction column
+      align-items flex-start
+      gap 4px
       
       .label
-        font-size 14px
+        font-size 12px
+        margin-bottom 2px
       
       .value
-        font-size 14px
+        font-size 12px
+        word-break break-word
 
   .visualization
+    padding 16px 8px
+    
     .model-diff
       display flex
       flex-wrap nowrap
       overflow-x auto
-      gap 8px
-      padding-bottom 10px
+      gap 6px
+      padding-bottom 8px
 
       .bar-chart
         flex-shrink 0
-        min-width 50px
+        min-width 45px
         
         .bar-visual
-          width 40px
-          height 150px
+          width 35px
+          height 140px
           
           .bar
-            min-height 8px
+            min-height 6px
+            
+          .bar-value
+            font-size 12px
+            top -30px
+            padding 1px 4px
           
           .bar-icon
             display flex
             align-items center
             justify-content center
-            width 28px
-            height 28px
-            margin 8px auto 0
+            width 24px
+            height 24px
+            margin 6px auto 0
             border-radius 4px
             
             img
@@ -849,7 +878,7 @@ const getBarHeight = (value) => {
               object-fit contain
 
         .model-info
-          margin-top 6px
+          margin-top 4px
           display flex
           flex-direction column
           align-items center

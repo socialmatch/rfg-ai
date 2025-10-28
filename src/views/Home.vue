@@ -1573,11 +1573,13 @@ onUnmounted(() => {
     height 100% !important
 
   .right-icons
-    bottom 10px
+    bottom 120%
 
     .icon-item
-      min-width 100px
-      padding 4px 6px
+      border none
+      background-color transparent !important
+      min-width 80px
+      padding 0
       gap 6px
 
       .model-value
