@@ -4,6 +4,7 @@ import WalletTest from '@/views/WalletTest.vue'
 import Leaderboard from '@/views/Leaderboard.vue'
 import Models from '@/views/Models.vue'
 import ModelDetail from '@/views/ModelDetail.vue'
+import About from '@/views/About.vue'
 
 const routes = [
   {
@@ -30,6 +31,11 @@ const routes = [
     path: '/wallet-test',
     name: 'wallet-test',
     component: WalletTest
+  },
+  {
+    path: '/about',
+    name: 'about',
+    component: About
   }
 ]
 
