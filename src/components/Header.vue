@@ -7,11 +7,11 @@ header.header
     nav.nav
       .nav-item(@click="goToHome" :class="{ active: $route.name === 'home' }") LIVE
       .nav-item(@click="goToLeaderboard" :class="{ active: $route.name === 'leaderboard' }") LEADERBOARD
-      .nav-item(@click="handleModelsClick" @mouseenter="!isMobile && (showModelsDropdown = true)" @mouseleave="!isMobile && handleMouseLeave" :class="{ active: $route.name === 'models' || $route.name === 'model-detail' }")
+      .nav-item(@click="handleModelsClick" @mouseenter="handleNavItemEnter" @mouseleave="handleNavItemLeave" :class="{ active: $route.name === 'models' || $route.name === 'model-detail' }" ref="navItemElement")
         | MODELS
         // 移动端背景遮罩
         .dropdown-backdrop(v-if="showModelsDropdown && isMobile" @click.stop="showModelsDropdown = false")
-        .models-dropdown(v-if="showModelsDropdown" @mouseenter="!isMobile && handleDropdownEnter" @mouseleave="!isMobile && (showModelsDropdown = false)")
+        .models-dropdown(v-if="showModelsDropdown" ref="dropdownElement" @mouseenter="handleDropdownEnter" @mouseleave="handleDropdownLeave" :style="dropdownStyle")
           .dropdown-title AI MODELS
           .dropdown-separator
           .model-item(v-for="model in models" :key="model.name" @click.stop="goToModelDetail(model)")
@@ -25,7 +25,7 @@ header.header
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 
 import { getAllModelInfo, getModelIconPath } from '@/config/accounts.js'
@@ -33,10 +33,24 @@ import { getAllModelInfo, getModelIconPath } from '@/config/accounts.js'
 const router = useRouter()
 const route = useRoute()
 const showModelsDropdown = ref(false)
+const dropdownElement = ref(null)
+const navItemElement = ref(null)
 let hideTimeout = null
 
 // 检测是否为移动端
 const isMobile = ref(false)
+
+// 动态计算弹窗位置
+const dropdownStyle = computed(() => {
+  if (!isMobile.value && navItemElement.value) {
+    const rect = navItemElement.value.getBoundingClientRect()
+    return {
+      top: `${rect.bottom + window.scrollY + 8}px`,
+      left: `${rect.left + window.scrollX}px`
+    }
+  }
+  return {}
+})
 
 // 检查窗口大小
 const checkMobile = () => {
@@ -87,20 +101,52 @@ const handleModelsClick = (event) => {
   // PC端：不做任何操作，让 hover 事件处理
 }
 
-const handleMouseLeave = () => {
-  // 使用延时关闭，给用户时间移动到弹窗上
-  hideTimeout = setTimeout(() => {
-    showModelsDropdown.value = false
-  }, 150)
+// 处理鼠标进入 nav-item
+const handleNavItemEnter = () => {
+  // PC端才显示弹窗
+  if (!isMobile.value) {
+    // 清除之前的关闭定时器
+    if (hideTimeout) {
+      clearTimeout(hideTimeout)
+      hideTimeout = null
+    }
+    showModelsDropdown.value = true
+  }
 }
 
-const handleDropdownEnter = () => {
-  // 鼠标进入弹窗时清除延时关闭
-  if (hideTimeout) {
-    clearTimeout(hideTimeout)
-    hideTimeout = null
+// 处理鼠标离开 nav-item
+const handleNavItemLeave = () => {
+  // PC端才处理延时关闭
+  if (!isMobile.value) {
+    // 使用延时关闭，给用户时间移动到弹窗上
+    hideTimeout = setTimeout(() => {
+      showModelsDropdown.value = false
+    }, 200)
   }
-  showModelsDropdown.value = true
+}
+
+// 处理鼠标进入弹窗
+const handleDropdownEnter = () => {
+  // PC端才处理
+  if (!isMobile.value) {
+    // 清除之前的关闭定时器
+    if (hideTimeout) {
+      clearTimeout(hideTimeout)
+      hideTimeout = null
+    }
+    showModelsDropdown.value = true
+  }
+}
+
+// 处理鼠标离开弹窗
+const handleDropdownLeave = () => {
+  // PC端才处理
+  if (!isMobile.value) {
+    // 使用延时关闭
+    hideTimeout = setTimeout(() => {
+      showModelsDropdown.value = false
+    }, 200)
+  }
 }
 
 const aboutRFGAI = () => {
@@ -129,6 +175,11 @@ onUnmounted(() => {
   if (typeof window !== 'undefined') {
     window.removeEventListener('resize', checkMobile)
   }
+  // 清除定时器
+  if (hideTimeout) {
+    clearTimeout(hideTimeout)
+    hideTimeout = null
+  }
 })
 
 // 监听路由变化，关闭下拉菜单
@@ -142,6 +193,8 @@ watch(() => route.path, () => {
   background #0f172a
   border-bottom 1px solid #2b3444
   padding 14px 0
+  position relative
+  z-index 10000
 
 .header-content
   width 100%
@@ -149,6 +202,7 @@ watch(() => route.path, () => {
   display flex
   align-items center
   justify-content space-between
+  position relative
 
 .logo h1
   color #f8fafc
@@ -158,6 +212,9 @@ watch(() => route.path, () => {
 .nav
   display flex
   gap 32px
+  position absolute
+  left 50%
+  transform translateX(-50%)
 
 .nav-item
   color #94a3b8
@@ -190,16 +247,24 @@ watch(() => route.path, () => {
       opacity 1
 
 .models-dropdown
-  position absolute
-  top 100%
-  left 0
+  position fixed
   background #1a2230
   border 1px solid #2b3444
   border-radius 8px
   box-shadow 0 8px 25px rgba(0, 0, 0, 0.3)
-  z-index 1000
+  z-index 10001
   min-width 240px
-  margin-top 8px
+  // 使用 JavaScript 动态计算位置，这里先用基本样式
+  // 添加伪元素作为不可见的顶部缓冲区，填充间隙，让鼠标可以顺利移动到弹窗
+  &::before
+    content ''
+    position absolute
+    top -8px
+    left 0
+    right 0
+    height 8px
+    background transparent
+    pointer-events auto
 
   .dropdown-title
     padding 12px 16px 8px
@@ -313,6 +378,8 @@ watch(() => route.path, () => {
 
   // Bottom row: Navigation (second row)
   .nav
+    position static
+    transform none
     order 10
     width 100%
     gap 12px

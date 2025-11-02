@@ -50,7 +50,7 @@
                   img(v-if="!model.isBtcPrice" :src="getModelImage(model.name)" :alt="model.name")
                   img(v-else :src="getCryptoIcon('BTC')" alt="BTC")
                 .model-value ${{ (model.balance ? parseFloat(model.balance) : model.value).toLocaleString() }}
-          .x-axis
+          //.x-axis
             .tick(v-for="tick in xAxisTicks" :key="tick") {{ tick }}
 
       // Right side: sidebar tabs + list
@@ -191,7 +191,31 @@ const cryptoPrices = ref([
 ])
 
 // Trading models data - using unified config and balance data
-const tradingModels = ref([])
+// Initialize from config to ensure all models from ACCOUNT_CONFIGS are shown
+const initializeTradingModelsFromConfig = () => {
+  const configModels = getAllModelInfo().filter(model => model.enabled)
+  return configModels.map(model => ({
+    name: model.name,
+    value: 0,
+    change: 0,
+    color: model.color,
+    accountAlias: null,
+    asset: 'USDT',
+    balance: '0.00000000',
+    crossWalletBalance: '0.00000000',
+    crossUnPnl: '0.00000000',
+    availableBalance: '0.00000000',
+    availableCash: '0.00000000',
+    maxWithdrawAmount: '0.00000000',
+    marginAvailable: true,
+    updateTime: 0,
+    totalUsdtValue: '0.00000000',
+    uid: null,
+    walletName: null
+  }))
+}
+
+const tradingModels = ref(initializeTradingModelsFromConfig())
 
 // Provide a default empty model data on initialization to avoid reduce errors
 const defaultModel = {
@@ -205,17 +229,44 @@ const defaultModel = {
 const loadAsterBalance = async () => {
   // Helper function to process and update UI with data
   const processAndUpdateData = async (result) => {
-    const balanceData = []
+    // Start with models from config to ensure all configured models are included
+    const configModels = getAllModelInfo().filter(model => model.enabled)
+    const balanceDataMap = new Map()
+
+    // Initialize all models from config
+    configModels.forEach(model => {
+      balanceDataMap.set(model.name, {
+        name: model.name,
+        value: 0,
+        change: 0,
+        color: model.color,
+        accountAlias: null,
+        asset: 'USDT',
+        balance: '0.00000000',
+        crossWalletBalance: '0.00000000',
+        crossUnPnl: '0.00000000',
+        availableBalance: '0.00000000',
+        availableCash: '0.00000000',
+        maxWithdrawAmount: '0.00000000',
+        marginAvailable: true,
+        updateTime: 0,
+        totalUsdtValue: '0.00000000',
+        uid: null,
+        walletName: null
+      })
+    })
+
     const accountDataList = []
-    
+
+    // Update models with API data
     result.accounts.forEach(account => {
       if (account.success && account.data) {
         const usdtBalance = account.data.find(b => b.asset === 'USDT')
-        if (usdtBalance || account.data.length > 0) {
-          balanceData.push({
+        if (usdtBalance) {
+          const modelData = {
             name: account.modelInfo.name,
-            value: parseFloat(usdtBalance.balance),
-            change: parseFloat(usdtBalance.crossUnPnl),
+            value: parseFloat(usdtBalance.balance || 0),
+            change: parseFloat(usdtBalance.crossUnPnl || 0),
             color: account.modelInfo.color,
             accountAlias: usdtBalance.accountAlias,
             asset: usdtBalance.asset,
@@ -230,8 +281,10 @@ const loadAsterBalance = async () => {
             totalUsdtValue: usdtBalance.totalUsdtValue,
             uid: usdtBalance.uid,
             walletName: usdtBalance.walletName
-          })
-          
+          }
+
+          balanceDataMap.set(account.modelInfo.name, modelData)
+
           // Build account data for Positions component
           accountDataList.push({
             modelInfo: account.modelInfo,
@@ -242,10 +295,12 @@ const loadAsterBalance = async () => {
         }
       }
     })
-    
+
     // Set account data for Positions component
     asterAccountData.value = accountDataList
 
+    // Convert map to array and sort by value
+    const balanceData = Array.from(balanceDataMap.values())
     balanceData.sort((a, b) => b.value - a.value)
 
     // Add BTC price data as a model
@@ -301,6 +356,8 @@ const loadAsterBalance = async () => {
     asterBalanceLoading.value = false // Set to false since we have cached data
   } else {
     asterBalanceLoading.value = true
+    // Initialize with config models if no cache
+    tradingModels.value = initializeTradingModelsFromConfig()
   }
 
   asterBalanceError.value = null
@@ -321,15 +378,19 @@ const loadAsterBalance = async () => {
       asterBalanceError.value = result.error
       console.error('❌ Account balance loading failed:', result.error)
 
-      // Keep empty array instead of mock data
-      tradingModels.value = []
+      // Keep models from config instead of empty array
+      if (tradingModels.value.length === 0) {
+        tradingModels.value = initializeTradingModelsFromConfig()
+      }
     }
   } catch (error) {
     asterBalanceError.value = error.message
     console.error('❌ Account balance loading exception:', error)
 
-    // Keep empty array instead of mock data
-    tradingModels.value = []
+    // Keep models from config instead of empty array
+    if (tradingModels.value.length === 0) {
+      tradingModels.value = initializeTradingModelsFromConfig()
+    }
   } finally {
     asterBalanceLoading.value = false
   }
@@ -525,8 +586,24 @@ const buildChart = async () => {
       },
       scales: {
         x: {
-          display: false,
-          maxTicksLimit: 10 // Limit x-axis ticks for better performance with large datasets
+          display: true,
+          grid: { color: '#2b3444', drawBorder: false },
+          ticks: {
+            color: '#94a3b8',
+            font: { size: 11, weight: 'bold' },
+            maxTicksLimit: 10, // Limit x-axis ticks for better performance with large datasets
+            callback: function(value, index, ticks) {
+              // Use labels from closure
+              if (!labels || !labels[value]) return ''
+              const date = new Date(labels[value])
+              return date.toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+              })
+            }
+          }
         },
         y: {
           type: 'linear',
@@ -985,6 +1062,9 @@ watch(selectedModel, (newVal, oldVal) => {
 onMounted(() => {
   setTimeout(() => { connectionStatus.value = 'connected' }, 1500)
 
+  // Initialize trading models from config to ensure all models are shown immediately
+  tradingModels.value = initializeTradingModelsFromConfig()
+
   // Load all data sequentially
   loadAllData()
 
@@ -1103,6 +1183,8 @@ onUnmounted(() => {
   background rgba(255, 255, 255, 0.05)
   border 1px solid rgba(255, 255, 255, 0.1)
   transition all 0.2s ease
+  width 120px
+  flex-shrink 0
 
   &:hover
     background rgba(255, 255, 255, 0.08)
@@ -1497,6 +1579,7 @@ onUnmounted(() => {
     gap 8px
 
   .ticker-item
+    width auto
     min-width 0
     padding 6px 8px
     font-size 10px
