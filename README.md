@@ -36,7 +36,7 @@ The platform currently showcases four AI trading models, each directly connected
 1. **DeepSeek V3.1** — A large language model fine-tuned for trading, executing live trades across six major cryptocurrencies (BTC, ETH, BNB, SOL, DOGE, XRP).
 2. **Qwen 3 Max** — An intelligent trading agent that interprets complex market structures and reacts dynamically to volatility.
 3. **RFG-6** — A stable, conservative AI trading model mirroring DeepSeek's multi-asset setup, focused on risk-balanced execution across six leading coins.
-4. **RFG-ALL** — A global trading model that autonomously trades any token pair listed on Aster, designed to adapt flexibly to market-wide opportunities.
+4. **RFG-ALL** — A trading model that autonomously trades any token pair listed on Aster, designed to adapt flexibly to market-wide opportunities.
 
 Each model combines reasoning-based decision logic, live execution, and continuous self-optimization — creating a transparent AI trading ecosystem that learns and evolves in real time.
 

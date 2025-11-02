@@ -59,7 +59,7 @@ export const ACCOUNT_CONFIGS = [
     modelIcon: 'Rfg_logo.png',
     uid: 'rfg_ai_x',
     initialCapital: 10000, // 初始本金 $10,000
-    description: 'A global trading model that autonomously trades any token pair listed on Aster, designed to adapt flexibly to market-wide opportunities.',
+    description: 'A trading model that autonomously trades any token pair listed on Aster, designed to adapt flexibly to market-wide opportunities.',
     "user_address": "0x9362ce38dedefeeb03439d7e36e0949f13ae8aaa",
     "signer_address": "0x41e4d0D232fe922417127e047cF3801552744158",
     enabled: true,
