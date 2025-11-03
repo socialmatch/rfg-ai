@@ -63,7 +63,6 @@
           .crypto-icons
             .crypto-icon(v-for="crypto in getActiveCryptoIcons()" :key="crypto")
               img(:src="getCryptoIcon(crypto)" :alt="crypto" v-if="getCryptoIcon(crypto)")
-
     .visualization
       .model-diff
         .bar-chart(v-for="model in leaderboardData" :key="model.name")
@@ -89,7 +88,7 @@ import { getAllModelsProcessedBalance } from '@/utils/newBalanceService.js'
 import { getAllModelsProcessedTrades } from '@/utils/newTradesService.js'
 import { getAllModelsProcessedPositions } from '@/utils/newPositionsService.js'
 import { calculateTradingStats, calculateSharpeRatio, calculateMaxDrawdown } from '@/utils/tradingStatsCalculator.js'
-import { getCryptoIcon } from '@/utils/cryptoIcons.js'
+import { getCryptoIcon, isSupportedCrypto } from '@/utils/cryptoIcons.js'
 import { getCachedData, setCachedData } from '@/utils/dataCache.js'
 
 const router = useRouter()
@@ -119,10 +118,19 @@ const getActiveCryptoIcons = () => {
     return []
   }
 
-  // Extract unique crypto symbols from positions
+  // Extract unique crypto symbols from positions and filter out unsupported cryptos
   const cryptos = [...new Set(winningModel.positions.map(position => position.coin))]
-  console.log('🔍 Active crypto symbols:', cryptos)
-  return cryptos.filter(crypto => crypto && crypto.trim() !== '')
+  console.log('🔍 Active crypto symbols (before filter):', cryptos)
+  
+  // Filter out cryptos that are not in cryptoIconMap (not supported)
+  const supportedCryptos = cryptos.filter(crypto => {
+    if (!crypto || crypto.trim() === '') return false
+    // Check if crypto is supported (exists in cryptoIconMap)
+    return isSupportedCrypto(crypto)
+  })
+  
+  console.log('🔍 Active crypto symbols (after filter):', supportedCryptos)
+  return supportedCryptos
 }
 
 // Dynamically load leaderboard data
@@ -843,17 +851,20 @@ const formatBarValue = (value) => {
     .model-diff
       display flex
       flex-wrap nowrap
-      overflow-x auto
-      gap 6px
+      justify-content space-between
+      gap 12px
       padding-bottom 8px
 
       .bar-chart
         flex-shrink 0
+        flex 1
         min-width 45px
+        max-width 80px
 
         .bar-visual
           width 35px
           height 140px
+          margin 0 auto
 
           .bar
             min-height 6px

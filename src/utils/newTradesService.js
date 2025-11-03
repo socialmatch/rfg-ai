@@ -196,9 +196,15 @@ export const processTradesData = (tradesData) => {
 
   const processedData = []
 
-  // Process trades array
+  // Process trades array, filter out trades with realizedPnl === 0
   if (tradesData.data.trades) {
     tradesData.data.trades.forEach(trade => {
+      // Filter out trades where realizedPnl is 0
+      const realizedPnl = parseFloat(trade.realizedPnl)
+      if (realizedPnl === 0) {
+        return // Skip this trade
+      }
+      
       processedData.push({
         symbol: trade.symbol,
         id: trade.id,

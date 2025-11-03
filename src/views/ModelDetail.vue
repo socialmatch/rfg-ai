@@ -297,18 +297,24 @@ const loadModelData = async () => {
             }
           }
 
-          // Process trading history
+          // Process trading history, filter out trades with realizedPnl === 0
           let tradesData = []
           if (trades && trades.status === 'fulfilled' && trades.value.success) {
             const apiData = trades.value.data
             if (apiData.trades && apiData.trades.length > 0) {
-              tradesData = apiData.trades.map(trade => ({
-                ...trade,
-                uid: apiData.uid,
-                walletName: apiData.wallet_name,
-                totalTrades: apiData.total_trades,
-                statistics: apiData.statistics
-              }))
+              // Filter out trades where realizedPnl is 0
+              tradesData = apiData.trades
+                .filter(trade => {
+                  const realizedPnl = parseFloat(trade.realizedPnl)
+                  return realizedPnl !== 0
+                })
+                .map(trade => ({
+                  ...trade,
+                  uid: apiData.uid,
+                  walletName: apiData.wallet_name,
+                  totalTrades: apiData.total_trades,
+                  statistics: apiData.statistics
+                }))
             }
           }
 

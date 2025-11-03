@@ -263,10 +263,15 @@ const loadAsterBalance = async () => {
       if (account.success && account.data) {
         const usdtBalance = account.data.find(b => b.asset === 'USDT')
         if (usdtBalance) {
+          const accountValue = parseFloat(usdtBalance.balance || 0)
+          const initialCapital = account.modelInfo.initialCapital || 10000
+          // Calculate change as: (accountValue - initialCapital) / initialCapital * 100
+          const changePercent = initialCapital > 0 ? ((accountValue - initialCapital) / initialCapital) * 100 : 0
+
           const modelData = {
             name: account.modelInfo.name,
-            value: parseFloat(usdtBalance.balance || 0),
-            change: parseFloat(usdtBalance.crossUnPnl || 0),
+            value: accountValue,
+            change: changePercent,
             color: account.modelInfo.color,
             accountAlias: usdtBalance.accountAlias,
             asset: usdtBalance.asset,
@@ -320,6 +325,7 @@ const loadAsterBalance = async () => {
           isBtcPrice: true
         })
       }
+      console.log('balanceData:', balanceData)
     } catch (error) {
       console.warn('⚠️ Failed to load BTC price for trading models:', error)
     }
@@ -838,7 +844,12 @@ const loadAsterUserTrades = async () => {
     let allTrades = []
     result.accounts.forEach(account => {
       if (account.success && account.data) {
-        allTrades = allTrades.concat(account.data)
+        // Filter out trades with realizedPnl === 0
+        const filteredTrades = account.data.filter(trade => {
+          const realizedPnl = parseFloat(trade.realizedPnl)
+          return realizedPnl !== 0
+        })
+        allTrades = allTrades.concat(filteredTrades)
       }
     })
     allTrades.sort((a, b) => b.time - a.time)

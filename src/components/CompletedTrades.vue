@@ -97,45 +97,6 @@ const symbols = ['BTC', 'ETH', 'SOL', 'BNB', 'DOGE', 'XRP']
 
 function randomBetween(min, max) { return Math.random() * (max - min) + min }
 
-function makeRecord(id, baseTimeMs) {
-  const model = models[Math.floor(Math.random() * models.length)]
-  const sym = symbols[Math.floor(Math.random() * symbols.length)]
-  const isShort = Math.random() < 0.5
-  const action = `completed a ${isShort ? 'short' : 'long'} trade on ${sym}!`
-
-  // Set price ranges based on different currencies
-  const priceRanges = {
-    BTC: [98000, 112000], ETH: [3400, 4200], SOL: [160, 200], BNB: [980, 1120], DOGE: [0.16, 0.22], XRP: [2.1, 2.6]
-  }
-  const [minP, maxP] = priceRanges[sym]
-  const entry = randomBetween(minP, maxP)
-  const move = (isShort ? -1 : 1) * randomBetween(0.2, (maxP - minP) * 0.02)
-  const exit = Math.max(minP, Math.min(maxP, entry + move))
-
-  const qtyBase = { BTC: 0.3, ETH: 1.8, SOL: 60, BNB: 10, DOGE: 4000, XRP: 900 }
-  const quantity = +(qtyBase[sym] * (isShort ? -1 : 1) * randomBetween(0.8, 1.2)).toFixed(2)
-
-  const notionalStart = +(entry * Math.abs(quantity)).toFixed(2)
-  const notionalEnd = +(exit * Math.abs(quantity)).toFixed(2)
-  const profit = +((exit - entry) * quantity).toFixed(2)
-
-  const heldMins = Math.floor(randomBetween(20, 6 * 60))
-  const holdingTime = `${Math.floor(heldMins / 60)}H ${heldMins % 60}M`
-
-  return {
-    id,
-    model,
-    action,
-    entryPrice: +entry.toFixed(sym === 'DOGE' ? 4 : sym === 'XRP' ? 2 : 2),
-    exitPrice: +exit.toFixed(sym === 'DOGE' ? 4 : sym === 'XRP' ? 2 : 2),
-    quantity,
-    notionalStart,
-    notionalEnd,
-    holdingTime,
-    profit,
-    timestamp: new Date(baseTimeMs)
-  }
-}
 
 // No longer use mock data, only display real data
 
@@ -148,13 +109,19 @@ const convertAsterTrades = (asterTrades) => {
     return []
   }
 
-  return asterTrades.map((trade, index) => {
-    const side = trade.side === 'BUY' ? 'LONG' : 'SHORT'
-    const symbol = trade.symbol.replace('USDT', '')
-    const price = parseFloat(trade.price)
-    const quantity = parseFloat(trade.qty)
-    const realizedPnl = parseFloat(trade.realizedPnl)
-    const commission = parseFloat(trade.commission)
+  // Filter out trades with realizedPnl === 0 before mapping
+  return asterTrades
+    .filter(trade => {
+      const realizedPnl = parseFloat(trade.realizedPnl)
+      return realizedPnl !== 0
+    })
+    .map((trade, index) => {
+      const side = trade.side === 'BUY' ? 'LONG' : 'SHORT'
+      const symbol = trade.symbol.replace('USDT', '')
+      const price = parseFloat(trade.price)
+      const quantity = parseFloat(trade.qty)
+      const realizedPnl = parseFloat(trade.realizedPnl)
+      const commission = parseFloat(trade.commission)
 
     // Calculate holding time (simulated, as API does not provide)
     const tradeTime = new Date(trade.time)
@@ -208,7 +175,7 @@ const trades = computed(() => {
       if (!modelGroups[modelName]) {
         modelGroups[modelName] = []
       }
-      if (modelGroups[modelName].length < 5) {
+      if (modelGroups[modelName].length < 25) {
         modelGroups[modelName].push(trade)
       }
     })
@@ -221,7 +188,7 @@ const trades = computed(() => {
     return trade.model && trade.model.toLowerCase() === props.selectedModel.toLowerCase()
   })
   // Limit to maximum 10 trades for single model
-  const limitedFiltered = filtered.slice(0, 10)
+  const limitedFiltered = filtered.slice(0, 100)
   return limitedFiltered
 })
 
