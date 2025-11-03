@@ -299,7 +299,7 @@ export const processChartData = async (modelsData, btcPriceData = null) => {
       })
 
       datasets.push({
-        label: 'BTC',
+        label: 'BTC BUY&HOLD',
         data: btcAlignedData,
         borderColor: '#f7931a', // BTC orange color
         backgroundColor: '#f7931a20',
@@ -310,7 +310,7 @@ export const processChartData = async (modelsData, btcPriceData = null) => {
         yAxisID: 'y', // Use same Y axis as other models
         spanGaps: false,
         modelInfo: {
-          name: 'BTC',
+          name: 'BTC BUY&HOLD',
           uid: 'btc_price',
           currentValue: btcAlignedData[btcAlignedData.length - 1] || 0,
           color: '#f7931a'

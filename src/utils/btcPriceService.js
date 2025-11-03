@@ -13,7 +13,7 @@ const BASE_URL = 'https://fapi.asterdex.com/fapi/v3'
  * @param {number} limit - Number of records to fetch (default: 500)
  * @returns {Promise<Object>} BTC price data response
  */
-export const getBtcPriceData = async (symbol = 'BTCUSDT', interval = '5m', limit = 500) => {
+export const getBtcPriceData = async (symbol = 'BTCUSDT', interval = '5m') => {
   try {
 
     const url = new URL(`${BASE_URL}/markPriceKlines`)
@@ -57,8 +57,9 @@ export const getBtcPriceData = async (symbol = 'BTCUSDT', interval = '5m', limit
 
 /**
  * Process BTC price data for chart display
+ * Calculate portfolio value based on buying BTC with $10,000 at the first price
  * @param {Array} priceData - Raw BTC price data from API
- * @param {Array} modelLabels - Model data time labels to align with
+ * @param {Array} modelLabels - Model data time labels to align with (not used for BTC calculation)
  * @returns {Object} Processed BTC price data for chart
  */
 export const processBtcPriceData = (priceData, modelLabels = null) => {
@@ -74,45 +75,30 @@ export const processBtcPriceData = (priceData, modelLabels = null) => {
     const labels = []
     const data = []
 
-    // Calculate BTC quantity based on first model data time
-    let firstPrice = null
-    let btcQuantity = 0
+    // Use the first BTC price data as the entry price
+    // Calculate BTC quantity: $10,000 / first price
+    const firstPrice = parseFloat(priceData[0][4]) // Close price of the first candle
+    const initialCapital = 10000
+    const btcQuantity = initialCapital / firstPrice // Fixed BTC quantity bought with $10,000
 
-    if (modelLabels && modelLabels.length > 0) {
-      // Find the BTC price at the first model data time
-      const firstModelTime = new Date(modelLabels[0]).getTime()
-      let minDiff = Infinity
+    console.log(`💰 BTC Entry: ${initialCapital} USDT at ${firstPrice} = ${btcQuantity.toFixed(8)} BTC`)
 
-      priceData.forEach(candle => {
-        const candleTime = candle[0]
-        const diff = Math.abs(candleTime - firstModelTime)
-        if (diff < minDiff) {
-          minDiff = diff
-          firstPrice = parseFloat(candle[4]) // Close price at the closest time
-        }
-      })
-
-      if (firstPrice) {
-        btcQuantity = 10000 / firstPrice // BTC quantity bought with $10,000
-      }
-    } else {
-      // Fallback to first BTC price if no model labels provided
-      firstPrice = parseFloat(priceData[0][4])
-      btcQuantity = 10000 / firstPrice
-    }
-
-    priceData.forEach(candle => {
+    // Process each candle: calculate portfolio value = btcQuantity * current price
+    priceData.forEach((candle, index) => {
       // Extract timestamp (open time)
       const timestamp = candle[0]
       // Extract close price (current price)
       const closePrice = parseFloat(candle[4])
 
-      // Calculate current value: BTC quantity * current price
+      // Calculate current portfolio value: Fixed BTC quantity * current price
       const currentValue = btcQuantity * closePrice
 
       labels.push(new Date(timestamp).toISOString())
       data.push(currentValue)
     })
+
+    console.log(`📊 BTC Chart: ${priceData.length} data points, initial value: ${initialCapital}, final value: ${data[data.length - 1]?.toFixed(2)}`)
+
     return {
       labels,
       data

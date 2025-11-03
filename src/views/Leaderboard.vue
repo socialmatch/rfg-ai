@@ -121,14 +121,14 @@ const getActiveCryptoIcons = () => {
   // Extract unique crypto symbols from positions and filter out unsupported cryptos
   const cryptos = [...new Set(winningModel.positions.map(position => position.coin))]
   console.log('🔍 Active crypto symbols (before filter):', cryptos)
-  
+
   // Filter out cryptos that are not in cryptoIconMap (not supported)
   const supportedCryptos = cryptos.filter(crypto => {
     if (!crypto || crypto.trim() === '') return false
     // Check if crypto is supported (exists in cryptoIconMap)
     return isSupportedCrypto(crypto)
   })
-  
+
   console.log('🔍 Active crypto symbols (after filter):', supportedCryptos)
   return supportedCryptos
 }
@@ -650,8 +650,7 @@ const formatBarValue = (value) => {
 
 .model-diff
   display flex
-  //justify-content space-between
-  gap 60px
+  justify-content space-between
 
 .bar-chart
   position relative

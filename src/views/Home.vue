@@ -310,7 +310,7 @@ const loadAsterBalance = async () => {
 
     // Add BTC price data as a model
     try {
-      const btcResult = await getBtcPriceData('BTCUSDT', '5m', 500)
+      const btcResult = await getBtcPriceData('BTCUSDT', '5m')
       if (btcResult.success && btcResult.data.length > 0) {
         const firstPrice = parseFloat(btcResult.data[0][4])
         const btcQuantity = 10000 / firstPrice
@@ -318,7 +318,7 @@ const loadAsterBalance = async () => {
         const latestValue = btcQuantity * latestPrice
 
         balanceData.push({
-          name: 'BTC',
+          name: 'BTC BUY&HOLD',
           value: latestValue,
           change: 0,
           color: '#f7931a',
@@ -469,7 +469,7 @@ const loadChartData = async () => {
     // Concurrently get chart data for all models and BTC price data
     const [chartResult, btcPriceResult] = await Promise.allSettled([
       getAllModelsChartData(enabledModels, 10000),
-      getBtcPriceData('BTCUSDT', '5m', 500)
+      getBtcPriceData('BTCUSDT', '5m')
     ])
 
     const result = chartResult.status === 'fulfilled' ? chartResult.value : { success: false, models: [] }
@@ -562,7 +562,7 @@ const buildChart = async () => {
               return date.toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
             },
             label: (context) => {
-              if (context.dataset.label === 'BTC') {
+              if (context.dataset.label === 'BTC BUY&HOLD') {
                 return `${context.dataset.label}: $${context.parsed.y.toLocaleString()}`
               }
               return `${context.dataset.label}: $${context.parsed.y.toLocaleString()}`
@@ -1313,7 +1313,7 @@ onUnmounted(() => {
 
 .chart-frame
   position relative
-  padding 8px 180px 6px 22px  // 右边从8px改为48px，增加40px间距
+  padding 8px 120px 6px 22px  // 右边从8px改为48px，增加40px间距
   flex 1 // fill remaining height below header
   min-height 320px
 
