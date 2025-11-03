@@ -11,7 +11,7 @@ export const ACCOUNT_CONFIGS = [
     modelSlug: 'rfg-6',
     modelColor: '#10b981',
     modelIcon: 'Rfg_logo.png',
-    uid: 'rfg_ai',
+    uid: 'rfg-6',
     initialCapital: 10000, // 初始本金 $10,000
     description: 'A stable, conservative AI trading model mirroring DeepSeek\'s multi-asset setup, focused on risk-balanced execution across six leading coins (BTC, ETH, BNB, SOL, DOGE, XRP).',
     "user_address": "0xbcd72a4206dff98bf64d6563fa29b5ac45d4095d",
@@ -57,7 +57,7 @@ export const ACCOUNT_CONFIGS = [
     modelSlug: 'rfg-all',
     modelColor: '#00ff04', // 橙色
     modelIcon: 'Rfg_logo.png',
-    uid: 'rfg_ai_x',
+    uid: 'rfg-all',
     initialCapital: 10000, // 初始本金 $10,000
     description: 'A trading model that autonomously trades any token pair listed on Aster, designed to adapt flexibly to market-wide opportunities.',
     "user_address": "0x9362ce38dedefeeb03439d7e36e0949f13ae8aaa",

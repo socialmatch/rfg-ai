@@ -642,8 +642,8 @@ const formatBarValue = (value) => {
 
 .model-diff
   display flex
-  justify-content space-between
-  gap 12px
+  //justify-content space-between
+  gap 60px
 
 .bar-chart
   position relative
@@ -755,11 +755,11 @@ const formatBarValue = (value) => {
 
   .leaderboard-table
     padding 0 15px
-    
+
     // Hide table headers on mobile
     .table-header
       display none
-    
+
     .table-body
       .table-row
         background #1a2230
@@ -767,33 +767,33 @@ const formatBarValue = (value) => {
         border-radius 8px
         margin-bottom 12px
         padding 12px
-        
+
         // Card layout
         display flex
         flex-direction row
         flex-wrap wrap
         gap 8px
-        
+
         // Hide alternate background
         &.alternate
           background #1a2230
-        
+
         .col
           display flex
           justify-content space-between
           align-items center
           padding 4px 0
           flex-basis calc(50% - 4px)
-          
+
           &:not(.model):not(.rank):before
             content attr(data-label)
             color #94a3b8
             font-size 11px
             font-weight 600
-          
+
           &.rank
             display none
-          
+
           &.model
             order -1
             width 100%
@@ -802,16 +802,16 @@ const formatBarValue = (value) => {
             border-bottom 1px solid #2b3444
             margin-bottom 4px
             flex-basis 100%
-            
+
             &:before
               content 'RANK #' attr(data-rank)
               color #3b82f6
               font-size 12px
               font-weight 700
-            
+
           &.account-value, &.return-percent, &.total-pnl
             font-size 13px
-            
+
           &.fees, &.win-rate, &.biggest-win, &.biggest-loss, &.trades
             font-size 12px
 
@@ -822,24 +822,24 @@ const formatBarValue = (value) => {
 
   .summary-info
     padding 16px
-    
+
     .summary-item
       margin-bottom 16px
       flex-direction column
       align-items flex-start
       gap 4px
-      
+
       .label
         font-size 12px
         margin-bottom 2px
-      
+
       .value
         font-size 12px
         word-break break-word
 
   .visualization
     padding 16px 8px
-    
+
     .model-diff
       display flex
       flex-wrap nowrap
@@ -850,19 +850,19 @@ const formatBarValue = (value) => {
       .bar-chart
         flex-shrink 0
         min-width 45px
-        
+
         .bar-visual
           width 35px
           height 140px
-          
+
           .bar
             min-height 6px
-            
+
           .bar-value
             font-size 12px
             top -30px
             padding 1px 4px
-          
+
           .bar-icon
             display flex
             align-items center
@@ -871,7 +871,7 @@ const formatBarValue = (value) => {
             height 24px
             margin 6px auto 0
             border-radius 4px
-            
+
             img
               width 100%
               height 100%
@@ -882,7 +882,7 @@ const formatBarValue = (value) => {
           display flex
           flex-direction column
           align-items center
-          
+
           .bar-label
             display none
 </style>

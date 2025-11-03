@@ -8,7 +8,20 @@ import { getCachedApiData, setCachedApiData, getAllModelsCachedData } from '../u
 
 // Base API URL
 const BASE_URL = 'https://testapi1.rfgmeme.ai/aster/balance'
-
+const defaultResData = (uid) => {
+  return {
+    "uid": 'uid',
+    "wallet_name": uid,
+    "mark": uid,
+    "available_cash": 0,
+    "total_value": 0,
+    "total_assets": 0,
+    "account_summary": "",
+    "balances": [],
+    "active_balances": [],
+    "timestamp": 0
+  }
+}
 /**
  * Get balance data for a single model by UID
  * @param {string} uid - Model UID
@@ -17,7 +30,7 @@ const BASE_URL = 'https://testapi1.rfgmeme.ai/aster/balance'
  */
 export const getModelBalance = async (uid, skipCache = false) => {
   const API_NAME = 'aster/balance'
-  
+
   // Check cache first if not skipping
   if (!skipCache) {
     const cached = getCachedApiData(API_NAME, uid)
@@ -31,7 +44,7 @@ export const getModelBalance = async (uid, skipCache = false) => {
       }
     }
   }
-  
+
   try {
     console.log(`🔄 Fetching balance for ${uid}...`)
     const response = await fetch(`${BASE_URL}/${uid}`, {
@@ -50,7 +63,7 @@ export const getModelBalance = async (uid, skipCache = false) => {
     if (data.success) {
       // Cache the result
       setCachedApiData(API_NAME, uid, data.data)
-      
+
       return {
         success: true,
         data: data.data,
@@ -61,7 +74,7 @@ export const getModelBalance = async (uid, skipCache = false) => {
       console.error(`❌ API returned error for ${uid}:`, data.message)
       return {
         success: false,
-        data: null,
+        data: defaultResData(uid),
         error: data.message || 'Unknown API error',
         fromCache: false
       }
@@ -70,7 +83,7 @@ export const getModelBalance = async (uid, skipCache = false) => {
     console.error(`❌ Failed to fetch balance for ${uid}:`, error)
     return {
       success: false,
-      data: null,
+      data: defaultResData(uid),
       error: error.message,
       fromCache: false
     }
@@ -95,13 +108,13 @@ export const getAllModelsBalance = async (skipCache = false) => {
         error: 'No enabled models with UID found'
       }
     }
-    
+
     // Check if all models have cached data (no TTL check, always use cache if available)
     if (!skipCache) {
       const allModelsHaveCache = enabledModels.every(model => {
         return getCachedApiData('aster/balance', model.uid) !== null
       })
-      
+
       if (allModelsHaveCache) {
         console.log(`✅ Using cached balance for all ${enabledModels.length} models`)
         const results = []
@@ -121,7 +134,7 @@ export const getAllModelsBalance = async (skipCache = false) => {
         }
       }
     }
-    
+
     // Fetch balance data for all models sequentially
     console.log(`🔄 Fetching balance for ${enabledModels.length} models...`)
     const accounts = []
@@ -132,7 +145,7 @@ export const getAllModelsBalance = async (skipCache = false) => {
       try {
         const result = await getModelBalance(model.uid, skipCache)
         console.log(`✅ ${model.name} (${model.uid}): ${result.fromCache ? 'from cache' : 'fetched'}`)
-        
+
         if (result.success) {
           accounts.push({
             modelInfo: model,
@@ -144,7 +157,7 @@ export const getAllModelsBalance = async (skipCache = false) => {
           console.error(`❌ Failed to fetch balance for ${model.name} (${model.uid}):`, result.error)
           accounts.push({
             modelInfo: model,
-            data: null,
+            data: defaultResData(model.uid),
             success: false,
             error: result.error
           })
@@ -154,7 +167,7 @@ export const getAllModelsBalance = async (skipCache = false) => {
         console.error(`❌ Failed to fetch balance for ${model.name} (${model.uid}):`, error.message)
         accounts.push({
           modelInfo: model,
-          data: null,
+          data: defaultResData(model.uid),
           success: false,
           error: error.message
         })
