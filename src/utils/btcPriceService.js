@@ -19,7 +19,8 @@ export const getBtcPriceData = async (symbol = 'BTCUSDT', interval = '5m', limit
     const url = new URL(`${BASE_URL}/markPriceKlines`)
     url.searchParams.append('symbol', symbol)
     url.searchParams.append('interval', interval)
-    url.searchParams.append('limit', limit.toString())
+    url.searchParams.append('startTime', new Date('2025/11/04 00:30').getTime())
+    url.searchParams.append('endTime', new Date().getTime())
 
     const response = await fetch(url.toString(), {
       method: 'GET',
