@@ -42,7 +42,7 @@
           .right-icons
             .icon-item(v-for="model in tradingModels" :key="model.name"
               :class="{ hovered: hoveredModel && hoveredModel.name === model.name }"
-              :style="{ display: selectedModel === 'ALL MODELS' || selectedModel === model.name ? 'flex' : 'none', borderColor: model.color, boxShadow: (hoveredModel && hoveredModel.name === model.name) ? `0 4px 12px ${model.color}33` : 'none' }"
+              :style="{ display: selectedModel === 'ALL MODELS' || selectedModel === model.name ? 'flex' : 'none'}"
               @click="selectedModel = model.name")
               //.icon-dot(:style="{ backgroundColor: model.color }")
               .icon-content
@@ -1296,7 +1296,7 @@ onUnmounted(() => {
 
 .chart-btn
   background transparent
-  border 1px solid #2b3444
+  //border 1px solid #2b3444
   color #cbd5e1
   padding 4px 10px
   border-radius 4px
@@ -1313,7 +1313,7 @@ onUnmounted(() => {
 
 .chart-frame
   position relative
-  padding 8px 120px 6px 22px  // 右边从8px改为48px，增加40px间距
+  padding 8px 160px 6px 22px  // 右边从8px改为48px，增加40px间距
   flex 1 // fill remaining height below header
   min-height 320px
 
@@ -1348,9 +1348,6 @@ onUnmounted(() => {
   align-items center
   gap 8px
   padding 6px 8px
-  background rgba(15, 23, 42, 0.9)
-  border 1px solid
-  border-radius 6px
   cursor pointer
   transition all 0.2s ease
   min-width 140px
@@ -1371,8 +1368,8 @@ onUnmounted(() => {
   gap 8px
 
 .model-image
-  width 20px
-  height 20px
+  width 30px
+  height 30px
   display flex
   align-items center
   justify-content center
