@@ -787,6 +787,8 @@ const backToAllModels = () => {
 
 // Scheduled data updates - separate intervals for different data types
 let balanceUpdateInterval = null
+let chartDataLongInterval = null // 30-minute interval for chart data
+let balanceLongInterval = null // 30-minute interval for balance data
 
 // Load crypto prices asynchronously (fast, non-blocking)
 const loadCryptoPricesAsync = async () => {
@@ -841,6 +843,38 @@ const stopBalanceUpdates = () => {
   if (balanceUpdateInterval) {
     clearInterval(balanceUpdateInterval)
     balanceUpdateInterval = null
+  }
+}
+
+// Start 30-minute interval for chart data refresh
+const startChartDataLongUpdates = () => {
+  // 30 minutes = 30 * 60 * 1000 = 1800000 milliseconds
+  chartDataLongInterval = setInterval(() => {
+    console.log('🔄 Refreshing chart data (30-minute interval)...')
+    loadChartData()
+  }, 30 * 60 * 1000)
+}
+
+const stopChartDataLongUpdates = () => {
+  if (chartDataLongInterval) {
+    clearInterval(chartDataLongInterval)
+    chartDataLongInterval = null
+  }
+}
+
+// Start 30-minute interval for balance data refresh
+const startBalanceLongUpdates = () => {
+  // 30 minutes = 30 * 60 * 1000 = 1800000 milliseconds
+  balanceLongInterval = setInterval(() => {
+    console.log('🔄 Refreshing balance data (30-minute interval)...')
+    loadAsterBalance()
+  }, 30 * 60 * 1000)
+}
+
+const stopBalanceLongUpdates = () => {
+  if (balanceLongInterval) {
+    clearInterval(balanceLongInterval)
+    balanceLongInterval = null
   }
 }
 
@@ -1195,6 +1229,10 @@ onMounted(() => {
   startDataUpdates()
   startPriceUpdates()
 
+  // Start 30-minute intervals for chart data and balance data refresh
+  startChartDataLongUpdates()
+  startBalanceLongUpdates()
+
   // Add window resize listener to update icon positions
   resizeHandler = () => {
     if (chartInstance) {
@@ -1211,6 +1249,8 @@ onUnmounted(() => {
   if (chartInstance) chartInstance.destroy()
   stopDataUpdates()
   stopPriceUpdates()
+  stopChartDataLongUpdates()
+  stopBalanceLongUpdates()
   if (resizeHandler) {
     window.removeEventListener('resize', resizeHandler)
   }
