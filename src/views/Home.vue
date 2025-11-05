@@ -37,12 +37,14 @@
             button.chart-btn(:class="{ active: chartPeriod === '72h' }" @click="setChartPeriod('72h')") 72H
         .chart-frame
           .y-axis-label $
-          .chart-canvas
+          .chart-canvas(@mouseleave="handleChartLeave")
             canvas#tradingChart(ref="chartCanvas")
           .right-icons(v-show="hasChartData")
             .icon-item(v-for="model in tradingModels" :key="model.name"
               :class="{ hovered: hoveredModel && hoveredModel.name === model.name }"
               :style="getIconItemStyle(model)"
+              @mouseenter="handleIconItemHover(model)"
+              @mouseleave="handleIconItemLeave"
               @click="selectedModel = model.name")
               //.icon-dot(:style="{ backgroundColor: model.color }")
               .icon-content
@@ -151,6 +153,7 @@ const chartData = ref(null)
 
 // 图表交互状态
 const hoveredModel = ref(null)
+let hoveredDatasetIndex = -1 // Store the index of the hovered dataset for tooltip filtering (non-reactive for Chart.js filter)
 const selectedModelForChart = ref(null)
 const showBackAllButton = ref(false)
 const iconPositionUpdate = ref(0) // Used to trigger icon position recalculation
@@ -410,7 +413,7 @@ const hasChartData = computed(() => {
   if (!chartData.value || !chartData.value.datasets || chartData.value.datasets.length === 0) {
     return false
   }
-  
+
   // Check if at least one dataset has non-null data points
   return chartData.value.datasets.some(dataset => {
     if (!dataset.data || dataset.data.length === 0) {
@@ -544,15 +547,36 @@ const buildChart = async () => {
       maintainAspectRatio: false,
       interaction: {
         intersect: false,
-        mode: 'index'
+        mode: 'nearest'
       },
       onHover: (event, activeElements) => {
         if (activeElements.length > 0) {
           const datasetIndex = activeElements[0].datasetIndex
           const dataset = chartInstance.data.datasets[datasetIndex]
           hoveredModel.value = dataset ? dataset.modelInfo : null
+          hoveredDatasetIndex = datasetIndex
+
+          // Update opacity for all datasets
+          chartInstance.data.datasets.forEach((ds, index) => {
+            if (index === datasetIndex) {
+              // Selected line: full opacity
+              ds.borderColor = ds.modelInfo.color
+              ds.backgroundColor = hexToRgba(ds.modelInfo.color, 0.2)
+              ds.borderWidth = 1.5
+            } else {
+              // Other lines: reduced opacity (0.5)
+              ds.borderColor = hexToRgba(ds.modelInfo.color, 0.5)
+              ds.backgroundColor = hexToRgba(ds.modelInfo.color, 0.1)
+              ds.borderWidth = 1
+            }
+          })
+          chartInstance.update('none')
+
+          // Trigger icon position update to update icon-item opacity
+          iconPositionUpdate.value++
         } else {
-          hoveredModel.value = null
+          // Reset all opacity when mouse is not on any line
+          resetAllOpacity()
         }
       },
       onClick: (event, activeElements) => {
@@ -573,16 +597,28 @@ const buildChart = async () => {
           bodyColor: '#fff',
           borderColor: '#475569',
           borderWidth: 1,
+          displayColors: false, // Remove the color square indicator
+          filter: (tooltipItem) => {
+            // Only show the tooltip for the hovered dataset
+            if (hoveredDatasetIndex >= 0) {
+              return tooltipItem.datasetIndex === hoveredDatasetIndex
+            }
+            // If no hover, don't show tooltip
+            return false
+          },
           callbacks: {
             title: (context) => {
+              if (context.length === 0) return ''
               const date = new Date(context[0].label)
               return date.toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
             },
             label: (context) => {
               if (context.dataset.label === 'BTC BUY&HOLD') {
-                return `${context.dataset.label}: $${context.parsed.y.toLocaleString()}`
+                return `$${context.parsed.y.toLocaleString()}`
+                // return `${context.dataset.label}: $${context.parsed.y.toLocaleString()}`
               }
-              return `${context.dataset.label}: $${context.parsed.y.toLocaleString()}`
+              return ` $${context.parsed.y.toLocaleString()}`
+              // return `${context.dataset.label}: $${context.parsed.y.toLocaleString()}`
             }
           }
         },
@@ -898,16 +934,32 @@ const shouldShowBackground = (modelName) => {
   return modelName === 'GROK 4'
 }
 
+// Helper function to convert hex color to rgba with opacity
+const hexToRgba = (hex, opacity) => {
+  const r = parseInt(hex.slice(1, 3), 16)
+  const g = parseInt(hex.slice(3, 5), 16)
+  const b = parseInt(hex.slice(5, 7), 16)
+  return `rgba(${r}, ${g}, ${b}, ${opacity})`
+}
+
 // Get icon item style with dynamic positioning based on chart data point
 const getIconItemStyle = (model) => {
   // Reference iconPositionUpdate to trigger reactivity
   const _ = iconPositionUpdate.value
 
+  // Set opacity based on hover state
+  let opacity = 1
+  if (hoveredModel.value) {
+    // If hovering over a model, set opacity to 0.5 for non-hovered items, 1 for hovered item
+    opacity = hoveredModel.value.name === model.name ? 1 : 0.5
+  }
+
   const baseStyle = {
     display: selectedModel.value === 'ALL MODELS' || selectedModel.value === model.name ? 'flex' : 'none',
     position: 'absolute',
     right: '8px',
-    transform: 'translateY(-50%)'
+    transform: 'translateY(-50%)',
+    opacity: opacity.toString()
   }
 
   // If chart is not ready, return base style
@@ -978,6 +1030,92 @@ const getIconItemStyle = (model) => {
     console.warn('Error calculating icon item position:', error)
     return baseStyle
   }
+}
+
+// Reset all lines and icons to full opacity
+const resetAllOpacity = () => {
+  if (!chartInstance || !chartData.value) return
+  
+  hoveredModel.value = null
+  hoveredDatasetIndex = -1
+  
+  // Reset all datasets to full opacity
+  chartInstance.data.datasets.forEach((ds) => {
+    ds.borderColor = ds.modelInfo.color
+    ds.backgroundColor = hexToRgba(ds.modelInfo.color, 0.2)
+    ds.borderWidth = 1.5
+  })
+  chartInstance.update('none')
+  
+  // Trigger icon position update to update icon-item opacity
+  iconPositionUpdate.value++
+}
+
+// Handle icon item hover - update chart opacity when hovering over icon items
+const handleIconItemHover = (model) => {
+  if (!chartInstance || !chartData.value) return
+
+  // Find the dataset for this model
+  const dataset = chartInstance.data.datasets.find(
+    ds => ds.modelInfo && ds.modelInfo.name === model.name
+  )
+
+  if (dataset && dataset.modelInfo) {
+    hoveredModel.value = dataset.modelInfo
+    hoveredDatasetIndex = chartInstance.data.datasets.indexOf(dataset)
+  } else {
+    // If dataset not found, create a modelInfo object from the model
+    hoveredModel.value = {
+      name: model.name,
+      color: model.color,
+      uid: model.uid || null
+    }
+    hoveredDatasetIndex = -1
+  }
+
+  // Update opacity for all datasets
+  chartInstance.data.datasets.forEach((ds) => {
+    if (ds.modelInfo && ds.modelInfo.name === model.name) {
+      // Selected line: full opacity
+      ds.borderColor = ds.modelInfo.color
+      ds.backgroundColor = hexToRgba(ds.modelInfo.color, 0.2)
+      ds.borderWidth = 1.5
+    } else {
+      // Other lines: reduced opacity (0.5)
+      ds.borderColor = hexToRgba(ds.modelInfo.color, 0.5)
+      ds.backgroundColor = hexToRgba(ds.modelInfo.color, 0.1)
+      ds.borderWidth = 1
+    }
+  })
+  chartInstance.update('none')
+
+  // Trigger icon position update to update icon-item opacity
+  iconPositionUpdate.value++
+}
+
+// Handle icon item leave - reset chart opacity when leaving icon items
+const handleIconItemLeave = () => {
+  // Reset all opacity when mouse leaves icon item
+  resetAllOpacity()
+}
+
+// Handle chart leave - reset opacity when mouse leaves chart area
+const handleChartLeave = (event) => {
+  // Check if mouse moved to icon area
+  const relatedTarget = event.relatedTarget
+  if (relatedTarget) {
+    const rightIcons = document.querySelector('.right-icons')
+    // If mouse moved to icon area, don't reset (handleIconItemHover will handle it)
+    if (rightIcons && (rightIcons.contains(relatedTarget) || rightIcons === relatedTarget)) {
+      return
+    }
+  }
+  
+  // Mouse left chart area (and not moved to icon area), reset opacity
+  // Use a small delay to allow icon hover events to process first
+  setTimeout(() => {
+    resetAllOpacity()
+  }, 50)
 }
 
 // Get trading history using new trades service
@@ -1504,9 +1642,9 @@ onUnmounted(() => {
   right 0
   top 0
   bottom 0
-  left 0
+  width 160px
   pointer-events none
-  z-index 10
+  z-index 1
 
 .icon-item
   display flex
