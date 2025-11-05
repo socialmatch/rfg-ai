@@ -555,7 +555,7 @@ export const getUserTrades = async (accountConfig, params = {}) => {
   try {
     // 设置默认参数
     const defaultParams = {
-      limit: 1000, // 默认获取1000条记录
+      limit: 10000, // 默认获取1000条记录
       ...params
     }
 

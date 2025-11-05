@@ -423,7 +423,7 @@ const loadModelData = async () => {
       // Always fetch fresh data in background (even if we have cache)
       const fetchPromises = [
         { key: 'balance', promise: getModelBalance(accountConfig.uid, true) }, // Skip cache
-        { key: 'trades', promise: getModelTrades(accountConfig.uid, 'BTCUSDT', 25, true) }, // Skip cache
+        { key: 'trades', promise: getModelTrades(accountConfig.uid, 'BTCUSDT', 10000, true) }, // Skip cache
         { key: 'positions', promise: getModelPositions(accountConfig.uid, true) } // Skip cache
       ]
 
