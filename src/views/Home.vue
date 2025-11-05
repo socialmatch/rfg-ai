@@ -59,10 +59,10 @@
       .right-panel
         .sidebar-tabs
           .tab(:class="{ active: activeDetailTab === 'trades' }" @click="setActiveDetailTab('trades')") COMPLETED TRADES
-          //.tab(:class="{ active: activeDetailTab === 'model' }" @click="setActiveDetailTab('model')") MODELCHAT
+          .tab(:class="{ active: activeDetailTab === 'prompts' }" @click="setActiveDetailTab('prompts')") PROMPTS
           .tab(:class="{ active: activeDetailTab === 'positions' }" @click="setActiveDetailTab('positions')") POSITIONS
           .tab(:class="{ active: activeDetailTab === 'readme' }" @click="setActiveDetailTab('readme')") README.TXT
-        .filter-section(v-if="activeDetailTab !== 'readme'")
+        .filter-section(v-if="activeDetailTab !== 'readme' && activeDetailTab !== 'prompts'")
           .filter
             span.label FILTER:
             select.select(v-model="selectedModel")
@@ -125,6 +125,7 @@ import ModelChatFeed from '@/components/ModelChatFeed.vue'
 import Chat from '@/components/Chat.vue'
 import Positions from '@/components/Positions.vue'
 import Readme from '@/components/Readme.vue'
+import Prompts from '@/components/Prompts.vue'
 import { getAllModelsProcessedBalance } from '@/utils/newBalanceService.js'
 import { getAllModelsProcessedPositions } from '@/utils/newPositionsService.js'
 import { getAllModelsProcessedTrades } from '@/utils/newTradesService.js'
@@ -1035,10 +1036,10 @@ const getIconItemStyle = (model) => {
 // Reset all lines and icons to full opacity
 const resetAllOpacity = () => {
   if (!chartInstance || !chartData.value) return
-  
+
   hoveredModel.value = null
   hoveredDatasetIndex = -1
-  
+
   // Reset all datasets to full opacity
   chartInstance.data.datasets.forEach((ds) => {
     ds.borderColor = ds.modelInfo.color
@@ -1046,7 +1047,7 @@ const resetAllOpacity = () => {
     ds.borderWidth = 1.5
   })
   chartInstance.update('none')
-  
+
   // Trigger icon position update to update icon-item opacity
   iconPositionUpdate.value++
 }
@@ -1110,7 +1111,7 @@ const handleChartLeave = (event) => {
       return
     }
   }
-  
+
   // Mouse left chart area (and not moved to icon area), reset opacity
   // Use a small delay to allow icon hover events to process first
   setTimeout(() => {
@@ -1320,6 +1321,7 @@ const closeMobileModal = () => {
 const getModalTitle = () => {
   switch (activeDetailTab.value) {
     case 'trades': return 'COMPLETED TRADES'
+    case 'prompts': return 'PROMPTS'
     case 'positions': return 'POSITIONS'
     case 'readme': return 'README.TXT'
     default: return 'DETAILS'
@@ -1332,7 +1334,7 @@ const joinWaitlist = () => { alert('Join waitlist feature to be implemented') }
 const aboutRFGAI = () => { alert('About RFG AI feature to be implemented') }
 
 const getActiveDetailComponent = () => {
-  const components = { trades: CompletedTrades, model: ModelChatFeed, chat: ModelChatFeed, positions: Positions, readme: Readme }
+  const components = { trades: CompletedTrades, model: ModelChatFeed, chat: ModelChatFeed, prompts: Prompts, positions: Positions, readme: Readme }
   return components[activeDetailTab.value]
 }
 
