@@ -39,17 +39,17 @@
           .y-axis-label $
           .chart-canvas
             canvas#tradingChart(ref="chartCanvas")
-          .right-icons
+          .right-icons(v-show="hasChartData")
             .icon-item(v-for="model in tradingModels" :key="model.name"
               :class="{ hovered: hoveredModel && hoveredModel.name === model.name }"
-              :style="{ display: selectedModel === 'ALL MODELS' || selectedModel === model.name ? 'flex' : 'none'}"
+              :style="getIconItemStyle(model)"
               @click="selectedModel = model.name")
               //.icon-dot(:style="{ backgroundColor: model.color }")
               .icon-content
                 .model-image(:style="!model.isBtcPrice && shouldShowBackground(model.name) ? { backgroundColor: model.color } : {}")
                   img(v-if="!model.isBtcPrice" :src="getModelImage(model.name)" :alt="model.name")
                   img(v-else :src="getCryptoIcon('BTC')" alt="BTC")
-                .model-value ${{ (model.balance ? parseFloat(model.balance) : model.value).toLocaleString() }}
+                .model-value(:style="{ backgroundColor: model.color }") ${{ (model.balance ? parseFloat(model.balance) : model.value).toLocaleString() }}
           //.x-axis
             .tick(v-for="tick in xAxisTicks" :key="tick") {{ tick }}
 
@@ -153,6 +153,7 @@ const chartData = ref(null)
 const hoveredModel = ref(null)
 const selectedModelForChart = ref(null)
 const showBackAllButton = ref(false)
+const iconPositionUpdate = ref(0) // Used to trigger icon position recalculation
 
 const selectedModel = ref('ALL MODELS')
 const modelOptions = computed(() => {
@@ -404,6 +405,22 @@ const loadAsterBalance = async () => {
 
 const legends = computed(() => tradingModels.value)
 
+// Whether chart data is available for rendering right-icons (check if datasets have actual data)
+const hasChartData = computed(() => {
+  if (!chartData.value || !chartData.value.datasets || chartData.value.datasets.length === 0) {
+    return false
+  }
+  
+  // Check if at least one dataset has non-null data points
+  return chartData.value.datasets.some(dataset => {
+    if (!dataset.data || dataset.data.length === 0) {
+      return false
+    }
+    // Check if there's at least one non-null value
+    return dataset.data.some(value => value !== null && value !== undefined)
+  })
+})
+
 // Dynamically generate x-axis ticks
 const xAxisTicks = computed(() => {
   if (!chartData.value || !chartData.value.labels) return []
@@ -642,6 +659,11 @@ const buildChart = async () => {
       }
     }
   })
+
+  // Trigger icon position update after chart is built
+  nextTick(() => {
+    iconPositionUpdate.value++
+  })
 }
 
 // Update chart data
@@ -667,6 +689,11 @@ const updateChart = () => {
   chartInstance.data.labels = labels
   chartInstance.data.datasets = filteredDatasets
   chartInstance.update('none')
+
+  // Trigger icon position update after chart update
+  nextTick(() => {
+    iconPositionUpdate.value++
+  })
 }
 
 // Number rolling animation component
@@ -835,6 +862,88 @@ const getModelImage = (modelName) => {
 // Only GROK 4 needs background color (too similar to theme), others don't
 const shouldShowBackground = (modelName) => {
   return modelName === 'GROK 4'
+}
+
+// Get icon item style with dynamic positioning based on chart data point
+const getIconItemStyle = (model) => {
+  // Reference iconPositionUpdate to trigger reactivity
+  const _ = iconPositionUpdate.value
+
+  const baseStyle = {
+    display: selectedModel.value === 'ALL MODELS' || selectedModel.value === model.name ? 'flex' : 'none',
+    position: 'absolute',
+    right: '8px',
+    transform: 'translateY(-50%)'
+  }
+
+  // If chart is not ready, return base style
+  if (!chartInstance || !chartData.value || !chartCanvas.value) {
+    return baseStyle
+  }
+
+  try {
+    // Find the dataset for this model
+    const dataset = chartInstance.data.datasets.find(d => d.modelInfo?.name === model.name)
+    if (!dataset || !dataset.data || dataset.data.length === 0) {
+      return baseStyle
+    }
+
+    // Get the last non-null value from the dataset
+    let lastValue = null
+    for (let i = dataset.data.length - 1; i >= 0; i--) {
+      if (dataset.data[i] !== null && dataset.data[i] !== undefined) {
+        lastValue = dataset.data[i]
+        break
+      }
+    }
+
+    if (lastValue === null) {
+      return baseStyle
+    }
+
+    // Get the y scale
+    const yScale = chartInstance.scales.y
+    if (!yScale) {
+      return baseStyle
+    }
+
+    // Get the pixel position for the y value (relative to canvas)
+    const yPixel = yScale.getPixelForValue(lastValue)
+
+    // Get the chart canvas element and its container
+    const canvasElement = chartCanvas.value
+    const chartCanvasContainer = canvasElement.closest('.chart-canvas')
+
+    if (!chartCanvasContainer) {
+      return baseStyle
+    }
+
+    // Get the chart frame container
+    const chartFrame = chartCanvasContainer.closest('.chart-frame')
+    if (!chartFrame) {
+      return baseStyle
+    }
+
+    // Get positions using getBoundingClientRect
+    // Wait for next tick to ensure DOM is ready
+    const canvasRect = chartCanvasContainer.getBoundingClientRect()
+    const chartFrameRect = chartFrame.getBoundingClientRect()
+
+    // Calculate offset: canvas container top relative to chart-frame top
+    // yPixel is relative to the canvas top, so we need to add the canvas offset
+    const offsetTop = canvasRect.top - chartFrameRect.top
+
+    // Calculate final top position: yPixel is relative to canvas top, add the offset
+    const topPosition = yPixel + offsetTop
+
+    return {
+      ...baseStyle,
+      top: `${topPosition}px`
+    }
+  } catch (error) {
+    console.warn('Error calculating icon item position:', error)
+    return baseStyle
+  }
 }
 
 // Get trading history using new trades service
@@ -1070,6 +1179,9 @@ watch(selectedModel, (newVal, oldVal) => {
   }
 })
 
+// Window resize handler for icon positions
+let resizeHandler = null
+
 onMounted(() => {
   setTimeout(() => { connectionStatus.value = 'connected' }, 1500)
 
@@ -1082,12 +1194,26 @@ onMounted(() => {
   // Start auto refresh for balance (every 15s) and crypto prices (every 5s)
   startDataUpdates()
   startPriceUpdates()
+
+  // Add window resize listener to update icon positions
+  resizeHandler = () => {
+    if (chartInstance) {
+      nextTick(() => {
+        iconPositionUpdate.value++
+      })
+    }
+  }
+
+  window.addEventListener('resize', resizeHandler)
 })
 
 onUnmounted(() => {
   if (chartInstance) chartInstance.destroy()
   stopDataUpdates()
   stopPriceUpdates()
+  if (resizeHandler) {
+    window.removeEventListener('resize', resizeHandler)
+  }
 })
 </script>
 
@@ -1335,12 +1461,11 @@ onUnmounted(() => {
 
 .right-icons
   position absolute
-  right 8px
-  top 50%
-  transform translateY(-50%)
-  display flex
-  flex-direction column
-  gap 8px
+  right 0
+  top 0
+  bottom 0
+  left 0
+  pointer-events none
   z-index 10
 
 .icon-item
@@ -1350,11 +1475,11 @@ onUnmounted(() => {
   padding 6px 8px
   cursor pointer
   transition all 0.2s ease
-  min-width 140px
-
+  min-width 155px
+  pointer-events auto
   &:hover, &.hovered
-    background rgba(15, 23, 42, 0.95)
-    transform scale(1.05)
+    //background rgba(15, 23, 42, 0.95)
+    transform scale(1.05) translateY(-50%) !important
 
 .icon-dot
   width 8px
@@ -1386,6 +1511,7 @@ onUnmounted(() => {
   font-weight 800
   font-family 'JetBrains Mono', monospace
   white-space nowrap
+  padding 2px 4px
 
 
 .x-axis
@@ -1664,7 +1790,7 @@ onUnmounted(() => {
     height 100% !important
 
   .right-icons
-    bottom 120%
+    // Icon items are now positioned individually based on chart data points
 
     .icon-item
       border none
