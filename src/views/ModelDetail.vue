@@ -283,16 +283,28 @@ const loadModelData = async () => {
       // Helper function to process and update model data
       const processAndUpdateModelData = (balance, trades, positions) => {
         try {
-          // Process balance data
+          // Process balance data - same as Leaderboard
           let balanceData = null
+          let accountValue = 0
+          let availableCash = 0
           if (balance && balance.status === 'fulfilled' && balance.value.success) {
             const apiData = balance.value.data
+            // Use total_value directly from API response (same as Leaderboard uses balance.balance)
+            // In processBalanceData, balance.balance = data.total_value
+            accountValue = parseFloat(apiData.total_value || 0)
+            availableCash = parseFloat(apiData.available_cash || 0)
+            
             if (apiData.active_balances && apiData.active_balances.length > 0) {
               balanceData = apiData.active_balances.find(b => b.asset === 'USDT')
               if (balanceData) {
-                balanceData.totalUsdtValue = apiData.total_usdt_value
+                // Set balance.balance to total_value (same as processBalanceData does)
+                balanceData.balance = apiData.total_value ? apiData.total_value.toString() : "0"
+                balanceData.totalUsdtValue = apiData.total_value || 0
+                balanceData.crossWalletBalance = apiData.total_value ? apiData.total_value.toString() : "0"
+                balanceData.crossUnPnl = (accountValue - availableCash) ? (accountValue - availableCash).toString() : "0"
                 balanceData.uid = apiData.uid
                 balanceData.walletName = apiData.wallet_name
+                balanceData.availableBalance = apiData.available_cash ? apiData.available_cash.toString() : "0"
               }
             }
           }
@@ -338,7 +350,8 @@ const loadModelData = async () => {
           const maxDrawdown = calculateMaxDrawdown(tradesData)
 
           const initialCapital = accountConfig.initialCapital || 10000
-          const accountValue = balanceData ? parseFloat(balanceData.balance) : 0
+          // Calculate total P&L same as Leaderboard: accountValue - initialCapital
+          // accountValue is already calculated from apiData.total_value (same as balance.balance in Leaderboard)
           const totalPnl = accountValue - initialCapital
           const returnPercent = initialCapital > 0 ? (totalPnl / initialCapital) * 100 : 0
 
@@ -348,9 +361,9 @@ const loadModelData = async () => {
             models.value[modelIndex] = {
               ...models.value[modelIndex],
               accountValue: accountValue,
-              availableCash: balanceData ? parseFloat(balanceData.availableBalance) : 0,
+              availableCash: availableCash,
               totalPnl: totalPnl,
-              totalUnrealizedPnl: balanceData ? parseFloat(balanceData.crossUnPnl) : 0,
+              totalUnrealizedPnl: accountValue - availableCash,
               totalFees: stats.totalCommission || 0,
               netRealized: stats.totalProfit || 0,
               returnPercent: returnPercent,
