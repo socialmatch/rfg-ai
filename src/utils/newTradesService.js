@@ -7,7 +7,7 @@ import { getAllModelInfo } from '../config/accounts.js'
 import { getCachedApiData, setCachedApiData, getAllModelsCachedData } from '../utils/dataCache.js'
 
 // Base API URL
-const BASE_URL = 'https://testapi1.rfgmeme.ai/aster/trades'
+const BASE_URL = 'https://testapi1.rfgmeme.ai/aster/closed-trades'
 
 // Default parameters
 const DEFAULT_SYMBOL = 'BTCUSDT'
@@ -21,8 +21,8 @@ const DEFAULT_LIMIT = 1000
  * @returns {Promise<Object>} Trades data response
  */
 export const getModelTrades = async (uid, symbol = DEFAULT_SYMBOL, limit = DEFAULT_LIMIT, skipCache = false) => {
-  const API_NAME = 'aster/trades'
-  
+  const API_NAME = 'aster/closed-trades'
+
   // Check cache first if not skipping
   if (!skipCache) {
     const cached = getCachedApiData(API_NAME, uid)
@@ -36,10 +36,10 @@ export const getModelTrades = async (uid, symbol = DEFAULT_SYMBOL, limit = DEFAU
       }
     }
   }
-  
+
   try {
     console.log(`🔄 Fetching trades for ${uid}...`)
-    const response = await fetch(`${BASE_URL}/${uid}?symbol=&limit=${limit}`, {
+    const response = await fetch(`${BASE_URL}?uid=${uid}&limit=${limit}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -53,12 +53,23 @@ export const getModelTrades = async (uid, symbol = DEFAULT_SYMBOL, limit = DEFAU
     const data = await response.json()
 
     if (data.success) {
+      const normalizedData = {
+        trades: Array.isArray(data?.data?.trades) ? data.data.trades : [],
+        query_params: data?.data?.query_params || { uid, limit },
+        uid,
+        wallet_name: Array.isArray(data?.data?.trades) && data.data.trades.length > 0
+          ? data.data.trades[0].wallet_name
+          : uid,
+        total_trades: Array.isArray(data?.data?.trades) ? data.data.trades.length : 0,
+        statistics: data?.data?.statistics || null
+      }
+
       // Cache the result
-      setCachedApiData(API_NAME, uid, data.data)
-      
+      setCachedApiData(API_NAME, uid, normalizedData)
+
       return {
         success: true,
-        data: data.data,
+        data: normalizedData,
         error: null,
         fromCache: false
       }
@@ -101,18 +112,18 @@ export const getAllModelsTrades = async (symbol = DEFAULT_SYMBOL, limit = DEFAUL
         error: 'No enabled models with UID found'
       }
     }
-    
+
     // Check if all models have cached data (no TTL check, always use cache if available)
     if (!skipCache) {
       const allModelsHaveCache = enabledModels.every(model => {
-        return getCachedApiData('aster/trades', model.uid) !== null
+        return getCachedApiData('aster/closed-trades', model.uid) !== null
       })
-      
+
       if (allModelsHaveCache) {
         console.log(`✅ Using cached trades for all ${enabledModels.length} models`)
         const results = []
         enabledModels.forEach(model => {
-          const cached = getCachedApiData('aster/trades', model.uid)
+          const cached = getCachedApiData('aster/closed-trades', model.uid)
           if (cached) {
             results.push({
               modelInfo: model,
@@ -127,7 +138,7 @@ export const getAllModelsTrades = async (symbol = DEFAULT_SYMBOL, limit = DEFAUL
         }
       }
     }
-    
+
     // Fetch trades data for all models sequentially
     console.log(`🔄 Fetching trades for ${enabledModels.length} models...`)
     const accounts = []
@@ -138,7 +149,7 @@ export const getAllModelsTrades = async (symbol = DEFAULT_SYMBOL, limit = DEFAUL
       try {
         const result = await getModelTrades(model.uid, symbol, limit, skipCache)
         console.log(`✅ ${model.name} (${model.uid}): ${result.fromCache ? 'from cache' : 'fetched'}`)
-        
+
         if (result.success) {
           accounts.push({
             modelInfo: model,
@@ -189,45 +200,65 @@ export const getAllModelsTrades = async (symbol = DEFAULT_SYMBOL, limit = DEFAUL
  * @param {Object} tradesData - Raw trades data from API
  * @returns {Array} Processed trades data
  */
-export const processTradesData = (tradesData) => {
-  if (!tradesData || !tradesData.data) {
+export const processTradesData = (tradesData, modelInfo = null) => {
+  const data = tradesData?.data || tradesData || {}
+  const tradesArray = Array.isArray(data.trades) ? data.trades : []
+
+  if (!tradesArray || tradesArray.length === 0) {
     return []
   }
 
   const processedData = []
+  const uid = modelInfo?.uid || data.uid || data.query_params?.uid || tradesArray[0]?.wallet_name || null
+  const walletName = tradesArray[0]?.wallet_name || modelInfo?.modelSlug || uid || ''
+  const totalTrades = data.total_trades || tradesArray.length
+  const statistics = data.statistics || null
 
-  // Process trades array, filter out trades with realizedPnl === 0
-  if (tradesData.data.trades) {
-    tradesData.data.trades.forEach(trade => {
-      // Filter out trades where realizedPnl is 0
-      const realizedPnl = parseFloat(trade.realizedPnl)
-      if (realizedPnl === 0) {
-        return // Skip this trade
-      }
-      
-      processedData.push({
-        symbol: trade.symbol,
-        id: trade.id,
-        orderId: trade.orderId,
-        side: trade.side,
-        price: trade.price,
-        qty: trade.qty,
-        realizedPnl: trade.realizedPnl,
-        marginAsset: trade.marginAsset,
-        quoteQty: trade.quoteQty,
-        commission: trade.commission,
-        commissionAsset: trade.commissionAsset,
-        time: trade.time,
-        positionSide: trade.positionSide,
-        buyer: trade.buyer,
-        maker: trade.maker,
-        uid: tradesData.data.uid,
-        walletName: tradesData.data.wallet_name,
-        totalTrades: tradesData.data.total_trades,
-        statistics: tradesData.data.statistics
-      })
+  tradesArray.forEach(trade => {
+    const direction = (trade.direction || '').toUpperCase()
+    const side = direction === 'SHORT' ? 'SELL' : direction === 'LONG' ? 'BUY' : (trade.side || 'BUY')
+    const quantity = parseFloat(trade.quantity ?? trade.qty ?? 0)
+    const entryPrice = parseFloat(trade.entry_price ?? trade.price ?? 0)
+    const exitPrice = parseFloat(trade.exit_price ?? trade.exitPrice ?? entryPrice)
+    const realizedPnl = parseFloat(trade.net_pnl ?? trade.realizedPnl ?? 0)
+
+    if (!realizedPnl || realizedPnl === 0) {
+      return
+    }
+
+    const commission = parseFloat(trade.fees_total ?? trade.commission ?? 0)
+    const timestamp = trade.created_at ? new Date(trade.created_at).getTime() : (trade.time ?? Date.now())
+    const quoteQty = !isNaN(entryPrice) && !isNaN(quantity) ? entryPrice * quantity : parseFloat(trade.quoteQty ?? 0)
+
+    processedData.push({
+      symbol: trade.symbol,
+      id: trade.id ?? trade.trade_id,
+      orderId: trade.trade_id ?? trade.orderId,
+      side,
+      direction: direction || null,
+      price: entryPrice,
+      entryPrice,
+      exitPrice,
+      qty: quantity,
+      quantity,
+      realizedPnl,
+      grossPnl: parseFloat(trade.gross_pnl ?? trade.grossPnl ?? realizedPnl),
+      marginAsset: trade.marginAsset || 'USDT',
+      quoteQty,
+      commission,
+      commissionAsset: trade.commissionAsset || 'USDT',
+      time: timestamp,
+      createdAt: trade.created_at || null,
+      positionSide: direction || null,
+      holdingTime: trade.holding_time || null,
+      buyer: trade.buyer ?? null,
+      maker: trade.maker ?? null,
+      uid,
+      walletName,
+      totalTrades,
+      statistics
     })
-  }
+  })
 
   return processedData
 }
@@ -249,7 +280,7 @@ export const getAllModelsProcessedTrades = async (symbol = DEFAULT_SYMBOL, limit
     // Process each account's trades data
     const processedAccounts = result.accounts.map(account => ({
       modelInfo: account.modelInfo,
-      data: account.success ? processTradesData(account) : [],
+      data: account.success ? processTradesData(account, account.modelInfo) : [],
       success: account.success,
       error: account.error || null
     }))

@@ -112,38 +112,45 @@ const convertAsterTrades = (asterTrades) => {
   // Filter out trades with realizedPnl === 0 before mapping
   return asterTrades
     .filter(trade => {
-      const realizedPnl = parseFloat(trade.realizedPnl)
-      return realizedPnl !== 0
+      const realizedPnl = parseFloat(trade.realizedPnl ?? trade.net_pnl ?? 0)
+      return !isNaN(realizedPnl) && realizedPnl !== 0
     })
     .map((trade, index) => {
-      const side = trade.side === 'BUY' ? 'LONG' : 'SHORT'
-      const symbol = trade.symbol.replace('USDT', '')
-      const price = parseFloat(trade.price)
-      const quantity = parseFloat(trade.qty)
-      const realizedPnl = parseFloat(trade.realizedPnl)
-      const commission = parseFloat(trade.commission)
+      const direction = (trade.direction || trade.positionSide || '').toUpperCase()
+      const side = direction === 'SHORT' ? 'SHORT' : 'LONG'
+      const symbol = (trade.symbol || '').replace('USDT', '')
+      const entryPrice = parseFloat(trade.entryPrice ?? trade.price ?? trade.entry_price ?? 0)
+      const exitPrice = parseFloat(trade.exitPrice ?? trade.exit_price ?? entryPrice)
+      const quantity = parseFloat(trade.quantity ?? trade.qty ?? 0)
+      const realizedPnl = parseFloat(trade.realizedPnl ?? trade.net_pnl ?? 0)
+      const commission = Math.abs(parseFloat(trade.commission ?? trade.fees_total ?? 0))
+      const tradeTime = trade.time
+        ? new Date(trade.time)
+        : trade.createdAt
+          ? new Date(trade.createdAt)
+          : new Date()
+      const holdingTime = trade.holdingTime || trade.holding_time || 'N/A'
+      const modelConfig = trade.uid ? getAccountByUid(trade.uid) : null
+      const modelName = modelConfig?.modelName || trade.walletName || 'UNKNOWN'
+      const absQty = Math.abs(quantity)
+      const notionalStart = !isNaN(entryPrice) ? entryPrice * absQty : 0
+      const notionalEnd = !isNaN(exitPrice) ? exitPrice * absQty : notionalStart + realizedPnl
 
-    // Calculate holding time (simulated, as API does not provide)
-    const tradeTime = new Date(trade.time)
-    const holdingTime = `${Math.floor(Math.random() * 24)}H ${Math.floor(Math.random() * 60)}M`
-
-    const convertedTrade = {
-      id: trade.id || index + 1,
-      // model: trade.modelInfo?.name || 'UNKNOWN',
-      model: getAccountByUid(trade.uid).modelName || 'UNKNOWN',
-      action: `completed a ${side.toLowerCase()} trade on ${symbol}!`,
-      entryPrice: price,
-      exitPrice: price + (realizedPnl / Math.abs(quantity)), // Calculate exit price based on P&L
-      quantity: trade.positionSide === 'SHORT' ? -Math.abs(quantity) : Math.abs(quantity),
-      notionalStart: parseFloat(trade.quoteQty),
-      notionalEnd: parseFloat(trade.quoteQty) + realizedPnl,
-      holdingTime: holdingTime,
-      profit: realizedPnl - Math.abs(commission), // Net profit = realized P&L - fees
-      timestamp: tradeTime,
-      commission: Math.abs(commission)
-    }
-    return convertedTrade
-  }).sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
+      return {
+        id: trade.id || trade.orderId || index + 1,
+        model: modelName,
+        action: `completed a ${side.toLowerCase()} trade on ${symbol || trade.symbol}!`,
+        entryPrice,
+        exitPrice,
+        quantity: side === 'SHORT' ? -absQty : absQty,
+        notionalStart,
+        notionalEnd,
+        holdingTime,
+        profit: realizedPnl, // net_pnl already accounts for fees
+        timestamp: tradeTime,
+        commission
+      }
+    }).sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
 }
 
 // Filter trade records based on selected model

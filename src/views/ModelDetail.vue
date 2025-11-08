@@ -27,17 +27,14 @@
         .label Available Cash
         .value ${{ currentModel.availableCash.toLocaleString() }}
       .stat-item
-        .label Total P&L
+        .label Total P&L(RETURN %)
         .value(:class="currentModel.totalPnl >= 0 ? 'positive' : 'negative'")
           | ${{ currentModel.totalPnl.toLocaleString() }}
+          | ({{ (currentModel.returnPercent || 0) >= 0 ? '+' : '' }}{{ (currentModel.returnPercent || 0).toFixed(2) }}%)
       .stat-item
         .label Total Fees
         .value(:class="(currentModel.totalFees || 0) >= 0 ? 'positive' : 'negative'")
           | ${{ formatCurrency(currentModel.totalFees) }}
-      .stat-item
-        .label RETURN %
-        .value(:class="(currentModel.returnPercent || 0) >= 0 ? 'positive' : 'negative'")
-          | {{ (currentModel.returnPercent || 0) >= 0 ? '+' : '' }}{{ (currentModel.returnPercent || 0).toFixed(2) }}%
 
   // Statistics
   .stats-section
@@ -167,7 +164,7 @@ import Header from '@/components/Header.vue'
 import { getAllModelInfo, getModelIconPath, getAccountBalanceData, getAccountByModelName } from '@/config/accounts.js'
 import { getModelBalance } from '@/utils/newBalanceService.js'
 import { getModelPositions } from '@/utils/newPositionsService.js'
-import { getModelTrades } from '@/utils/newTradesService.js'
+import { getModelTrades, processTradesData } from '@/utils/newTradesService.js'
 import { calculateTradingStats, calculateSharpeRatio, calculateMaxDrawdown } from '@/utils/tradingStatsCalculator.js'
 import { getCryptoIcon } from '@/utils/cryptoIcons.js'
 import { getCachedApiData, setCachedApiData } from '@/utils/dataCache.js'
@@ -293,7 +290,7 @@ const loadModelData = async () => {
             // In processBalanceData, balance.balance = data.total_value
             accountValue = parseFloat(apiData.total_value || 0)
             availableCash = parseFloat(apiData.available_cash || 0)
-            
+
             if (apiData.active_balances && apiData.active_balances.length > 0) {
               balanceData = apiData.active_balances.find(b => b.asset === 'USDT')
               if (balanceData) {
@@ -313,21 +310,7 @@ const loadModelData = async () => {
           let tradesData = []
           if (trades && trades.status === 'fulfilled' && trades.value.success) {
             const apiData = trades.value.data
-            if (apiData.trades && apiData.trades.length > 0) {
-              // Filter out trades where realizedPnl is 0
-              tradesData = apiData.trades
-                .filter(trade => {
-                  const realizedPnl = parseFloat(trade.realizedPnl)
-                  return realizedPnl !== 0
-                })
-                .map(trade => ({
-                  ...trade,
-                  uid: apiData.uid,
-                  walletName: apiData.wallet_name,
-                  totalTrades: apiData.total_trades,
-                  statistics: apiData.statistics
-                }))
-            }
+            tradesData = processTradesData({ data: apiData }, accountConfig)
           }
 
           // Process position data
@@ -401,19 +384,29 @@ const loadModelData = async () => {
               recentTrades: tradesData
                 .sort((a, b) => new Date(b.time) - new Date(a.time))
                 .slice(0, 25)
-                .map((trade, index) => ({
-                  id: index + 1,
-                  side: trade.side === 'BUY' ? 'LONG' : 'SHORT',
-                  coin: trade.symbol.replace('USDT', ''),
-                  entryPrice: parseFloat(trade.price),
-                  exitPrice: parseFloat(trade.price),
-                  quantity: parseFloat(trade.qty),
-                  holdingTime: '1h 30m',
-                  notionalEntry: parseFloat(trade.quoteQty),
-                  notionalExit: parseFloat(trade.quoteQty),
-                  totalFees: Math.abs(parseFloat(trade.commission)),
-                  netPnl: parseFloat(trade.realizedPnl)
-                }))
+                .map((trade, index) => {
+                  const direction = (trade.direction || trade.positionSide || '').toUpperCase()
+                  const side = direction === 'SHORT' ? 'SHORT' : (trade.side === 'SELL' ? 'SHORT' : 'LONG')
+                  const entryPrice = parseFloat(trade.entryPrice ?? 0)
+                  const exitPrice = parseFloat(trade.exitPrice ?? entryPrice)
+                  const quantity = parseFloat(trade.quantity ?? 0)
+                  const absQty = Math.abs(quantity)
+                  const notionalEntry = !isNaN(entryPrice) ? entryPrice * absQty : 0
+                  const notionalExit = !isNaN(exitPrice) ? exitPrice * absQty : notionalEntry + parseFloat(trade.realizedPnl ?? 0)
+                  return {
+                    id: index + 1,
+                    side,
+                    coin: trade.symbol ? trade.symbol.replace('USDT', '') : '',
+                    entryPrice,
+                    exitPrice,
+                    quantity: side === 'SHORT' ? -absQty : absQty,
+                    holdingTime: trade.holdingTime || trade.holding_time || 'N/A',
+                    notionalEntry,
+                    notionalExit,
+                    totalFees: Math.abs(parseFloat(trade.commission ?? 0)),
+                    netPnl: parseFloat(trade.realizedPnl ?? trade.net_pnl ?? 0)
+                  }
+                })
             }
           }
 
