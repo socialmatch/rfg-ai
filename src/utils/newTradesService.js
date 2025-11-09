@@ -11,7 +11,7 @@ const BASE_URL = 'https://testapi1.rfgmeme.ai/aster/closed-trades'
 
 // Default parameters
 const DEFAULT_SYMBOL = 'BTCUSDT'
-const DEFAULT_LIMIT = 1000
+const DEFAULT_LIMIT = 10000
 
 /**
  * Get trades data for a single model by UID
