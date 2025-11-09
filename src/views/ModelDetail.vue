@@ -167,7 +167,7 @@ import { getModelPositions } from '@/utils/newPositionsService.js'
 import { getModelTrades, processTradesData } from '@/utils/newTradesService.js'
 import { calculateTradingStats, calculateSharpeRatio, calculateMaxDrawdown } from '@/utils/tradingStatsCalculator.js'
 import { getCryptoIcon } from '@/utils/cryptoIcons.js'
-import { getCachedApiData, setCachedApiData } from '@/utils/dataCache.js'
+import { setCachedApiData } from '@/utils/dataCache.js'
 
 const route = useRoute()
 
@@ -250,32 +250,8 @@ const loadModelData = async () => {
     }
 
     try {
-      // Check cache first for this model
       console.log(`🔍 Loading data for model: ${currentModel.name}, UID: ${accountConfig.uid}`)
-      let balanceResult, tradesResult, positionsResult
-      // Get cached data (always use cache if available, no TTL check)
-      const cachedBalance = getCachedApiData('aster/balance', accountConfig.uid)
-      const cachedTrades = getCachedApiData('aster/trades', accountConfig.uid)
-      const cachedPositions = getCachedApiData('aster/positions', accountConfig.uid)
-
-      if (cachedBalance) {
-        console.log(`✅ Using cached balance data for ${currentModel.name}`)
-        balanceResult = { status: 'fulfilled', value: { success: true, data: cachedBalance } }
-      } else {
-        console.log(`⚠️ No cached balance data for ${currentModel.name}, will fetch`)
-      }
-      if (cachedTrades) {
-        console.log(`✅ Using cached trades data for ${currentModel.name}`)
-        tradesResult = { status: 'fulfilled', value: { success: true, data: cachedTrades } }
-      } else {
-        console.log(`⚠️ No cached trades data for ${currentModel.name}, will fetch`)
-      }
-      if (cachedPositions) {
-        console.log(`✅ Using cached positions data for ${currentModel.name}`)
-        positionsResult = { status: 'fulfilled', value: { success: true, data: cachedPositions } }
-      } else {
-        console.log(`⚠️ No cached positions data for ${currentModel.name}, will fetch`)
-      }
+      loading.value = true
 
       // Helper function to process and update model data
       const processAndUpdateModelData = (balance, trades, positions) => {
@@ -417,62 +393,36 @@ const loadModelData = async () => {
         }
       }
 
-      // If we have cached data, process and display it immediately
-      if (cachedBalance || cachedTrades || cachedPositions) {
-        console.log(`⚡ Processing cached data immediately for ${currentModel.name}`)
-        processAndUpdateModelData(balanceResult, tradesResult, positionsResult)
-      } else {
-        // No cache, keep loading state until fresh data arrives
-        loading.value = true
-      }
-
-      // Always fetch fresh data in background (even if we have cache)
       const fetchPromises = [
-        { key: 'balance', promise: getModelBalance(accountConfig.uid, true) }, // Skip cache
-        { key: 'trades', promise: getModelTrades(accountConfig.uid, 'BTCUSDT', 10000, true) }, // Skip cache
-        { key: 'positions', promise: getModelPositions(accountConfig.uid, true) } // Skip cache
+        { key: 'balance', cacheKey: 'aster/balance', promise: getModelBalance(accountConfig.uid, true) },
+        { key: 'trades', cacheKey: 'aster/closed-trades', promise: getModelTrades(accountConfig.uid, 'BTCUSDT', 10000, true) },
+        { key: 'positions', cacheKey: 'aster/positions', promise: getModelPositions(accountConfig.uid, true) }
       ]
 
       const results = await Promise.allSettled(fetchPromises.map(p => p.promise))
 
-      // Update with fresh data
-      results.forEach((result, index) => {
-        const key = fetchPromises[index].key
+      const balanceResult = results[0]
+      const tradesResult = results[1]
+      const positionsResult = results[2]
 
-        if (result.status === 'fulfilled') {
-          const data = result.value
-          console.log(`✅ Fetched fresh ${key} data for ${currentModel.name}:`, data)
-
-          // Cache using API-specific names
-          if (key === 'balance' && data.success) {
-            setCachedApiData('aster/balance', accountConfig.uid, data.data)
-            balanceResult = result
-            console.log(`✅ Updated balance result for ${currentModel.name}`)
-          } else if (key === 'trades' && data.success) {
-            setCachedApiData('aster/trades', accountConfig.uid, data.data)
-            tradesResult = result
-            console.log(`✅ Updated trades result for ${currentModel.name}`)
-          } else if (key === 'positions' && data.success) {
-            setCachedApiData('aster/positions', accountConfig.uid, data.data)
-            positionsResult = result
-            console.log(`✅ Updated positions result for ${currentModel.name}`)
-          } else {
-            console.log(`⚠️ ${key} fetch succeeded but data.success = false:`, data)
-          }
-        } else {
-          console.error(`❌ ${key} fetch failed for ${currentModel.name}:`, result.reason)
+      // Update caches with fresh data
+      fetchPromises.forEach((item, index) => {
+        const result = results[index]
+        if (result.status === 'fulfilled' && result.value?.success) {
+          setCachedApiData(item.cacheKey, accountConfig.uid, result.value.data)
         }
       })
 
-      // Ensure we have results (from cache or fresh fetch)
-      balanceResult = balanceResult || { status: 'fulfilled', value: null }
-      tradesResult = tradesResult || { status: 'fulfilled', value: null }
-      positionsResult = positionsResult || { status: 'fulfilled', value: null }
+      const hasSuccessfulData =
+        (balanceResult.status === 'fulfilled' && balanceResult.value?.success) ||
+        (tradesResult.status === 'fulfilled' && tradesResult.value?.success) ||
+        (positionsResult.status === 'fulfilled' && positionsResult.value?.success)
 
-      // Process fresh data (only if we didn't process cached data already)
-      if (!cachedBalance && !cachedTrades && !cachedPositions) {
+      if (hasSuccessfulData) {
         console.log(`📥 Processing fresh data for ${currentModel.name}`)
         processAndUpdateModelData(balanceResult, tradesResult, positionsResult)
+      } else {
+        throw new Error('No data available from API')
       }
     } catch (error) {
       console.error(`❌ Failed to get ${currentModel.name} data:`, error)
