@@ -41,7 +41,8 @@
     .stats-grid
       .stat-card
         .stat-label Average Leverage
-        .stat-value {{ currentModel.averageLeverage }}
+        //.stat-value {{ currentModel.averageLeverage }}
+        .stat-value --
       .stat-card
         .stat-label Average Confidence
         .stat-value {{ currentModel.averageConfidence }}%
@@ -75,7 +76,7 @@
     .section-header
       .section-title ACTIVE POSITIONS
       .total-pnl Total Unrealized P&L:
-        span.positive ${{ formatCurrency(currentModel.totalUnrealizedPnl) }}
+        span(:class="currentModel.totalUnrealizedPnl >= 0 ? 'positive' : 'negative'") ${{ formatCurrency(currentModel.totalUnrealizedPnl) }}
     .positions-grid
       .position-card(v-for="position in currentModel.positions" :key="position.id")
         .position-header
@@ -295,6 +296,7 @@ const loadModelData = async () => {
 
           // Process position data
           let positionsData = []
+          let totalUnrealizedPositionsPnl = 0
           if (positions && positions.status === 'fulfilled' && positions.value.success) {
             const apiData = positions.value.data
             if (apiData.positions && apiData.positions.length > 0) {
@@ -304,6 +306,10 @@ const loadModelData = async () => {
                 walletName: apiData.wallet_name,
                 totalPositions: apiData.total_positions
               }))
+              totalUnrealizedPositionsPnl = positionsData.reduce((sum, position) => {
+                const pnl = parseFloat(position.unRealizedProfit ?? position.netUnrealizedPnl ?? 0)
+                return sum + (isNaN(pnl) ? 0 : pnl)
+              }, 0)
             }
           }
 
@@ -326,7 +332,7 @@ const loadModelData = async () => {
               accountValue: accountValue,
               availableCash: availableCash,
               totalPnl: totalPnl,
-              totalUnrealizedPnl: accountValue - availableCash,
+              totalUnrealizedPnl: totalUnrealizedPositionsPnl,
               totalFees: stats.totalCommission || 0,
               netRealized: stats.totalProfit || 0,
               returnPercent: returnPercent,
@@ -736,6 +742,8 @@ watch(() => route.params.slug, (newSlug, oldSlug) => {
   span.positive
     color #10b981
     font-weight 600
+  span.negative
+    color #ef4444
 
 .positions-grid
   display grid
@@ -746,6 +754,7 @@ watch(() => route.params.slug, (newSlug, oldSlug) => {
   background #1e293b
   border-radius 12px
   padding 24px
+  max-width 457px
 
 .position-header
   display flex
