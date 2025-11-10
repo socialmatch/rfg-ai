@@ -6,7 +6,7 @@
   .page-title LEADERBOARD
 
   // Tabs
-  .tabs-container
+  //.tabs-container
     .tab(:class="{ active: activeTab === 'overall' }" @click="setActiveTab('overall')") OVERALL STATS
     //.tab(:class="{ active: activeTab === 'analytics' }" @click="setActiveTab('analytics')") ADVANCED ANALYTICS
 
