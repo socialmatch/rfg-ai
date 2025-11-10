@@ -44,8 +44,8 @@
         //.stat-value {{ currentModel.averageLeverage }}
         .stat-value --
       .stat-card
-        .stat-label Average Confidence
-        .stat-value {{ currentModel.averageConfidence }}%
+        .stat-label WIN RATE
+        .stat-value {{ currentModel.winRate }}%
       .stat-card
         .stat-label Biggest Win
         .stat-value.positive ${{ formatCurrency(currentModel.biggestWin) }}
