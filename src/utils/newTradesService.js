@@ -7,7 +7,7 @@ import { getAllModelInfo } from '../config/accounts.js'
 import { getCachedApiData, setCachedApiData, getAllModelsCachedData } from '../utils/dataCache.js'
 
 // Base API URL
-const BASE_URL = 'https://testapi1.rfgmeme.ai/aster/closed-trades'
+const BASE_URL = `${import.meta.env.VITE_APP_SERVER_URL}/aster/closed-trades`
 
 // Default parameters
 const DEFAULT_SYMBOL = 'BTCUSDT'
@@ -203,6 +203,11 @@ export const getAllModelsTrades = async (symbol = DEFAULT_SYMBOL, limit = DEFAUL
 export const processTradesData = (tradesData, modelInfo = null) => {
   const data = tradesData?.data || tradesData || {}
   const tradesArray = Array.isArray(data.trades) ? data.trades : []
+  const defaultLeverage = () => {
+    const level = data?.query_params?.leverage || data?.leverage || null
+    if (level) return parseFloat(level)
+    return null
+  }
 
   if (!tradesArray || tradesArray.length === 0) {
     return []
@@ -230,6 +235,9 @@ export const processTradesData = (tradesData, modelInfo = null) => {
     const timestamp = trade.created_at ? new Date(trade.created_at).getTime() : (trade.time ?? Date.now())
     const quoteQty = !isNaN(entryPrice) && !isNaN(quantity) ? entryPrice * quantity : parseFloat(trade.quoteQty ?? 0)
 
+    const leverage =
+      trade.leverage ?? trade.leverage_level ?? trade.position_leverage ?? defaultLeverage()
+
     processedData.push({
       symbol: trade.symbol,
       id: trade.id ?? trade.trade_id,
@@ -256,7 +264,8 @@ export const processTradesData = (tradesData, modelInfo = null) => {
       uid,
       walletName,
       totalTrades,
-      statistics
+      statistics,
+      leverage: leverage !== null ? parseFloat(leverage) : null
     })
   })
 

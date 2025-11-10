@@ -7,7 +7,7 @@ import { getAllModelInfo } from '../config/accounts.js'
 import { getCachedApiData, setCachedApiData, getAllModelsCachedData } from '../utils/dataCache.js'
 
 // Base API URL
-const BASE_URL = 'https://testapi1.rfgmeme.ai/aster/positions'
+const BASE_URL = `${import.meta.env.VITE_APP_SERVER_URL}/aster/positions`
 
 /**
  * Get positions data for a single model by UID

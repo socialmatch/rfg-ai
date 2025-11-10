@@ -330,7 +330,14 @@ const loadModelData = async () => {
               totalFees: stats.totalCommission || 0,
               netRealized: stats.totalProfit || 0,
               returnPercent: returnPercent,
-              averageLeverage: tradesData.length > 0 ? (tradesData.reduce((sum, trade) => sum + parseFloat(trade.leverage || 1), 0) / tradesData.length).toFixed(1) : '0.0',
+              averageLeverage: (() => {
+                const leverageValues = tradesData
+                  .map(trade => parseFloat(trade.leverage))
+                  .filter(value => !isNaN(value) && value > 0)
+                if (leverageValues.length === 0) return 'N/A'
+                const avg = leverageValues.reduce((sum, value) => sum + value, 0) / leverageValues.length
+                return avg.toFixed(1)
+              })(),
               averageConfidence: stats.winRate || 0,
               biggestWin: stats.biggestWin || 0,
               biggestLoss: stats.biggestLoss || 0,
