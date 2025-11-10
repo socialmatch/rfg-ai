@@ -133,6 +133,158 @@ const getActiveCryptoIcons = () => {
   return supportedCryptos
 }
 
+const buildLeaderboardFromData = (balanceData, tradesData, positionsData) => {
+  const hasBalance = balanceData && balanceData.success
+  const hasTrades = tradesData && tradesData.success
+  const hasPositions = positionsData && positionsData.success
+
+  if (!hasBalance && !hasTrades && !hasPositions) {
+    console.warn('⚠️ No valid leaderboard datasets available to build view')
+    return false
+  }
+
+  const modelDataMap = new Map()
+
+  if (hasBalance) {
+    balanceData.accounts.forEach(account => {
+      if (account.success && account.data && account.data.length > 0) {
+        const usdtBalance = account.data.find(b => b.asset === 'USDT')
+        if (usdtBalance) {
+          modelDataMap.set(account.modelInfo.name, {
+            ...modelDataMap.get(account.modelInfo.name) || {},
+            modelInfo: account.modelInfo,
+            balance: usdtBalance,
+            accountValue: parseFloat(usdtBalance.crossWalletBalance + usdtBalance.crossUnPnl),
+            unrealizedPnL: parseFloat(usdtBalance.crossUnPnl),
+            totalUsdtValue: parseFloat(usdtBalance.totalUsdtValue || usdtBalance.balance),
+            uid: usdtBalance.uid,
+            walletName: usdtBalance.walletName
+          })
+        }
+      }
+    })
+  }
+
+  if (hasTrades) {
+    tradesData.accounts.forEach(account => {
+      if (account.data && account.data.length > 0) {
+        const modelName = account.modelInfo.name
+        const existingData = modelDataMap.get(modelName) || { modelInfo: account.modelInfo }
+
+        const stats = calculateTradingStats(account.data)
+        const sharpeRatio = calculateSharpeRatio(account.data)
+        const maxDrawdown = calculateMaxDrawdown(account.data)
+
+        modelDataMap.set(modelName, {
+          ...existingData,
+          trades: account.data,
+          stats,
+          sharpeRatio,
+          maxDrawdown
+        })
+      }
+    })
+  }
+
+  if (hasPositions) {
+    console.log('🔍 Processing positions data for accounts:', positionsData.accounts.length)
+    positionsData.accounts.forEach(account => {
+      console.log('🔍 Processing account:', account.modelInfo.name, 'Success:', account.success)
+      console.log('🔍 Account data structure:', account.data)
+
+      if (account.success && account.data) {
+        const positions = account.data.positions || account.data
+        console.log('🔍 Positions found:', positions)
+
+        if (positions && positions.length > 0) {
+          console.log('🔍 Account has positions:', positions.length, 'positions')
+          const modelName = account.modelInfo.name
+          const existingData = modelDataMap.get(modelName) || { modelInfo: account.modelInfo }
+
+          const mappedPositions = positions.map((position, index) => ({
+            id: index + 1,
+            coin: position.symbol ? position.symbol.replace('USDT', '') : 'UNKNOWN',
+            entryTime: new Date(position.updateTime || Date.now()).toLocaleTimeString(),
+            entryPrice: parseFloat(position.entryPrice || 0),
+            side: parseFloat(position.positionAmt || 0) >= 0 ? 'LONG' : 'SHORT',
+            quantity: Math.abs(parseFloat(position.positionAmt || 0)),
+            leverage: parseFloat(position.leverage || 1),
+            liquidationPrice: parseFloat(position.liquidationPrice || 0),
+            margin: parseFloat(position.isolatedMargin || 0),
+            unrealPnl: parseFloat(position.unRealizedProfit || 0),
+            notional: parseFloat(position.notional || 0)
+          }))
+
+          console.log('🔍 Mapped positions for', modelName, ':', mappedPositions)
+          modelDataMap.set(modelName, {
+            ...existingData,
+            positions: mappedPositions
+          })
+        } else {
+          console.log('🔍 Account has no positions:', account.modelInfo.name)
+        }
+      } else {
+        console.log('🔍 Account failed:', account.modelInfo.name)
+      }
+    })
+  } else {
+    console.log('🔍 No positions data or failed to get positions data')
+  }
+
+  const leaderboardItems = []
+  modelDataMap.forEach((data, modelName) => {
+    const balance = data.balance
+    const stats = data.stats || {}
+    const accountValue = balance ? parseFloat(balance.balance) : 0
+    const initialCapital = data.modelInfo.initialCapital || 10000
+    const totalPnl = accountValue - initialCapital
+    const returnPercent = initialCapital > 0 ? (totalPnl / initialCapital) * 100 : 0
+
+    leaderboardItems.push({
+      rank: 0,
+      name: modelName,
+      accountValue: accountValue,
+      returnPercent: returnPercent,
+      totalPnl: totalPnl,
+      fees: stats.totalCommission || 0,
+      winRate: stats.winRate || 0,
+      biggestWin: stats.biggestWin || 0,
+      biggestLoss: stats.biggestLoss || 0,
+      sharpe: stats.profitLossRatio || 0,
+      trades: stats.totalTrades || 0,
+      color: data.modelInfo.color,
+      balance: balance?.balance || '0.00000000',
+      availableBalance: balance?.availableBalance || '0.00000000',
+      marginAvailable: balance?.marginAvailable || false,
+      initialCapital: initialCapital,
+      positions: data.positions || [],
+      longTrades: stats.longTrades || 0,
+      shortTrades: stats.shortTrades || 0,
+      winTrades: stats.winTrades || 0,
+      lossTrades: stats.lossTrades || 0,
+      averageWin: stats.averageWin || 0,
+      averageLoss: stats.averageLoss || 0,
+      maxDrawdown: data.maxDrawdown || 0
+    })
+
+    console.log('🔍 Built leaderboard item for', modelName, 'with positions:', data.positions || [])
+  })
+
+  leaderboardItems.sort((a, b) => b.accountValue - a.accountValue)
+  leaderboardItems.forEach((item, index) => {
+    item.rank = index + 1
+  })
+
+  leaderboardData.value = leaderboardItems
+
+  console.log('✅ Leaderboard data built:', {
+    totalModels: leaderboardItems.length,
+    data: leaderboardItems
+  })
+
+  return leaderboardItems.length > 0
+}
+
 // Dynamically load leaderboard data
 const loadLeaderboardData = async () => {
   loading.value = true
@@ -140,7 +292,6 @@ const loadLeaderboardData = async () => {
   try {
     console.log('🔄 Loading leaderboard data...')
 
-    // Check cache first for each data type and use it immediately
     let balanceData = getCachedData('balance')
     let tradesData = getCachedData('trades')
     let positionsData = getCachedData('positions')
@@ -149,204 +300,39 @@ const loadLeaderboardData = async () => {
     if (tradesData) console.log('✅ Using cached trades data for leaderboard')
     if (positionsData) console.log('✅ Using cached positions data for leaderboard')
 
-    // Always fetch fresh data in background
-    const fetchPromises = []
-    if (!balanceData) {
-      fetchPromises.push({
-        key: 'balance',
-        promise: getAllModelsProcessedBalance()
-      })
-    }
-    if (!tradesData) {
-      fetchPromises.push({
-        key: 'trades',
-        promise: getAllModelsProcessedTrades()
-      })
-    }
-    if (!positionsData) {
-      fetchPromises.push({
-        key: 'positions',
-        promise: getAllModelsProcessedPositions()
-      })
-    }
+    const builtFromCache = buildLeaderboardFromData(balanceData, tradesData, positionsData)
 
-    // Fetch missing data
-    const results = await Promise.allSettled(fetchPromises.map(p => p.promise))
+    const fetchConfigs = [
+      { key: 'balance', cacheKey: 'balance', promise: getAllModelsProcessedBalance(true) },
+      { key: 'trades', cacheKey: 'trades', promise: getAllModelsProcessedTrades(undefined, undefined, true) },
+      { key: 'positions', cacheKey: 'positions', promise: getAllModelsProcessedPositions(true) }
+    ]
 
-    // Update with fresh data
+    const results = await Promise.allSettled(fetchConfigs.map(p => p.promise))
+
     results.forEach((result, index) => {
+      const { key, cacheKey } = fetchConfigs[index]
       if (result.status === 'fulfilled') {
-        const key = fetchPromises[index].key
         const data = result.value
-        console.log(`✅ Fetched fresh ${key} data for leaderboard`)
-        setCachedData(key, data)
-
-        if (key === 'balance') balanceData = data
-        if (key === 'trades') tradesData = data
-        if (key === 'positions') positionsData = data
+        if (data && data.success) {
+          console.log(`✅ Fetched fresh ${key} data for leaderboard`)
+          setCachedData(cacheKey, data)
+          if (key === 'balance') balanceData = data
+          if (key === 'trades') tradesData = data
+          if (key === 'positions') positionsData = data
+        } else {
+          console.warn(`⚠️ ${key} data fetch returned unsuccessful response:`, data?.error)
+        }
+      } else {
+        console.error(`❌ ${key} data fetch failed:`, result.reason)
       }
     })
 
-    // Ensure we have data (from cache or fresh fetch)
-    balanceData = balanceData || null
-    tradesData = tradesData || null
-    positionsData = positionsData || null
+    const builtFromFresh = buildLeaderboardFromData(balanceData, tradesData, positionsData)
 
-    // Build model data mapping
-    const modelDataMap = new Map()
-
-    // Process balance data
-    if (balanceData && balanceData.success) {
-      balanceData.accounts.forEach(account => {
-        if (account.success && account.data && account.data.length > 0) {
-          const usdtBalance = account.data.find(b => b.asset === 'USDT')
-          if (usdtBalance) {
-            modelDataMap.set(account.modelInfo.name, {
-              ...modelDataMap.get(account.modelInfo.name) || {},
-              modelInfo: account.modelInfo,
-              balance: usdtBalance,
-              accountValue: parseFloat(usdtBalance.crossWalletBalance + usdtBalance.crossUnPnl),
-              unrealizedPnL: parseFloat(usdtBalance.crossUnPnl),
-              totalUsdtValue: parseFloat(usdtBalance.totalUsdtValue || usdtBalance.balance),
-              uid: usdtBalance.uid,
-              walletName: usdtBalance.walletName
-            })
-          }
-        }
-      })
+    if (!builtFromCache && !builtFromFresh) {
+      throw new Error('No leaderboard data available')
     }
-
-    // Process trading history data
-    if (tradesData && tradesData.success) {
-      tradesData.accounts.forEach(account => {
-        if (account.data && account.data.length > 0) {
-          const modelName = account.modelInfo.name
-          const existingData = modelDataMap.get(modelName) || { modelInfo: account.modelInfo }
-
-          // Calculate trading statistics
-          const stats = calculateTradingStats(account.data)
-          const sharpeRatio = calculateSharpeRatio(account.data)
-          const maxDrawdown = calculateMaxDrawdown(account.data)
-
-          modelDataMap.set(modelName, {
-            ...existingData,
-            trades: account.data,
-            stats,
-            sharpeRatio,
-            maxDrawdown
-          })
-        }
-      })
-    }
-
-    // Process positions data
-    console.log('🔍 Positions data received:', positionsData)
-    if (positionsData && positionsData.success) {
-      console.log('🔍 Processing positions data for accounts:', positionsData.accounts.length)
-      positionsData.accounts.forEach(account => {
-        console.log('🔍 Processing account:', account.modelInfo.name, 'Success:', account.success)
-        console.log('🔍 Account data structure:', account.data)
-
-        if (account.success && account.data) {
-          // Check if positions exist in the data structure
-          const positions = account.data.positions || account.data
-          console.log('🔍 Positions found:', positions)
-
-          if (positions && positions.length > 0) {
-            console.log('🔍 Account has positions:', positions.length, 'positions')
-            const modelName = account.modelInfo.name
-            const existingData = modelDataMap.get(modelName) || { modelInfo: account.modelInfo }
-
-            // Map positions data to the expected format (same as ModelDetail)
-            const mappedPositions = positions.map((position, index) => ({
-              id: index + 1,
-              coin: position.symbol ? position.symbol.replace('USDT', '') : 'UNKNOWN',
-              entryTime: new Date(position.updateTime || Date.now()).toLocaleTimeString(),
-              entryPrice: parseFloat(position.entryPrice || 0),
-              side: parseFloat(position.positionAmt || 0) >= 0 ? 'LONG' : 'SHORT', // Passed positionAmt determines side
-              quantity: Math.abs(parseFloat(position.positionAmt || 0)),
-              leverage: parseFloat(position.leverage || 1),
-              liquidationPrice: parseFloat(position.liquidationPrice || 0),
-              margin: parseFloat(position.isolatedMargin || 0), // Use isolatedMargin as margin
-              unrealPnl: parseFloat(position.unRealizedProfit || 0), // Fixed field name
-              notional: parseFloat(position.notional || 0) // Add notional field
-            }))
-
-            console.log('🔍 Mapped positions for', modelName, ':', mappedPositions)
-            modelDataMap.set(modelName, {
-              ...existingData,
-              positions: mappedPositions
-            })
-          } else {
-            console.log('🔍 Account has no positions:', account.modelInfo.name)
-          }
-        } else {
-          console.log('🔍 Account failed:', account.modelInfo.name)
-        }
-      })
-    } else {
-      console.log('🔍 No positions data or failed to get positions data')
-    }
-
-    // Build leaderboard data
-    const leaderboardItems = []
-    modelDataMap.forEach((data, modelName) => {
-      const balance = data.balance
-      const stats = data.stats || {}
-      const accountValue = balance ? parseFloat(balance.balance) : 0
-      const initialCapital = data.modelInfo.initialCapital || 10000 // Default to $10,000
-
-      // Calculate total P&L: ACCT VALUE - Initial Capital
-      const totalPnl = accountValue - initialCapital
-
-      // Calculate return percentage: (ACCT VALUE - Initial Capital) / Initial Capital * 100
-      const returnPercent = initialCapital > 0 ? (totalPnl / initialCapital) * 100 : 0
-
-      leaderboardItems.push({
-        rank: 0, // Sort later
-        name: modelName,
-        accountValue: accountValue,
-        returnPercent: returnPercent,
-        totalPnl: totalPnl,
-        fees: stats.totalCommission || 0, // Total commission from trading history
-        winRate: stats.winRate || 0,
-        biggestWin: stats.biggestWin || 0,
-        biggestLoss: stats.biggestLoss || 0,
-        sharpe: stats.profitLossRatio || 0, // Use profit/loss ratio as Sharpe ratio approximation
-        trades: stats.totalTrades || 0,
-        color: data.modelInfo.color,
-        balance: balance?.balance || '0.00000000',
-        availableBalance: balance?.availableBalance || '0.00000000',
-        marginAvailable: balance?.marginAvailable || false,
-        initialCapital: initialCapital,
-        // Add positions data
-        positions: data.positions || [],
-        // New detailed statistics
-        longTrades: stats.longTrades || 0,
-        shortTrades: stats.shortTrades || 0,
-        winTrades: stats.winTrades || 0,
-        lossTrades: stats.lossTrades || 0,
-        averageWin: stats.averageWin || 0,
-        averageLoss: stats.averageLoss || 0,
-        maxDrawdown: data.maxDrawdown || 0
-      })
-
-      console.log('🔍 Built leaderboard item for', modelName, 'with positions:', data.positions || [])
-    })
-
-    // Sort by account value and set ranking
-    leaderboardItems.sort((a, b) => b.accountValue - a.accountValue)
-    leaderboardItems.forEach((item, index) => {
-      item.rank = index + 1
-    })
-
-    leaderboardData.value = leaderboardItems
-
-    console.log('✅ Leaderboard data loaded successfully:', {
-      totalModels: leaderboardItems.length,
-      data: leaderboardItems
-    })
-
   } catch (error) {
     console.error('❌ Failed to load leaderboard data:', error)
   } finally {

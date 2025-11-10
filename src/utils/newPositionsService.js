@@ -221,9 +221,9 @@ export const processPositionsData = (positionsData) => {
  * Get positions data for all models and process it
  * @returns {Promise<Object>} Processed positions data for all models
  */
-export const getAllModelsProcessedPositions = async () => {
+export const getAllModelsProcessedPositions = async (skipCache = false) => {
   try {
-    const result = await getAllModelsPositions()
+    const result = await getAllModelsPositions(skipCache)
 
     if (!result.success) {
       return result

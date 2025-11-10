@@ -269,9 +269,9 @@ export const processTradesData = (tradesData, modelInfo = null) => {
  * @param {number} limit - Number of trades to fetch (default: 25)
  * @returns {Promise<Object>} Processed trades data for all models
  */
-export const getAllModelsProcessedTrades = async (symbol = DEFAULT_SYMBOL, limit = DEFAULT_LIMIT) => {
+export const getAllModelsProcessedTrades = async (symbol = DEFAULT_SYMBOL, limit = DEFAULT_LIMIT, skipCache = false) => {
   try {
-    const result = await getAllModelsTrades(symbol, limit)
+    const result = await getAllModelsTrades(symbol, limit, skipCache)
 
     if (!result.success) {
       return result

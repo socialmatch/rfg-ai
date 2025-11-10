@@ -232,9 +232,9 @@ export const processBalanceData = (balanceData) => {
  * Get balance data for all models and process it
  * @returns {Promise<Object>} Processed balance data for all models
  */
-export const getAllModelsProcessedBalance = async () => {
+export const getAllModelsProcessedBalance = async (skipCache = false) => {
   try {
-    const result = await getAllModelsBalance()
+    const result = await getAllModelsBalance(skipCache)
 
     if (!result.success) {
       return result
