@@ -754,7 +754,6 @@ watch(() => route.params.slug, (newSlug, oldSlug) => {
   background #1e293b
   border-radius 12px
   padding 24px
-  max-width 457px
 
 .position-header
   display flex

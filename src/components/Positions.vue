@@ -109,9 +109,9 @@ const convertAsterPositions = (asterPositions, asterAccountData) => {
       let availableCash = 0
       if (asterAccountData && Array.isArray(asterAccountData)) {
         const accountData = asterAccountData.find(acc => acc.modelInfo?.name === modelName)
-        availableCash = parseFloat(accountData?.availableBalance || 0)
-      } else {
-        availableCash = parseFloat(asterAccountData?.availableBalance || 0)
+        availableCash = parseFloat(accountData?.availableCash ?? accountData?.availableBalance ?? 0)
+      } else if (asterAccountData) {
+        availableCash = parseFloat(asterAccountData?.availableCash ?? asterAccountData?.availableBalance ?? 0)
       }
 
       modelGroups[modelName] = {
