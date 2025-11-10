@@ -131,9 +131,9 @@
         .col EXIT PRICE
         .col QUANTITY
         .col HOLDING TIME
+        .col FEES
         .col NOTIONAL ENTRY
         .col NOTIONAL EXIT
-        .col TOTAL FEES
         .col NET P&L
 
       .table-body
@@ -149,9 +149,9 @@
           .col(data-label="EXIT PRICE") ${{ formatCurrency(trade.exitPrice) }}
           .col(data-label="QUANTITY") {{ formatQuantity(trade.quantity) }}
           .col(data-label="HOLDING TIME") {{ trade.holdingTime }}
+          .col(data-label="FEES") ${{ formatCurrency(trade.totalFees) }}
           .col(data-label="NOTIONAL ENTRY") ${{ formatCurrency(trade.notionalEntry) }}
           .col(data-label="NOTIONAL EXIT") ${{ formatCurrency(trade.notionalExit) }}
-          .col(data-label="TOTAL FEES") ${{ formatCurrency(trade.totalFees) }}
           .col(:class="trade.netPnl >= 0 ? 'positive' : 'negative'" data-label="NET P&L")
             | ${{ formatCurrency(trade.netPnl) }}
 
@@ -396,7 +396,7 @@ const loadModelData = async () => {
                     holdingTime: trade.holdingTime || trade.holding_time || 'N/A',
                     notionalEntry,
                     notionalExit,
-                    totalFees: Math.abs(parseFloat(trade.commission ?? 0)),
+                    totalFees: Math.abs(parseFloat(trade.feesTotal ?? trade.commission ?? trade.fees_total ?? 0)),
                     netPnl: parseFloat(trade.realizedPnl ?? trade.net_pnl ?? 0)
                   }
                 })

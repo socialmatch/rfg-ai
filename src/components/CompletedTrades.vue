@@ -23,8 +23,8 @@
           span.label Holding time:
           span.value {{ trade.holdingTime }}
         .detail-row
-          span.label Commission:
-          span.value ${{ trade.commission.toFixed(4) }}
+          span.label Fees:
+          span.value ${{ trade.feesTotal.toFixed(4) }}
       .trade-pnl
         .pnl-label NET P&L:
         .pnl-amount(:class="trade.profit >= 0 ? 'positive' : 'negative'")
@@ -123,7 +123,7 @@ const convertAsterTrades = (asterTrades) => {
       const exitPrice = parseFloat(trade.exitPrice ?? trade.exit_price ?? entryPrice)
       const quantity = parseFloat(trade.quantity ?? trade.qty ?? 0)
       const realizedPnl = parseFloat(trade.realizedPnl ?? trade.net_pnl ?? 0)
-      const commission = Math.abs(parseFloat(trade.commission ?? trade.fees_total ?? 0))
+      const feesTotal = Math.abs(parseFloat(trade.fees_total ?? trade.commission ?? 0))
       const tradeTime = trade.time
         ? new Date(trade.time)
         : trade.createdAt
@@ -148,7 +148,7 @@ const convertAsterTrades = (asterTrades) => {
         holdingTime,
         profit: realizedPnl, // net_pnl already accounts for fees
         timestamp: tradeTime,
-        commission
+        feesTotal
       }
     }).sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
 }

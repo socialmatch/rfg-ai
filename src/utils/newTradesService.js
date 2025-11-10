@@ -231,7 +231,7 @@ export const processTradesData = (tradesData, modelInfo = null) => {
       return
     }
 
-    const commission = parseFloat(trade.fees_total ?? trade.commission ?? 0)
+    const feesTotal = parseFloat(trade.fees_total ?? trade.commission ?? 0)
     const timestamp = trade.created_at ? new Date(trade.created_at).getTime() : (trade.time ?? Date.now())
     const quoteQty = !isNaN(entryPrice) && !isNaN(quantity) ? entryPrice * quantity : parseFloat(trade.quoteQty ?? 0)
 
@@ -253,7 +253,8 @@ export const processTradesData = (tradesData, modelInfo = null) => {
       grossPnl: parseFloat(trade.gross_pnl ?? trade.grossPnl ?? realizedPnl),
       marginAsset: trade.marginAsset || 'USDT',
       quoteQty,
-      commission,
+      commission: feesTotal,
+      feesTotal,
       commissionAsset: trade.commissionAsset || 'USDT',
       time: timestamp,
       createdAt: trade.created_at || null,
