@@ -51,8 +51,13 @@
       .stat-card
         .stat-label Biggest Loss
         .stat-value.negative ${{ formatCurrency(currentModel.biggestLoss) }}
-
-    .hold-times
+      .stat-card
+        .stat-label Long
+        .stat-value {{ currentModel.holdTimes.long }}%
+      .stat-card
+        .stat-label Short
+        .stat-value {{ currentModel.holdTimes.short }}%
+    //.hold-times
       .hold-times-title Hold Times
       .hold-times-grid
         .hold-time-item
@@ -61,7 +66,7 @@
         .hold-time-item
           .label Short
           .value {{ currentModel.holdTimes.short }}%
-        .hold-time-item
+        //.hold-time-item
           .label Flat
           .value {{ currentModel.holdTimes.flat }}%
 
@@ -71,7 +76,6 @@
       .section-title ACTIVE POSITIONS
       .total-pnl Total Unrealized P&L:
         span.positive ${{ formatCurrency(currentModel.totalUnrealizedPnl) }}
-
     .positions-grid
       .position-card(v-for="position in currentModel.positions" :key="position.id")
         .position-header
@@ -648,9 +652,8 @@ watch(() => route.params.slug, (newSlug, oldSlug) => {
 
 .stats-grid
   display grid
-  grid-template-columns repeat(4, 1fr)
+  grid-template-columns repeat(6, 1fr)
   gap 24px
-  margin-bottom 40px
 
 .stat-card
   background #1e293b
@@ -664,7 +667,7 @@ watch(() => route.params.slug, (newSlug, oldSlug) => {
     margin-bottom 8px
 
   .stat-value
-    font-size 24px
+    font-size 20px
     font-weight 700
     color #f8fafc
 

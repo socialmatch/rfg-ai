@@ -59,8 +59,8 @@
       .right-panel
         .sidebar-tabs
           .tab(:class="{ active: activeDetailTab === 'trades' }" @click="setActiveDetailTab('trades')") COMPLETED TRADES
-          .tab(:class="{ active: activeDetailTab === 'prompts' }" @click="setActiveDetailTab('prompts')") PROMPTS
           .tab(:class="{ active: activeDetailTab === 'positions' }" @click="setActiveDetailTab('positions')") POSITIONS
+          .tab(:class="{ active: activeDetailTab === 'prompts' }" @click="setActiveDetailTab('prompts')") PROMPTS
           .tab(:class="{ active: activeDetailTab === 'readme' }" @click="setActiveDetailTab('readme')") README.TXT
         .filter-section(v-if="activeDetailTab !== 'readme' && activeDetailTab !== 'prompts'")
           .filter
