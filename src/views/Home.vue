@@ -58,8 +58,8 @@
       // Right side: sidebar tabs + list
       .right-panel
         .sidebar-tabs
-          .tab(:class="{ active: activeDetailTab === 'trades' }" @click="setActiveDetailTab('trades')") COMPLETED TRADES
           .tab(:class="{ active: activeDetailTab === 'positions' }" @click="setActiveDetailTab('positions')") POSITIONS
+          .tab(:class="{ active: activeDetailTab === 'trades' }" @click="setActiveDetailTab('trades')") COMPLETED TRADES
           .tab(:class="{ active: activeDetailTab === 'prompts' }" @click="setActiveDetailTab('prompts')") PROMPTS
           .tab(:class="{ active: activeDetailTab === 'readme' }" @click="setActiveDetailTab('readme')") README.TXT
         .filter-section(v-if="activeDetailTab !== 'readme' && activeDetailTab !== 'prompts'")
@@ -67,7 +67,7 @@
             span.label FILTER:
             select.select(v-model="selectedModel")
               option(v-for="m in modelOptions" :key="m" :value="m") {{ m }}
-          .showing Showing Last 100 Trades
+          .showing(v-if="sidebarInfoText") {{ sidebarInfoText }}
         .sidebar-content
           component(:is="getActiveDetailComponent()"
             :selectedModel="selectedModel"
@@ -141,7 +141,7 @@ Chart.register(...registerables, zoomPlugin)
 const router = useRouter()
 
 const activeTab = ref('live')
-const activeDetailTab = ref('trades')
+const activeDetailTab = ref('positions')
 const chartPeriod = ref('all')
 const connectionStatus = ref('connecting')
 const showMobileModal = ref(false)
@@ -164,6 +164,16 @@ const modelOptions = computed(() => {
   const allModels = ['ALL MODELS']
   const configModels = getAllModelInfo().map(model => model.name)
   return [...allModels, ...configModels]
+})
+
+const sidebarInfoText = computed(() => {
+  if (activeDetailTab.value === 'positions') {
+    return 'Showing Current Positions'
+  }
+  if (activeDetailTab.value === 'trades') {
+    return 'Showing Last 100 Trades'
+  }
+  return ''
 })
 
 // Aster Finance 账户数据
@@ -890,13 +900,13 @@ const loadAllData = async () => {
     console.log('💰 Step 2: Loading all models balance...')
     await loadAsterBalance()
 
-    // Step 3: Load all models trades
-    console.log('📈 Step 3: Loading all models trades...')
-    await loadAsterUserTrades()
-
-    // Step 4: Load all models positions
-    console.log('📍 Step 4: Loading all models positions...')
+    // Step 3: Load all models positions
+    console.log('📍 Step 3: Loading all models positions...')
     await loadAsterAccountData()
+
+    // Step 4: Load all models trades
+    console.log('📈 Step 4: Loading all models trades...')
+    await loadAsterUserTrades()
 
     console.log('✅ All data loaded successfully')
   } catch (error) {
