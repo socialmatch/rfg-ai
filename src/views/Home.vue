@@ -331,6 +331,12 @@ const loadAsterBalance = async ({ skipInit = false, skipCache = false } = {}) =>
     const balanceData = Array.from(balanceDataMap.values())
     balanceData.sort((a, b) => b.value - a.value)
 
+    const btcIndex = balanceData.findIndex(item => item.isBtcPrice)
+    if (btcIndex !== -1) {
+      const btcItem = balanceData.splice(btcIndex, 1)[0]
+      balanceData.push(btcItem)
+    }
+
     // Add BTC price data as a model
     try {
       const btcResult = await getBtcPriceData('BTCUSDT', '5m')
