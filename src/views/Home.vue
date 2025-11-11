@@ -340,13 +340,20 @@ const loadAsterBalance = async ({ skipInit = false, skipCache = false } = {}) =>
         const latestPrice = parseFloat(btcResult.data[btcResult.data.length - 1][4])
         const latestValue = btcQuantity * latestPrice
 
-        balanceData.push({
+        const existingIndex = balanceData.findIndex(item => item.name === 'BTC BUY&HOLD')
+        const btcModel = {
           name: 'BTC BUY&HOLD',
           value: latestValue,
           change: 0,
           color: '#f7931a',
           isBtcPrice: true
-        })
+        }
+
+        if (existingIndex !== -1) {
+          balanceData[existingIndex] = btcModel
+        } else {
+          balanceData.push(btcModel)
+        }
       }
       console.log('balanceData:', balanceData)
     } catch (error) {
