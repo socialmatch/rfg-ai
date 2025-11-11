@@ -1,6 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import Home from '@/views/Home.vue'
-import WalletTest from '@/views/WalletTest.vue'
 import Leaderboard from '@/views/Leaderboard.vue'
 import Models from '@/views/Models.vue'
 import ModelDetail from '@/views/ModelDetail.vue'
@@ -26,11 +25,6 @@ const routes = [
     path: '/models/:slug',
     name: 'model-detail',
     component: ModelDetail
-  },
-  {
-    path: '/wallet-test',
-    name: 'wallet-test',
-    component: WalletTest
   },
   {
     path: '/about',
