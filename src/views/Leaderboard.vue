@@ -80,7 +80,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import Header from '@/components/Header.vue'
 import { getAllModelInfo, getModelIconPath, getAccountBalanceData, getAccountByModelName, DEFAULT_INITIAL_CAPITAL } from '@/config/accounts.js'
@@ -100,6 +100,9 @@ const sortColumn = ref('')
 
 // Leaderboard data - initialized as empty, dynamically get real data later
 const leaderboardData = ref([])
+
+// Auto-refresh timer (1 minute = 60000ms)
+let refreshTimer = null
 
 // Get active crypto icons for display based on winning model's positions
 const getActiveCryptoIcons = () => {
@@ -275,19 +278,21 @@ const buildLeaderboardFromData = (balanceData, tradesData, positionsData) => {
     item.rank = index + 1
   })
 
-  leaderboardData.value = leaderboardItems
-
   console.log('✅ Leaderboard data built:', {
     totalModels: leaderboardItems.length,
     data: leaderboardItems
   })
 
-  return leaderboardItems.length > 0
+  // Return the built data instead of directly updating leaderboardData.value
+  return leaderboardItems.length > 0 ? leaderboardItems : null
 }
 
 // Dynamically load leaderboard data
-const loadLeaderboardData = async () => {
-  loading.value = true
+const loadLeaderboardData = async (silent = false) => {
+  // Only show loading indicator on initial load, not on auto-refresh
+  if (!silent) {
+    loading.value = true
+  }
 
   try {
     console.log('🔄 Loading leaderboard data...')
@@ -300,8 +305,16 @@ const loadLeaderboardData = async () => {
     if (tradesData) console.log('✅ Using cached trades data for leaderboard')
     if (positionsData) console.log('✅ Using cached positions data for leaderboard')
 
-    const builtFromCache = buildLeaderboardFromData(balanceData, tradesData, positionsData)
+    // Build from cache first (only if we don't have existing data)
+    let newLeaderboardData = null
+    if (leaderboardData.value.length === 0) {
+      newLeaderboardData = buildLeaderboardFromData(balanceData, tradesData, positionsData)
+      if (newLeaderboardData) {
+        leaderboardData.value = newLeaderboardData
+      }
+    }
 
+    // Fetch fresh data in background
     const fetchConfigs = [
       { key: 'balance', cacheKey: 'balance', promise: getAllModelsProcessedBalance(true) },
       { key: 'trades', cacheKey: 'trades', promise: getAllModelsProcessedTrades(undefined, undefined, true) },
@@ -328,13 +341,25 @@ const loadLeaderboardData = async () => {
       }
     })
 
-    const builtFromFresh = buildLeaderboardFromData(balanceData, tradesData, positionsData)
-
-    if (!builtFromCache && !builtFromFresh) {
-      throw new Error('No leaderboard data available')
+    // Build fresh data in background, only update if successful
+    newLeaderboardData = buildLeaderboardFromData(balanceData, tradesData, positionsData)
+    
+    // Only update if we got valid data, otherwise keep existing data
+    if (newLeaderboardData && newLeaderboardData.length > 0) {
+      leaderboardData.value = newLeaderboardData
+      console.log('✅ Leaderboard data updated successfully')
+    } else {
+      console.warn('⚠️ Failed to build fresh leaderboard data, keeping existing data')
+      if (leaderboardData.value.length === 0) {
+        throw new Error('No leaderboard data available')
+      }
     }
   } catch (error) {
     console.error('❌ Failed to load leaderboard data:', error)
+    // Keep existing data on error, only throw if we have no data at all
+    if (leaderboardData.value.length === 0) {
+      throw error
+    }
   } finally {
     loading.value = false
   }
@@ -383,7 +408,23 @@ const shouldShowBackground = (modelName) => {
 
 // Load data when component mounts
 onMounted(() => {
-  loadLeaderboardData()
+  loadLeaderboardData(false) // Initial load with loading indicator
+
+  // Set up auto-refresh every 30 seconds (30000ms)
+  // Use silent mode to avoid showing loading indicator on auto-refresh
+  refreshTimer = setInterval(() => {
+    console.log('🔄 Auto-refreshing leaderboard data...')
+    loadLeaderboardData(true) // Silent refresh, keep existing data visible
+  }, 30000)
+})
+
+// Clean up timer when component unmounts
+onUnmounted(() => {
+  if (refreshTimer) {
+    clearInterval(refreshTimer)
+    refreshTimer = null
+    console.log('🛑 Stopped leaderboard auto-refresh')
+  }
 })
 
 const getBarHeight = (value) => {
