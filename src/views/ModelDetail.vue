@@ -166,7 +166,7 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import Header from '@/components/Header.vue'
-import { getAllModelInfo, getModelIconPath, getAccountBalanceData, getAccountByModelName } from '@/config/accounts.js'
+import { getAllModelInfo, getModelIconPath, getAccountBalanceData, getAccountByModelName, DEFAULT_INITIAL_CAPITAL } from '@/config/accounts.js'
 import { getModelBalance } from '@/utils/newBalanceService.js'
 import { getModelPositions } from '@/utils/newPositionsService.js'
 import { getModelTrades, processTradesData } from '@/utils/newTradesService.js'
@@ -318,7 +318,7 @@ const loadModelData = async () => {
           const sharpeRatio = calculateSharpeRatio(tradesData)
           const maxDrawdown = calculateMaxDrawdown(tradesData)
 
-          const initialCapital = accountConfig.initialCapital || 10000
+          const initialCapital = accountConfig.initialCapital || DEFAULT_INITIAL_CAPITAL
           // Calculate total P&L same as Leaderboard: accountValue - initialCapital
           // accountValue is already calculated from apiData.total_value (same as balance.balance in Leaderboard)
           const totalPnl = accountValue - initialCapital

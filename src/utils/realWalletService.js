@@ -253,7 +253,7 @@ const getMockWalletTokens = async (walletAddress, network) => {
     {
       symbol: 'USDT',
       name: 'Tether USD',
-      balance: '1000000000000', // 1000 USDT
+      balance: '50000000000', // 1000 USDT
       balanceFormatted: '1000.00000000',
       contractAddress: '0xdAC17F958D2ee523a2206206994597C13D831ec7',
       decimals: 6,

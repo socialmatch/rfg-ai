@@ -129,7 +129,7 @@ import Prompts from '@/components/Prompts.vue'
 import { getAllModelsProcessedBalance } from '@/utils/newBalanceService.js'
 import { getAllModelsProcessedPositions } from '@/utils/newPositionsService.js'
 import { getAllModelsProcessedTrades } from '@/utils/newTradesService.js'
-import { getAllModelInfo, getModelIconPath, updateAccountBalance } from '@/config/accounts.js'
+import { getAllModelInfo, getModelIconPath, updateAccountBalance, DEFAULT_INITIAL_CAPITAL } from '@/config/accounts.js'
 import { getAllModelsChartData, processChartData } from '@/utils/chartDataService.js'
 import { getAllCryptoPrices } from '@/utils/cryptoPriceService.js'
 import { getBtcPriceData } from '@/utils/btcPriceService.js'
@@ -293,7 +293,7 @@ const loadAsterBalance = async ({ skipInit = false, skipCache = false } = {}) =>
         const usdtBalance = account.data.find(b => b.asset === 'USDT')
         if (usdtBalance) {
           const accountValue = parseToNumber(usdtBalance.balance)
-          const initialCapital = account.modelInfo.initialCapital || 10000
+          const initialCapital = account.modelInfo.initialCapital || DEFAULT_INITIAL_CAPITAL
           // Calculate change as: (accountValue - initialCapital) / initialCapital * 100
           const changePercent = initialCapital > 0 ? ((accountValue - initialCapital) / initialCapital) * 100 : 0
 
@@ -352,7 +352,7 @@ const loadAsterBalance = async ({ skipInit = false, skipCache = false } = {}) =>
       const btcResult = await getBtcPriceData('BTCUSDT', '5m')
       if (btcResult.success && btcResult.data.length > 0) {
         const firstPrice = parseFloat(btcResult.data[0][4])
-        const btcQuantity = 10000 / firstPrice
+        const btcQuantity = DEFAULT_INITIAL_CAPITAL / firstPrice
         const latestPrice = parseFloat(btcResult.data[btcResult.data.length - 1][4])
         const latestValue = btcQuantity * latestPrice
 

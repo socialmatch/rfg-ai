@@ -83,7 +83,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import Header from '@/components/Header.vue'
-import { getAllModelInfo, getModelIconPath, getAccountBalanceData, getAccountByModelName } from '@/config/accounts.js'
+import { getAllModelInfo, getModelIconPath, getAccountBalanceData, getAccountByModelName, DEFAULT_INITIAL_CAPITAL } from '@/config/accounts.js'
 import { getAllModelsProcessedBalance } from '@/utils/newBalanceService.js'
 import { getAllModelsProcessedTrades } from '@/utils/newTradesService.js'
 import { getAllModelsProcessedPositions } from '@/utils/newPositionsService.js'
@@ -236,7 +236,7 @@ const buildLeaderboardFromData = (balanceData, tradesData, positionsData) => {
     const balance = data.balance
     const stats = data.stats || {}
     const accountValue = balance ? parseFloat(balance.balance) : 0
-    const initialCapital = data.modelInfo.initialCapital || 10000
+    const initialCapital = data.modelInfo.initialCapital || DEFAULT_INITIAL_CAPITAL
     const totalPnl = accountValue - initialCapital
     const returnPercent = initialCapital > 0 ? (totalPnl / initialCapital) * 100 : 0
 

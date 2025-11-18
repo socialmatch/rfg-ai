@@ -4,6 +4,7 @@
  */
 
 import {processBtcPriceData} from './btcPriceService.js'
+import { DEFAULT_INITIAL_CAPITAL } from '../config/accounts.js'
 
 const CHART_API_BASE = import.meta.env.VITE_APP_SERVER_URL
 
@@ -326,25 +327,35 @@ export const processChartData = async (modelsData, btcPriceData = null) => {
     // Calculate the range of the data
     const dataRange = maxValue - minValue
 
+    // Calculate thresholds based on initial capital
+    // Original values were based on 10000: 9000 (0.9), 8000 (0.8), 7000 (0.7), 6000 (0.6), 1000 (0.1)
+    const threshold90 = DEFAULT_INITIAL_CAPITAL * 0.9 // e.g., 450 for 500
+    const threshold80 = DEFAULT_INITIAL_CAPITAL * 0.8 // e.g., 400 for 500
+    const threshold70 = DEFAULT_INITIAL_CAPITAL * 0.7 // e.g., 350 for 500
+    const threshold60 = DEFAULT_INITIAL_CAPITAL * 0.6 // e.g., 300 for 500
+    const defaultMargin = DEFAULT_INITIAL_CAPITAL * 0.1 // e.g., 50 for 500
+    const minMargin = DEFAULT_INITIAL_CAPITAL * 0.05 // e.g., 25 for 500 (was 500 for 10000)
+    const roundStep = DEFAULT_INITIAL_CAPITAL * 0.1 // e.g., 50 for 500 (was 500 for 10000)
+
     // Set minimum scale based on data minimum
     let yAxisMin
-    if (minValue > 9000) {
-      yAxisMin = 8000 // Set minimum to 8000 if data minimum is around 9000
-    } else if (minValue > 8000) {
-      yAxisMin = 7000 // Set minimum to 7000 if data minimum is around 8000
-    } else if (minValue > 7000) {
-      yAxisMin = 6000 // Set minimum to 6000 if data minimum is around 7000
+    if (minValue > threshold90) {
+      yAxisMin = threshold80 // Set minimum to 80% of initial capital if data minimum is around 90%
+    } else if (minValue > threshold80) {
+      yAxisMin = threshold70 // Set minimum to 70% of initial capital if data minimum is around 80%
+    } else if (minValue > threshold70) {
+      yAxisMin = threshold60 // Set minimum to 60% of initial capital if data minimum is around 70%
     } else {
-      yAxisMin = Math.max(0, minValue - 1000) // Default margin of 1000
+      yAxisMin = Math.max(0, minValue - defaultMargin) // Default margin of 10% of initial capital
     }
 
     // Set maximum scale with appropriate margin
-    const margin = Math.max(dataRange * 0.2, 500) // 20% margin or minimum 500
+    const margin = Math.max(dataRange * 0.2, minMargin) // 20% margin or minimum 5% of initial capital
     let yAxisMax = maxValue + margin
 
-    // Round to nearest 500 for cleaner tick marks
-    yAxisMin = Math.floor(yAxisMin / 500) * 500
-    yAxisMax = Math.ceil(yAxisMax / 500) * 500
+    // Round to nearest step for cleaner tick marks (10% of initial capital)
+    yAxisMin = Math.floor(yAxisMin / roundStep) * roundStep
+    yAxisMax = Math.ceil(yAxisMax / roundStep) * roundStep
 
     return {
       labels,

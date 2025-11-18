@@ -3,6 +3,8 @@
  * Handles BTC price data requests from Aster Finance
  */
 
+import { DEFAULT_INITIAL_CAPITAL } from '../config/accounts.js'
+
 // Base API URL
 const BASE_URL = 'https://fapi.asterdex.com/fapi/v3'
 
@@ -29,7 +31,7 @@ const intervalToMs = (interval) => {
  */
 export const getBtcPriceData = async (symbol = 'BTCUSDT', interval = '5m') => {
   try {
-    const fixedStartTime = new Date('2025/11/04 00:30').getTime()
+    const fixedStartTime = new Date('2025/11/19 00:00').getTime()
     const endTime = Date.now()
     const intervalMs = intervalToMs(interval)
     const maxLimit = 1500 // Binance max
@@ -121,7 +123,7 @@ export const getBtcPriceData = async (symbol = 'BTCUSDT', interval = '5m') => {
 
 /**
  * Process BTC price data for chart display
- * Calculate portfolio value based on buying BTC with $10,000 at the first price
+ * Calculate portfolio value based on buying BTC with DEFAULT_INITIAL_CAPITAL at the first price
  * @param {Array} priceData - Raw BTC price data from API
  * @param {Array} modelLabels - Model data time labels to align with (not used for BTC calculation)
  * @returns {Object} Processed BTC price data for chart
@@ -140,10 +142,10 @@ export const processBtcPriceData = (priceData, modelLabels = null) => {
     const data = []
 
     // Use the first BTC price data as the entry price
-    // Calculate BTC quantity: $10,000 / first price
+    // Calculate BTC quantity: initialCapital / first price
     const firstPrice = parseFloat(priceData[0][4]) // Close price of the first candle
-    const initialCapital = 10000
-    const btcQuantity = initialCapital / firstPrice // Fixed BTC quantity bought with $10,000
+    const initialCapital = DEFAULT_INITIAL_CAPITAL
+    const btcQuantity = initialCapital / firstPrice // Fixed BTC quantity bought with initialCapital
 
     console.log(`💰 BTC Entry: ${initialCapital} USDT at ${firstPrice} = ${btcQuantity.toFixed(8)} BTC`)
 
