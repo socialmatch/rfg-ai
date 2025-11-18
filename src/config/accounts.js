@@ -9,15 +9,15 @@ export const DEFAULT_INITIAL_CAPITAL = 500
 // 账户配置列表
 export const ACCOUNT_CONFIGS = [
   {
-    id: 'rfg-xiao1',
-    modelName: 'RFG-XIAO1',
-    modelSlug: 'rfg-xiao1',
+    id: 'ds1',
+    modelName: 'DS1',
+    modelSlug: 'ds1',
     modelColor: '#FF6B6B', // 亮红色
     modelIcon: 'Rfg_logo.png',
     uid: 'xiao1',
     initialCapital: DEFAULT_INITIAL_CAPITAL, // 初始本金
     description: 'A stable, conservative AI trading model mirroring DeepSeek\'s multi-asset setup, focused on risk-balanced execution across six leading coins (BTC, ETH, BNB, SOL, DOGE, XRP).',
-    "user_address": "0xbcd72a4206dff98bf64d6563fa29b5ac45d4095d",
+    "user_address": "0xdb71d86188ccf4fa0b6bf4c5181272b9b497161c",
     "signer_address": "0x8a50BF4Ad95E01981479bdcd47D5cCdd0946eC6e",
     enabled: true,
     // 账户余额相关字段（从API获取后会更新）
@@ -32,15 +32,15 @@ export const ACCOUNT_CONFIGS = [
     updateTime: 0
   },
   {
-    id: 'rfg-xiao2',
-    modelName: 'RFG-XIAO2',
-    modelSlug: 'rfg-xiao2',
+    id: 'ds2',
+    modelName: 'DS2',
+    modelSlug: 'ds2',
     modelColor: '#4ECDC4', // 青绿色
     modelIcon: 'Rfg_logo.png',
     uid: 'xiao2',
     initialCapital: DEFAULT_INITIAL_CAPITAL, // 初始本金
     description: 'A large language model fine-tuned for trading, executing live trades across six major cryptocurrencies (BTC, ETH, BNB, SOL, DOGE, XRP).',
-    "user_address": "0x5e5d3b8476890ef35fb104a264d738a32d385566",
+    "user_address": "0x5591a0894e7e7d4950c8ce17048a2c3ba5f4f2ff",
     "signer_address": "0xbF7F859886C873d2BA4dC43610d8e295469a7b71",
     enabled: true,
     // 账户余额相关字段（从API获取后会更新）
@@ -55,15 +55,15 @@ export const ACCOUNT_CONFIGS = [
     updateTime: 0
   },
   {
-    id: 'rfg-xiao3',
-    modelName: 'RFG-XIAO3',
-    modelSlug: 'rfg-xiao3',
+    id: 'ds3',
+    modelName: 'DS3',
+    modelSlug: 'ds3',
     modelColor: '#45B7D1', // 天蓝色
     modelIcon: 'Rfg_logo.png',
     uid: 'xiao3',
     initialCapital: DEFAULT_INITIAL_CAPITAL, // 初始本金
     description: 'A trading model that autonomously trades any token pair listed on Aster, designed to adapt flexibly to market-wide opportunities.',
-    "user_address": "0x9362ce38dedefeeb03439d7e36e0949f13ae8aaa",
+    "user_address": "0x0956e309e65e64519fc17d07eb3da3f30c293680",
     "signer_address": "0x41e4d0D232fe922417127e047cF3801552744158",
     enabled: true,
     // 账户余额相关字段（从API获取后会更新）
@@ -78,15 +78,15 @@ export const ACCOUNT_CONFIGS = [
     updateTime: 0
   },
   {
-    id: 'rfg-xiao4',
-    modelName: 'RFG-XIAO4',
-    modelSlug: 'rfg-xiao4',
+    id: 'ds4',
+    modelName: 'DS4',
+    modelSlug: 'ds4',
     modelColor: '#FFA07A', // 浅橙色
     modelIcon: 'Rfg_logo.png',
     uid: 'xiao4',
     initialCapital: DEFAULT_INITIAL_CAPITAL, // 初始本金
     description: 'An intelligent trading agent that interprets complex market structures and reacts dynamically to volatility.',
-    "user_address": "0xa4e350536224ec9a62566cfc91814cd5387183b0",
+    "user_address": "0x45da399ec5a552f0ef2c48a7817971ef43d1b83a",
     "signer_address": "0x5571BAa2115B01613394d272982E1f2a3E0778ee",
     enabled: true,
     // 账户余额相关字段（从API获取后会更新）
@@ -101,15 +101,15 @@ export const ACCOUNT_CONFIGS = [
     updateTime: 0
   },
   {
-    id: 'rfg-xiao5',
-    modelName: 'RFG-XIAO5',
-    modelSlug: 'rfg-xiao5',
+    id: 'ds5',
+    modelName: 'DS5',
+    modelSlug: 'ds5',
     modelColor: '#98D8C8', // 薄荷绿
     modelIcon: 'Rfg_logo.png',
     uid: 'xiao5',
     initialCapital: DEFAULT_INITIAL_CAPITAL, // 初始本金
     description: 'A stable, conservative AI trading model mirroring DeepSeek\'s multi-asset setup, focused on risk-balanced execution across six leading coins (BTC, ETH, BNB, SOL, DOGE, XRP).',
-    "user_address": "0x40743b7420c019832e7b90be608981394d6a220d",
+    "user_address": "0xb597b1f7235f2fb3250416f39ad1caf459c9eb58",
     "signer_address": "0xc20BA21AC4705971609d8Ba9B002B6f91662b005",
     enabled: true,
     // 账户余额相关字段（从API获取后会更新）
@@ -124,15 +124,15 @@ export const ACCOUNT_CONFIGS = [
     updateTime: 0
   },
   {
-    id: 'rfg-xiao6',
-    modelName: 'RFG-XIAO6',
-    modelSlug: 'rfg-xiao6',
+    id: 'zy3',
+    modelName: 'ZY3',
+    modelSlug: 'zy3',
     modelColor: '#F7DC6F', // 亮黄色
     modelIcon: 'Rfg_logo.png',
     uid: 'xiao6',
     initialCapital: DEFAULT_INITIAL_CAPITAL, // 初始本金
     description: 'A large language model fine-tuned for trading, executing live trades across six major cryptocurrencies (BTC, ETH, BNB, SOL, DOGE, XRP).',
-    "user_address": "0xc08ebbb03dfa1fc3e240836e04f25c8c0070cd11",
+    "user_address": "0x4d62c2959c06efe620a4e1e95dbe060d56e5f59e",
     "signer_address": "0x7744b0d7f624D00625755FD0e871cA0d752673Db",
     enabled: true,
     // 账户余额相关字段（从API获取后会更新）
@@ -147,15 +147,15 @@ export const ACCOUNT_CONFIGS = [
     updateTime: 0
   },
   {
-    id: 'rfg-xiao7',
-    modelName: 'RFG-XIAO7',
-    modelSlug: 'rfg-xiao7',
+    id: 'zy4',
+    modelName: 'ZY4',
+    modelSlug: 'zy4',
     modelColor: '#BB8FCE', // 淡紫色
     modelIcon: 'Rfg_logo.png',
     uid: 'xiao7',
     initialCapital: DEFAULT_INITIAL_CAPITAL, // 初始本金
     description: 'A trading model that autonomously trades any token pair listed on Aster, designed to adapt flexibly to market-wide opportunities.',
-    "user_address": "0x8410f290a7dc296f53ce87921eb1ae4ced07db2d",
+    "user_address": "0x9362Ce38dEDEFEeb03439d7e36e0949F13AE8aAA",
     "signer_address": "0x5E5aCc45bE2c81f18e0c627D606BAE9bddD06293",
     enabled: true,
     // 账户余额相关字段（从API获取后会更新）
@@ -170,15 +170,15 @@ export const ACCOUNT_CONFIGS = [
     updateTime: 0
   },
   {
-    id: 'rfg-xiao8',
-    modelName: 'RFG-XIAO8',
-    modelSlug: 'rfg-xiao8',
+    id: 'zy6',
+    modelName: 'ZY6',
+    modelSlug: 'zy6',
     modelColor: '#85C1E2', // 浅蓝色
     modelIcon: 'Rfg_logo.png',
     uid: 'xiao8',
     initialCapital: DEFAULT_INITIAL_CAPITAL, // 初始本金
     description: 'An intelligent trading agent that interprets complex market structures and reacts dynamically to volatility.',
-    "user_address": "0xbcd72a4206dff98bf64d6563fa29b5ac45d4095d",
+    "user_address": "0x83B6D7A8F6181c569f59bFae154704FdEE9FAD27",
     "signer_address": "0x8a50BF4Ad95E01981479bdcd47D5cCdd0946eC6e",
     enabled: true,
     // 账户余额相关字段（从API获取后会更新）
@@ -193,15 +193,15 @@ export const ACCOUNT_CONFIGS = [
     updateTime: 0
   },
   {
-    id: 'rfg-6',
-    modelName: 'RFG-6',
-    modelSlug: 'rfg-6',
+    id: 'ds6',
+    modelName: 'DS6',
+    modelSlug: 'ds6',
     modelColor: '#F1948A', // 粉红色
     modelIcon: 'Rfg_logo.png',
     uid: 'rfg-6',
     initialCapital: DEFAULT_INITIAL_CAPITAL, // 初始本金
     description: 'A stable, conservative AI trading model mirroring DeepSeek\'s multi-asset setup, focused on risk-balanced execution across six leading coins (BTC, ETH, BNB, SOL, DOGE, XRP).',
-    "user_address": "0xbcd72a4206dff98bf64d6563fa29b5ac45d4095d",
+    "user_address": "0xBfCE9e60F3aFcFe558BD9B3Be66280BD095C6e0E",
     "signer_address": "0x8a50BF4Ad95E01981479bdcd47D5cCdd0946eC6e",
     enabled: true,
     // 账户余额相关字段（从API获取后会更新）
