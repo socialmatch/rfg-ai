@@ -131,6 +131,8 @@
         .col EXIT PRICE
         .col QUANTITY
         .col HOLDING TIME
+        .col ENTRY TIME
+        .col CLOSE TIME
         .col FEES
         .col NOTIONAL ENTRY
         .col NOTIONAL EXIT
@@ -149,6 +151,8 @@
           .col(data-label="EXIT PRICE") ${{ formatCurrency(trade.exitPrice) }}
           .col(data-label="QUANTITY") {{ formatQuantity(trade.quantity) }}
           .col(data-label="HOLDING TIME") {{ trade.holdingTime }}
+          .col(data-label="ENTRY TIME ") {{ formatBeijingTime(trade.entryBeijingTime) }}
+          .col(data-label="CLOSE TIME ") {{ formatBeijingTime(trade.closeBeijingTime) }}
           .col(data-label="FEES") ${{ formatCurrency(trade.totalFees) }}
           .col(data-label="NOTIONAL ENTRY") ${{ formatCurrency(trade.notionalEntry) }}
           .col(data-label="NOTIONAL EXIT") ${{ formatCurrency(trade.notionalExit) }}
@@ -394,6 +398,8 @@ const loadModelData = async () => {
                     exitPrice,
                     quantity: side === 'SHORT' ? -absQty : absQty,
                     holdingTime: trade.holdingTime || trade.holding_time || 'N/A',
+                    entryBeijingTime: trade.entry_beijing_time || null,
+                    closeBeijingTime: trade.close_beijing_time || null,
                     notionalEntry,
                     notionalExit,
                     totalFees: Math.abs(parseFloat(trade.feesTotal ?? trade.commission ?? trade.fees_total ?? 0)),
@@ -470,6 +476,23 @@ const formatQuantity = (value) => {
     return '0.0000'
   }
   return parseFloat(value).toFixed(4)
+}
+
+// Format Beijing time function
+const formatBeijingTime = (timeString) => {
+  if (!timeString) return 'N/A'
+  try {
+    const date = new Date(timeString)
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+    const hour = String(date.getHours()).padStart(2, '0')
+    const minute = String(date.getMinutes()).padStart(2, '0')
+    const second = String(date.getSeconds()).padStart(2, '0')
+    return `${year}/${month}/${day} ${hour}:${minute}:${second}`
+  } catch (error) {
+    return timeString
+  }
 }
 
 // Load data when component mounts
@@ -859,7 +882,7 @@ watch(() => route.params.slug, (newSlug, oldSlug) => {
 
 .table-header
   display grid
-  grid-template-columns repeat(10, 1fr)
+  grid-template-columns repeat(12, 1fr)
   gap 16px
   padding 16px 24px
   background #334155
@@ -871,7 +894,7 @@ watch(() => route.params.slug, (newSlug, oldSlug) => {
 .table-body
   .table-row
     display grid
-    grid-template-columns repeat(10, 1fr)
+    grid-template-columns repeat(12, 1fr)
     gap 16px
     padding 16px 24px
     border-bottom 1px solid #334155

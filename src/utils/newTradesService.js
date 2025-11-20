@@ -219,7 +219,15 @@ export const processTradesData = (tradesData, modelInfo = null) => {
   const totalTrades = data.total_trades || tradesArray.length
   const statistics = data.statistics || null
 
-  tradesArray.forEach(trade => {
+  tradesArray.forEach((trade, index) => {
+    // Debug: log first trade to see raw API data
+    if (index === 0) {
+      console.log('🔍 Raw API trade data (first trade):', {
+        entry_beijing_time: trade.entry_beijing_time,
+        close_beijing_time: trade.close_beijing_time,
+        allKeys: Object.keys(trade)
+      })
+    }
     const direction = (trade.direction || '').toUpperCase()
     const side = direction === 'SHORT' ? 'SELL' : direction === 'LONG' ? 'BUY' : (trade.side || 'BUY')
     const quantity = parseFloat(trade.quantity ?? trade.qty ?? 0)
@@ -260,6 +268,8 @@ export const processTradesData = (tradesData, modelInfo = null) => {
       createdAt: trade.created_at || null,
       positionSide: direction || null,
       holdingTime: trade.holding_time || null,
+      entry_beijing_time: trade.entry_beijing_time || null,
+      close_beijing_time: trade.close_beijing_time || null,
       buyer: trade.buyer ?? null,
       maker: trade.maker ?? null,
       uid,

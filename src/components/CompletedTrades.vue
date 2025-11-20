@@ -23,6 +23,12 @@
           span.label Holding time:
           span.value {{ trade.holdingTime }}
         .detail-row
+          span.label Entry Time :
+          span.value {{ formatBeijingTime(trade.entryBeijingTime) }}
+        .detail-row
+          span.label Close Time :
+          span.value {{ formatBeijingTime(trade.closeBeijingTime) }}
+        .detail-row
           span.label Fees:
           span.value ${{ trade.feesTotal.toFixed(4) }}
       .trade-pnl
@@ -148,7 +154,9 @@ const convertAsterTrades = (asterTrades) => {
         holdingTime,
         profit: realizedPnl, // net_pnl already accounts for fees
         timestamp: tradeTime,
-        feesTotal
+        feesTotal,
+        entryBeijingTime: trade.entry_beijing_time || null,
+        closeBeijingTime: trade.close_beijing_time || null
       }
     }).sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
 }
@@ -215,6 +223,22 @@ const formatDate = (date) => {
     hour: '2-digit',
     minute: '2-digit'
   }).format(date)
+}
+
+const formatBeijingTime = (timeString) => {
+  if (!timeString) return 'N/A'
+  try {
+    const date = new Date(timeString)
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+    const hour = String(date.getHours()).padStart(2, '0')
+    const minute = String(date.getMinutes()).padStart(2, '0')
+    const second = String(date.getSeconds()).padStart(2, '0')
+    return `${year}/${month}/${day} ${hour}:${minute}:${second}`
+  } catch (error) {
+    return timeString
+  }
 }
 </script>
 
