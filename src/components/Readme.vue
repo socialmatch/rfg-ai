@@ -1,21 +1,21 @@
 <template lang="pug">
 .readme-container
   .readme-content
-    h1 RFG AI - Alpha Arena
+    h1 NexAlpha AI
     p An AI-driven trading platform that integrates live trading, conversational analysis, and intelligent market discovery.
 
     .intro-section
-      h3 RFG.AI Multi-Asset Intelligence Architecture
-      p RFG.AI operates a multi-asset intelligent planning engine that integrates specialized MCP (Modular Cognitive Process) Agents:
+      h3 NexAlpha.AI Multi-Asset Intelligence Architecture
+      p NexAlpha.AI operates a multi-asset intelligent planning engine that integrates specialized MCP (Modular Cognitive Process) Agents:
       ul.agents-list
         li KOL Agent – opinion leader sentiment and social influence analysis
         li K-Line Agent – technical chart and pattern recognition
         li Basic-News Agent – fundamental and macro-news analysis
         li On-Chain Agent – blockchain data monitoring and behavioral analytics
-      p In the Vibe Trading module, RFG.AI leverages its proprietary large model, primarily utilizing the K-Line Agent and On-Chain Agent for concurrent real-time market parsing and causal reasoning.
+      p In the Vibe Trading module, NexAlpha.AI leverages its proprietary large model, primarily utilizing the K-Line Agent and On-Chain Agent for concurrent real-time market parsing and causal reasoning.
       p A Transformer-based Planner continuously interprets multi-timeframe market data to determine the dominant market regime (bullish, bearish, or ranging), generating directional bias and confidence scores through causal reasoning and self-feedback optimization.
       p Each trade undergoes periodic post-execution evaluation through GRPO (Group Reward Policy Optimization), enabling continuous self-adjustment and achieving equilibrium between profitability and capital preservation.
-      p All analytical outputs are consolidated through RFG.AI's multi-expert adversarial debate mechanism, producing final trading signals that include trade direction, entry confidence, position sizing, take-profit/stop-loss estimation, and decision reasoning chains.
+      p All analytical outputs are consolidated through NexAlpha.AI's multi-expert adversarial debate mechanism, producing final trading signals that include trade direction, entry confidence, position sizing, take-profit/stop-loss estimation, and decision reasoning chains.
 
     h2 Features
     .features-list

@@ -3,7 +3,7 @@
   Header
 
   // Page title
-  .page-title LEADERBOARD
+  .page-title {{ $t('leaderboard.title') }}
 
   // Tabs
   //.tabs-container
@@ -13,16 +13,16 @@
   // Leaderboard table
   .leaderboard-table
     .table-header
-      .col.rank RANK
-      .col MODEL
-      .col ACCT VALUE
-      .col RETURN %
-      .col TOTAL P&L
-      .col FEES
-      .col WIN RATE
-      .col BIGGEST WIN
-      .col BIGGEST LOSS
-      .col TRADES
+      .col.rank {{ $t('leaderboard.rank') }}
+      .col {{ $t('leaderboard.model') }}
+      .col {{ $t('leaderboard.accountValue') }}
+      .col {{ $t('leaderboard.returnPercent') }}
+      .col {{ $t('leaderboard.totalPnl') }}
+      .col {{ $t('trades.fees') }}
+      .col {{ $t('leaderboard.winRate') }}
+      .col {{ $t('modelDetail.biggestWin') }}
+      .col {{ $t('modelDetail.biggestLoss') }}
+      .col {{ $t('leaderboard.totalTrades') }}
 
     .table-body
       .table-row(v-for="(model, index) in leaderboardData" :key="model.name" :class="{ 'alternate': index % 2 === 1 }")
@@ -32,7 +32,7 @@
             img(:src="getModelIcon(model.name)" :alt="model.name")
           .model-name {{ model.name }}
         .col(data-label="ACCT VALUE").account-value ${{ (model.accountValue || 0).toLocaleString() }}
-        .col.return-percent(:class="(model.returnPercent || 0) >= 0 ? 'positive' : 'negative'" data-label="RETURN %")
+        .col.return-percent(:class="(model.returnPercent || 0) >= 0 ? 'positive' : 'negative'" :data-label="$t('leaderboard.returnPercent')")
           | {{ (model.returnPercent || 0) >= 0 ? '+' : '' }}{{ (model.returnPercent || 0).toFixed(2) }}%
         .col(:class="(model.totalPnl || 0) >= 0 ? 'positive' : 'negative'" data-label="TOTAL P&L").total-pnl
           | ${{ (model.totalPnl || 0).toLocaleString() }}
@@ -76,7 +76,7 @@
 
   // Bottom note
   .footer-note
-    | Note: All statistics (except Account Value and P&L) reflect completed trades only. Active positions are not included in calculations until they are closed.
+    | {{ $t('leaderboard.note') }}
 </template>
 
 <script setup>
@@ -343,7 +343,7 @@ const loadLeaderboardData = async (silent = false) => {
 
     // Build fresh data in background, only update if successful
     newLeaderboardData = buildLeaderboardFromData(balanceData, tradesData, positionsData)
-    
+
     // Only update if we got valid data, otherwise keep existing data
     if (newLeaderboardData && newLeaderboardData.length > 0) {
       leaderboardData.value = newLeaderboardData

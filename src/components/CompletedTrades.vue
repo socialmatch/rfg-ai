@@ -8,39 +8,39 @@
           .model-icon(:style="shouldShowBackground(trade.model) ? { backgroundColor: getModelColorEvent(trade.model) } : {}")
             img(:src="getModelIcon(trade.model)" :alt="trade.model")
           .model {{ trade.model }}
-      .trade-action {{ trade.action }}
+      .trade-action {{ $t(`trades.completed${trade.action.charAt(0).toUpperCase() + trade.action.slice(1)}`) }} {{ trade.symbol }}!
       .trade-details
         .detail-row
-          span.label Price:
+          span.label {{ $t('trades.price') }}:
           span.value ${{ trade.entryPrice.toLocaleString() }} -> ${{ trade.exitPrice.toLocaleString() }}
         .detail-row
-          span.label Quantity:
+          span.label {{ $t('trades.quantity') }}:
           span.value {{ trade.quantity }}
         .detail-row
-          span.label Notional:
+          span.label {{ $t('trades.notional') }}:
           span.value ${{ trade.notionalStart.toLocaleString() }} -> ${{ trade.notionalEnd.toLocaleString() }}
         .detail-row
-          span.label Holding time:
+          span.label {{ $t('trades.holdingTime') }}:
           span.value {{ trade.holdingTime }}
         .detail-row
-          span.label Entry Time :
+          span.label {{ $t('trades.entryTime') }}:
           span.value {{ formatBeijingTime(trade.entryBeijingTime) }}
         .detail-row
-          span.label Close Time :
+          span.label {{ $t('trades.closeTime') }}:
           span.value {{ formatBeijingTime(trade.closeBeijingTime) }}
         .detail-row
-          span.label Fees:
+          span.label {{ $t('trades.fees') }}:
           span.value ${{ trade.feesTotal.toFixed(4) }}
       .trade-pnl
-        .pnl-label NET P&L:
+        .pnl-label {{ $t('trades.netPnl') }}:
         .pnl-amount(:class="trade.profit >= 0 ? 'positive' : 'negative'")
           | {{ trade.profit >= 0 ? '+' : '' }}${{ trade.profit.toFixed(2) }}
 
   // No data state
   .no-data(v-if="trades.length === 0")
     .no-data-icon 📈
-    .no-data-text No trade records
-    .no-data-subtitle Waiting for API data loading or account has no trading history
+    .no-data-text {{ $t('trades.noTradeRecords') }}
+    .no-data-subtitle {{ $t('trades.waitingForApiData') }}
 </template>
 
 <script setup>
@@ -142,10 +142,12 @@ const convertAsterTrades = (asterTrades) => {
       const notionalStart = !isNaN(entryPrice) ? entryPrice * absQty : 0
       const notionalEnd = !isNaN(exitPrice) ? exitPrice * absQty : notionalStart + realizedPnl
 
+      // Note: action text will be translated in template using $t
       return {
         id: trade.id || trade.orderId || index + 1,
         model: modelName,
-        action: `completed a ${side.toLowerCase()} trade on ${symbol || trade.symbol}!`,
+        action: side.toLowerCase(),
+        symbol: symbol || trade.symbol,
         entryPrice,
         exitPrice,
         quantity: side === 'SHORT' ? -absQty : absQty,

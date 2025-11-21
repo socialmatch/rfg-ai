@@ -2,18 +2,18 @@
 header.header
   .header-content
     .logo
-      h1 Alpha Arena by RFG AI
+      h1 {{ $t('common.alphaArena') }}
 
     nav.nav
-      .nav-item(@click="goToHome" :class="{ active: $route.name === 'home' }") LIVE
-      .nav-item(@click="goToLeaderboard" :class="{ active: $route.name === 'leaderboard' }") LEADERBOARD
+      .nav-item(@click="goToHome" :class="{ active: $route.name === 'home' }") {{ $t('common.live') }}
+      .nav-item(@click="goToLeaderboard" :class="{ active: $route.name === 'leaderboard' }") {{ $t('common.leaderboard') }}
       .nav-item.models-nav-item(@click="handleModelsClick" :class="{ active: $route.name === 'models' || $route.name === 'model-detail', 'dropdown-open': showModelsDropdown && isMobile }")
-        | MODELS
+        | {{ $t('common.models') }}
         // 移动端背景遮罩
         .dropdown-backdrop(v-if="showModelsDropdown && isMobile" @click.stop="showModelsDropdown = false")
         // PC端使用CSS hover显示，移动端使用show类显示
         .models-dropdown(:class="{ 'show': showModelsDropdown && isMobile }")
-          .dropdown-title AI MODELS
+          .dropdown-title {{ $t('common.aiModels') }}
           .dropdown-separator
           .model-item(v-for="model in models" :key="model.name" @click.stop="goToModelDetail(model)")
             //.model-color-dot(:style="{ backgroundColor: model.color }")
@@ -22,12 +22,14 @@ header.header
             .model-name {{ model.name }}
 
     .header-actions
-      button.btn-secondary(@click="aboutRFGAI" :class="{ active: $route.name === 'about' }") ABOUT RFG.AI
+      LanguageSwitcher
+      button.btn-secondary(@click="aboutRFGAI" :class="{ active: $route.name === 'about' }") {{ $t('common.aboutRfgAi') }}
 </template>
 
 <script setup>
 import { ref, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
+import LanguageSwitcher from '@/components/LanguageSwitcher.vue'
 
 import { getAllModelInfo, getModelIconPath } from '@/config/accounts.js'
 

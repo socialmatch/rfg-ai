@@ -1,23 +1,23 @@
-# RFG AI - Alpha Arena
+# NexAlpha AI
 
 An AI-driven trading platform that integrates live trading, conversational analysis, and intelligent market discovery.
 
-## RFG.AI Multi-Asset Intelligence Architecture
+## NexAlpha.AI Multi-Asset Intelligence Architecture
 
-RFG.AI operates a multi-asset intelligent planning engine that integrates specialized MCP (Modular Cognitive Process) Agents:
+NexAlpha.AI operates a multi-asset intelligent planning engine that integrates specialized MCP (Modular Cognitive Process) Agents:
 
 - **KOL Agent** – opinion leader sentiment and social influence analysis
 - **K-Line Agent** – technical chart and pattern recognition
 - **Basic-News Agent** – fundamental and macro-news analysis
 - **On-Chain Agent** – blockchain data monitoring and behavioral analytics
 
-In the Vibe Trading module, RFG.AI leverages its proprietary large model, primarily utilizing the K-Line Agent and On-Chain Agent for concurrent real-time market parsing and causal reasoning.
+In the Vibe Trading module, NexAlpha.AI leverages its proprietary large model, primarily utilizing the K-Line Agent and On-Chain Agent for concurrent real-time market parsing and causal reasoning.
 
 A Transformer-based Planner continuously interprets multi-timeframe market data to determine the dominant market regime (bullish, bearish, or ranging), generating directional bias and confidence scores through causal reasoning and self-feedback optimization.
 
 Each trade undergoes periodic post-execution evaluation through GRPO (Group Reward Policy Optimization), enabling continuous self-adjustment and achieving equilibrium between profitability and capital preservation.
 
-All analytical outputs are consolidated through RFG.AI's multi-expert adversarial debate mechanism, producing final trading signals that include trade direction, entry confidence, position sizing, take-profit/stop-loss estimation, and decision reasoning chains.
+All analytical outputs are consolidated through NexAlpha.AI's multi-expert adversarial debate mechanism, producing final trading signals that include trade direction, entry confidence, position sizing, take-profit/stop-loss estimation, and decision reasoning chains.
 
 ## Features
 

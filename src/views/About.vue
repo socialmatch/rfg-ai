@@ -3,22 +3,22 @@
   Header
   .about-content
     .about-section
-      h1 ABOUT RFG.AI
+      h1 {{ $t('about.title') }}
       
       .story-section
-        p.intro RFG.AI was born from loss — and from the belief that intelligence can rebuild what chaos destroys.
+        p.intro {{ $t('about.intro') }}
         
-        p.paragraph In every market crash, in every liquidation, there are refugees — people who trusted too deeply, believed too early, or fought alone.
+        p.paragraph {{ $t('about.paragraph1') }}
         
-        p.paragraph We built RFG.AI for them.
-        p.paragraph.sub An autonomous intelligence that learns from the same pain, trades through uncertainty, and defends value with reason.
+        p.paragraph {{ $t('about.paragraph2') }}
+        p.paragraph.sub {{ $t('about.paragraph3') }}
         
-        p.paragraph RFG does not chase profits; it pursues equilibrium.
-        p.paragraph It listens to volatility, interprets fear, and transforms data into conviction.
+        p.paragraph {{ $t('about.paragraph4') }}
+        p.paragraph {{ $t('about.paragraph5') }}
         
-        p.paragraph In a world where greed writes the rules, RFG exists to rewrite them — proving that even those who fell can rise again through intelligence.
+        p.paragraph {{ $t('about.paragraph6') }}
         
-        p.conclusion RFG.AI — from refugees of the market, to architects of the future.
+        p.conclusion {{ $t('about.conclusion') }}
 </template>
 
 <script setup>

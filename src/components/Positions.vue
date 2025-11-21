@@ -8,15 +8,15 @@
           img(:src="getModelIcon(model.name)" :alt="model.name")
         .model-name() {{ model.name }}
       .model-pnl(:class="model.totalUnrealizedPnl >= 0 ? 'positive' : 'negative'")
-        | TOTAL UNREALIZED P&L: {{ model.totalUnrealizedPnl >= 0 ? '+' : '' }}${{ model.totalUnrealizedPnl.toFixed(2) }}
+        | {{ $t('modelDetail.totalUnrealizedPnl') }} {{ model.totalUnrealizedPnl >= 0 ? '+' : '' }}${{ model.totalUnrealizedPnl.toFixed(2) }}
 
     .positions-table
       .table-header
-        .col SIDE
-        .col COIN
+        .col {{ $t('modelDetail.side') }}
+        .col {{ $t('modelDetail.coin') }}
         .col LEVERAGE
-        .col NOTIONAL
-        .col UNREAL P&L
+        .col {{ $t('modelDetail.notional') }}
+        .col {{ $t('modelDetail.unrealizedPnl') }}
 
       .table-body
         .table-row(v-for="position in model.positions" :key="position.id")
@@ -33,13 +33,13 @@
             | {{ position.unrealPnl >= 0 ? '+' : '' }}${{ position.unrealPnl.toFixed(2) }}
 
     .model-footer
-      .available-cash AVAILABLE CASH: ${{ model.availableCash.toLocaleString() }}
+      .available-cash {{ $t('positions.availableCash') }}: ${{ model.availableCash.toLocaleString() }}
 
   // No data state
   .no-data(v-if="modelPositions.length === 0")
     .no-data-icon 📊
-    .no-data-text No position data
-    .no-data-subtitle Waiting for API data loading or account has no positions
+    .no-data-text {{ $t('positions.noPositions') }}
+    .no-data-subtitle {{ $t('positions.noPositionsSubtitle') }}
 </template>
 
 <script setup>

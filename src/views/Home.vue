@@ -14,11 +14,11 @@
           .price ${{ crypto.price.toLocaleString() }}
       .ticker-right
         .performance-summary
-          .highest HIGHEST: {{ highestModel.name }}
+          .highest {{ $t('home.highest') }}: {{ highestModel.name }}
             .value-row
               span.rolling-value ${{ highestModel.value.toLocaleString() }}
               span.positive +{{ highestModel.change.toFixed(2) }}%
-          .lowest LOWEST: {{ lowestModel.name }}
+          .lowest {{ $t('home.lowest') }}: {{ lowestModel.name }}
             .value-row
               span.rolling-value ${{ lowestModel.value.toLocaleString() }}
               span.negative {{ lowestModel.change.toFixed(2) }}%
@@ -30,11 +30,11 @@
       .left-panel
         .panel-header
           .title-container
-            .back-all-btn(v-if="showBackAllButton" @click="backToAllModels") BACK TO ALL
-            .title TOTAL ACCOUNT VALUE
+            .back-all-btn(v-if="showBackAllButton" @click="backToAllModels") {{ $t('common.backToAll') }}
+            .title {{ $t('home.totalAccountValue') }}
           //.periods
-            button.chart-btn(:class="{ active: chartPeriod === 'all' }" @click="setChartPeriod('all')") ALL
-            button.chart-btn(:class="{ active: chartPeriod === '72h' }" @click="setChartPeriod('72h')") 72H
+            button.chart-btn(:class="{ active: chartPeriod === 'all' }" @click="setChartPeriod('all')") {{ $t('home.periods.all') }}
+            button.chart-btn(:class="{ active: chartPeriod === '72h' }" @click="setChartPeriod('72h')") {{ $t('home.periods.72h') }}
         .chart-frame
           .y-axis-label $
           .chart-canvas(@mouseleave="handleChartLeave")
@@ -58,13 +58,13 @@
       // Right side: sidebar tabs + list
       .right-panel
         .sidebar-tabs
-          .tab(:class="{ active: activeDetailTab === 'positions' }" @click="setActiveDetailTab('positions')") POSITIONS
-          .tab(:class="{ active: activeDetailTab === 'trades' }" @click="setActiveDetailTab('trades')") COMPLETED TRADES
-          .tab(:class="{ active: activeDetailTab === 'prompts' }" @click="setActiveDetailTab('prompts')") PROMPTS
-          .tab(:class="{ active: activeDetailTab === 'readme' }" @click="setActiveDetailTab('readme')") README.TXT
+          .tab(:class="{ active: activeDetailTab === 'positions' }" @click="setActiveDetailTab('positions')") {{ $t('home.positions') }}
+          .tab(:class="{ active: activeDetailTab === 'trades' }" @click="setActiveDetailTab('trades')") {{ $t('home.completedTrades') }}
+          .tab(:class="{ active: activeDetailTab === 'prompts' }" @click="setActiveDetailTab('prompts')") {{ $t('home.prompts') }}
+          .tab(:class="{ active: activeDetailTab === 'readme' }" @click="setActiveDetailTab('readme')") {{ $t('home.readme') }}
         .filter-section(v-if="activeDetailTab !== 'readme' && activeDetailTab !== 'prompts'")
           .filter
-            span.label FILTER:
+            span.label {{ $t('common.filter') }}:
             select.select(v-model="selectedModel")
               option(v-for="m in modelOptions" :key="m" :value="m") {{ m }}
           .showing(v-if="sidebarInfoText") {{ sidebarInfoText }}
@@ -117,6 +117,7 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { Chart, registerables } from 'chart.js'
 import zoomPlugin from 'chartjs-plugin-zoom'
 import Header from '@/components/Header.vue'
@@ -139,6 +140,7 @@ import { getCryptoIcon } from '@/utils/cryptoIcons.js'
 Chart.register(...registerables, zoomPlugin)
 
 const router = useRouter()
+const { t } = useI18n()
 
 const activeTab = ref('live')
 const activeDetailTab = ref('positions')
@@ -1384,10 +1386,10 @@ const closeMobileModal = () => {
 
 const getModalTitle = () => {
   switch (activeDetailTab.value) {
-    case 'trades': return 'COMPLETED TRADES'
-    case 'prompts': return 'PROMPTS'
-    case 'positions': return 'POSITIONS'
-    case 'readme': return 'README.TXT'
+    case 'trades': return t('home.completedTrades')
+    case 'prompts': return t('home.prompts')
+    case 'positions': return t('home.positions')
+    case 'readme': return t('home.readme')
     default: return 'DETAILS'
   }
 }
@@ -1404,10 +1406,10 @@ const getActiveDetailComponent = () => {
 
 const getStatusText = () => {
   switch (connectionStatus.value) {
-    case 'connecting': return 'STATUS: CONNECTING TO SERVER'
-    case 'connected': return 'STATUS: CONNECTED'
-    case 'disconnected': return 'STATUS: DISCONNECTED'
-    default: return 'STATUS: UNKNOWN'
+    case 'connecting': return t('home.statusConnecting')
+    case 'connected': return t('home.statusConnected')
+    case 'disconnected': return t('home.statusDisconnected')
+    default: return t('home.statusUnknown')
   }
 }
 

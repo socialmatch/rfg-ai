@@ -21,18 +21,18 @@
       .model-name {{ currentModel.name }}
     .model-stats
       .stat-item
-        .label Total Account Value
+        .label {{ $t('modelDetail.totalAccountValue') }}
         .value ${{ currentModel.accountValue.toLocaleString() }}
       .stat-item
-        .label Available Cash
+        .label {{ $t('modelDetail.availableCash') }}
         .value ${{ currentModel.availableCash.toLocaleString() }}
       .stat-item
-        .label Total P&L(RETURN %)
+        .label {{ $t('modelDetail.totalPnl') }}
         .value(:class="currentModel.totalPnl >= 0 ? 'positive' : 'negative'")
           | ${{ currentModel.totalPnl.toLocaleString() }}
           | ({{ (currentModel.returnPercent || 0) >= 0 ? '+' : '' }}{{ (currentModel.returnPercent || 0).toFixed(2) }}%)
       .stat-item
-        .label Total Fees
+        .label {{ $t('modelDetail.totalFees') }}
         .value(:class="(currentModel.totalFees || 0) >= 0 ? 'positive' : 'negative'")
           | ${{ formatCurrency(currentModel.totalFees) }}
 
@@ -40,23 +40,23 @@
   .stats-section
     .stats-grid
       .stat-card
-        .stat-label Average Leverage
+        .stat-label {{ $t('modelDetail.averageLeverage') }}
         //.stat-value {{ currentModel.averageLeverage }}
         .stat-value --
       .stat-card
-        .stat-label WIN RATE
+        .stat-label {{ $t('modelDetail.winRate') }}
         .stat-value {{ currentModel.winRate }}%
       .stat-card
-        .stat-label Biggest Win
+        .stat-label {{ $t('modelDetail.biggestWin') }}
         .stat-value.positive ${{ formatCurrency(currentModel.biggestWin) }}
       .stat-card
-        .stat-label Biggest Loss
+        .stat-label {{ $t('modelDetail.biggestLoss') }}
         .stat-value.negative ${{ formatCurrency(currentModel.biggestLoss) }}
       .stat-card
-        .stat-label Long
+        .stat-label {{ $t('modelDetail.long') }}
         .stat-value {{ currentModel.holdTimes.long }}%
       .stat-card
-        .stat-label Short
+        .stat-label {{ $t('modelDetail.short') }}
         .stat-value {{ currentModel.holdTimes.short }}%
     //.hold-times
       .hold-times-title Hold Times
@@ -74,8 +74,8 @@
   // Active positions
   .positions-section
     .section-header
-      .section-title ACTIVE POSITIONS
-      .total-pnl Total Unrealized P&L:
+      .section-title {{ $t('modelDetail.activePositions') }}
+      .total-pnl {{ $t('modelDetail.totalUnrealizedPnl') }}
         span(:class="currentModel.totalUnrealizedPnl >= 0 ? 'positive' : 'negative'") ${{ formatCurrency(currentModel.totalUnrealizedPnl) }}
     .positions-grid
       .position-card(v-for="position in currentModel.positions" :key="position.id")
@@ -88,82 +88,82 @@
 
         .position-details
           .detail-row
-            .label Entry Time
+            .label {{ $t('modelDetail.entryTimeLabel') }}
             .value {{ position.entryTime }}
           .detail-row
-            .label Entry Price
+            .label {{ $t('modelDetail.entryPrice') }}
             .value ${{ formatCurrency(position.entryPrice) }}
           .detail-row
-            .label Quantity
+            .label {{ $t('modelDetail.quantity') }}
             .value {{ formatQuantity(position.quantity) }}
           .detail-row
             .label Leverage
             .value {{ position.leverage }}x
           .detail-row
-            .label Liquidation Price
+            .label {{ $t('modelDetail.liquidationPrice') }}
             .value ${{ formatCurrency(position.liquidationPrice) }}
           .detail-row
-            .label Margin
+            .label {{ $t('modelDetail.margin') }}
             .value ${{ formatCurrency(position.margin) }}
           .detail-row
-            .label Unrealized P&L
+            .label {{ $t('modelDetail.unrealizedPnl') }}
             .value(:class="position.unrealPnl >= 0 ? 'positive' : 'negative'")
               | ${{ formatCurrency(position.unrealPnl) }}
           .detail-row
-            .label Notional
+            .label {{ $t('modelDetail.notional') }}
             .value ${{ formatCurrency(position.notional) }}
 
       // No positions data state
       .no-positions-data(v-if="currentModel.positions.length === 0")
         .no-data-icon 📊
-        .no-data-text No position data
-        .no-data-subtitle Current account has no active positions
+        .no-data-text {{ $t('modelDetail.noPositionData') }}
+        .no-data-subtitle {{ $t('modelDetail.noPositionSubtitle') }}
 
   // Recent trades
   .trades-section
-    .section-title LAST 25 TRADES
+    .section-title {{ $t('modelDetail.last25Trades') }}
 
     .trades-table
       .table-header
-        .col SIDE
-        .col COIN
-        .col ENTRY PRICE
-        .col EXIT PRICE
-        .col QUANTITY
-        .col HOLDING TIME
-        .col ENTRY TIME
-        .col CLOSE TIME
-        .col FEES
-        .col NOTIONAL ENTRY
-        .col NOTIONAL EXIT
-        .col NET P&L
+        .col {{ $t('modelDetail.side') }}
+        .col {{ $t('modelDetail.coin') }}
+        .col {{ $t('modelDetail.entryPrice') }}
+        .col {{ $t('modelDetail.exitPrice') }}
+        .col {{ $t('modelDetail.quantity') }}
+        .col {{ $t('modelDetail.holdingTime') }}
+        .col {{ $t('modelDetail.entryTime') }}
+        .col {{ $t('modelDetail.closeTime') }}
+        .col {{ $t('modelDetail.fees') }}
+        .col {{ $t('modelDetail.notionalEntry') }}
+        .col {{ $t('modelDetail.notionalExit') }}
+        .col {{ $t('modelDetail.netPnl') }}
 
       .table-body
         .table-row(v-for="trade in currentModel.recentTrades" :key="trade.id")
-          .col(data-label="SIDE")
+          .col(:data-label="$t('modelDetail.side')")
             .side(:class="trade.side.toLowerCase()") {{ trade.side }}
-          .col(data-label="COIN")
+          .col(:data-label="$t('modelDetail.coin')")
             .coin-info
               .coin-icon
                 img(:src="getCryptoIcon(trade.coin)" :alt="trade.coin" v-if="getCryptoIcon(trade.coin)")
               .coin-name {{ trade.coin }}
-          .col(data-label="ENTRY PRICE") ${{ formatCurrency(trade.entryPrice) }}
-          .col(data-label="EXIT PRICE") ${{ formatCurrency(trade.exitPrice) }}
-          .col(data-label="QUANTITY") {{ formatQuantity(trade.quantity) }}
-          .col(data-label="HOLDING TIME") {{ trade.holdingTime }}
-          .col(data-label="ENTRY TIME ") {{ formatBeijingTime(trade.entryBeijingTime) }}
-          .col(data-label="CLOSE TIME ") {{ formatBeijingTime(trade.closeBeijingTime) }}
-          .col(data-label="FEES") ${{ formatCurrency(trade.totalFees) }}
-          .col(data-label="NOTIONAL ENTRY") ${{ formatCurrency(trade.notionalEntry) }}
-          .col(data-label="NOTIONAL EXIT") ${{ formatCurrency(trade.notionalExit) }}
-          .col(:class="trade.netPnl >= 0 ? 'positive' : 'negative'" data-label="NET P&L")
+          .col(:data-label="$t('modelDetail.entryPrice')") ${{ formatCurrency(trade.entryPrice) }}
+          .col(:data-label="$t('modelDetail.exitPrice')") ${{ formatCurrency(trade.exitPrice) }}
+          .col(:data-label="$t('modelDetail.quantity')") {{ formatQuantity(trade.quantity) }}
+          .col(:data-label="$t('modelDetail.holdingTime')") {{ trade.holdingTime }}
+          .col(:data-label="$t('modelDetail.entryTime')") {{ formatBeijingTime(trade.entryBeijingTime) }}
+          .col(:data-label="$t('modelDetail.closeTime')") {{ formatBeijingTime(trade.closeBeijingTime) }}
+          .col(:data-label="$t('modelDetail.fees')") ${{ formatCurrency(trade.totalFees) }}
+          .col(:data-label="$t('modelDetail.notionalEntry')") ${{ formatCurrency(trade.notionalEntry) }}
+          .col(:data-label="$t('modelDetail.notionalExit')") ${{ formatCurrency(trade.notionalExit) }}
+          .col(:class="trade.netPnl >= 0 ? 'positive' : 'negative'" :data-label="$t('modelDetail.netPnl')")
             | ${{ formatCurrency(trade.netPnl) }}
 
       // No trades data state
       .no-trades-data(v-if="currentModel.recentTrades.length === 0")
         .no-data-icon 📈
-        .no-data-text No trade records
-        .no-data-subtitle Current account has no trading history
+        .no-data-text {{ $t('modelDetail.noTradeRecords') }}
+        .no-data-subtitle {{ $t('modelDetail.noTradeSubtitle') }}
 </template>
 
 <script setup>
