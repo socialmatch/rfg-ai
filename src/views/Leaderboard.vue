@@ -37,18 +37,18 @@
           .model-icon(:style="shouldShowBackground(model.name) ? { backgroundColor: model.color } : {}")
             img(:src="getModelIcon(model.name)" :alt="model.name")
           .model-name {{ model.name }}
-        .col(data-label="ACCT VALUE").account-value ${{ (model.accountValue || 0).toLocaleString() }}
-        .col.return-percent(:class="(model.returnPercent || 0) >= 0 ? 'positive' : 'negative'" :data-label="$t('leaderboard.returnPercent')")
-          | {{ (model.returnPercent || 0) >= 0 ? '+' : '' }}{{ (model.returnPercent || 0).toFixed(2) }}%
-        .col(:class="(model.totalPnl || 0) >= 0 ? 'positive' : 'negative'" data-label="TOTAL P&L").total-pnl
-          | ${{ (model.totalPnl || 0).toLocaleString() }}
-        .col(data-label="FEES").fees ${{ Math.abs(model.fees || 0).toFixed(2) }}
-        .col(data-label="WIN RATE").win-rate {{ (model.winRate || 0).toFixed(1) }}%
-        .col(:class="(model.biggestWin || 0) >= 0 ? 'positive' : 'negative'" data-label="BIGGEST WIN").biggest-win
-          | ${{ (model.biggestWin || 0).toFixed(2) }}
-        .col(:class="(model.biggestLoss || 0) >= 0 ? 'positive' : 'negative'" data-label="BIGGEST LOSS").biggest-loss
-          | ${{ (model.biggestLoss || 0).toFixed(2) }}
-        .col(data-label="TRADES").trades {{ model.trades || 0 }}
+        .col(data-label="ACCT VALUE").account-value {{ formatNumber(model.accountValue, { currency: true }) }}
+        .col.return-percent(:class="dataLoaded && (model.returnPercent || 0) >= 0 ? 'positive' : (dataLoaded && (model.returnPercent || 0) < 0 ? 'negative' : '')" :data-label="$t('leaderboard.returnPercent')")
+          | {{ formatNumber(model.returnPercent, { percent: true, decimals: 2 }) }}
+        .col(:class="dataLoaded && (model.totalPnl || 0) >= 0 ? 'positive' : (dataLoaded && (model.totalPnl || 0) < 0 ? 'negative' : '')" data-label="TOTAL P&L").total-pnl
+          | {{ formatNumber(model.totalPnl, { currency: true }) }}
+        .col(data-label="FEES").fees {{ formatNumber(Math.abs(model.fees || 0), { currency: true, decimals: 2 }) }}
+        .col(data-label="WIN RATE").win-rate {{ formatNumber(model.winRate, { percent: true, decimals: 1 }) }}
+        .col(:class="dataLoaded && (model.biggestWin || 0) >= 0 ? 'positive' : (dataLoaded && (model.biggestWin || 0) < 0 ? 'negative' : '')" data-label="BIGGEST WIN").biggest-win
+          | {{ formatNumber(model.biggestWin, { currency: true, decimals: 2 }) }}
+        .col(:class="dataLoaded && (model.biggestLoss || 0) >= 0 ? 'positive' : (dataLoaded && (model.biggestLoss || 0) < 0 ? 'negative' : '')" data-label="BIGGEST LOSS").biggest-loss
+          | {{ formatNumber(model.biggestLoss, { currency: true, decimals: 2 }) }}
+        .col(data-label="TRADES").trades {{ formatNumber(model.trades) }}
 
   // Bottom statistics and visualization
   .summary-section
@@ -61,7 +61,7 @@
             .model-name {{ winningModel.name }}
       .summary-item
         .label TOTAL EQUITY:
-        .value ${{ winningModel.accountValue.toLocaleString() }}
+        .value {{ formatNumber(winningModel.accountValue, { currency: true }) }}
 
       .summary-item
         .label ACTIVE POSITIONS:
@@ -106,6 +106,78 @@ const sortColumn = ref('')
 
 // Leaderboard data - initialized as empty, dynamically get real data later
 const leaderboardData = ref([])
+
+// Track if data has been loaded at least once
+const dataLoaded = ref(false)
+
+// Initialize leaderboard with all models from config (for display before data loads)
+const initializeLeaderboardWithAllModels = () => {
+  const allModels = getAllModelInfo().filter(model => model.enabled)
+  return allModels.map((model, index) => ({
+    rank: index + 1,
+    name: model.name,
+    accountValue: 0,
+    returnPercent: 0,
+    totalPnl: 0,
+    fees: 0,
+    winRate: 0,
+    biggestWin: 0,
+    biggestLoss: 0,
+    trades: 0,
+    color: model.color,
+    balance: '0.00000000',
+    availableBalance: '0.00000000',
+    marginAvailable: false,
+    initialCapital: model.initialCapital || DEFAULT_INITIAL_CAPITAL,
+    positions: [],
+    longTrades: 0,
+    shortTrades: 0,
+    winTrades: 0,
+    lossTrades: 0,
+    averageWin: 0,
+    averageLoss: 0,
+    maxDrawdown: 0,
+    isPlaceholder: true // Mark as placeholder data
+  }))
+}
+
+// Check if we have complete cached data for all models
+const hasCompleteCachedData = (balanceData, tradesData, positionsData) => {
+  if (!balanceData || !balanceData.success) return false
+  if (!tradesData || !tradesData.success) return false
+  if (!positionsData || !positionsData.success) return false
+  
+  // Get all enabled models
+  const allEnabledModels = getAllModelInfo().filter(model => model.enabled)
+  const enabledModelNames = new Set(allEnabledModels.map(m => m.name))
+  
+  // Check if we have data for all enabled models in balance data
+  const balanceModelNames = new Set(
+    balanceData.accounts
+      .filter(acc => acc.success && acc.data && acc.data.length > 0)
+      .map(acc => acc.modelInfo.name)
+  )
+  
+  // Check if we have data for all enabled models in trades data
+  const tradesModelNames = new Set(
+    tradesData.accounts
+      .filter(acc => acc.data && acc.data.length > 0)
+      .map(acc => acc.modelInfo.name)
+  )
+  
+  // Check if we have data for all enabled models in positions data
+  const positionsModelNames = new Set(
+    positionsData.accounts
+      .filter(acc => acc.success && acc.data)
+      .map(acc => acc.modelInfo.name)
+  )
+  
+  // We consider it complete if we have balance data for all models
+  // (trades and positions might be empty for some models, which is OK)
+  const hasAllBalanceData = allEnabledModels.every(model => balanceModelNames.has(model.name))
+  
+  return hasAllBalanceData
+}
 
 // Auto-refresh timer (1 minute = 60000ms)
 let refreshTimer = null
@@ -240,7 +312,13 @@ const buildLeaderboardFromData = (balanceData, tradesData, positionsData) => {
     console.log('🔍 No positions data or failed to get positions data')
   }
 
+  // Get all enabled models to ensure we include all models even if they have no data
+  const allEnabledModels = getAllModelInfo().filter(model => model.enabled)
+  const allEnabledModelNames = new Set(allEnabledModels.map(m => m.name))
+  
   const leaderboardItems = []
+  
+  // First, process models that have data
   modelDataMap.forEach((data, modelName) => {
     const balance = data.balance
     const stats = data.stats || {}
@@ -304,13 +382,55 @@ const buildLeaderboardFromData = (balanceData, tradesData, positionsData) => {
       lossTrades: stats.lossTrades || 0,
       averageWin: stats.averageWin || 0,
       averageLoss: stats.averageLoss || 0,
-      maxDrawdown: data.maxDrawdown || 0
+      maxDrawdown: data.maxDrawdown || 0,
+      isPlaceholder: false // Mark as real data
     })
 
     console.log('🔍 Built leaderboard item for', modelName, 'with positions:', data.positions || [])
   })
+  
+  // Add models that don't have data yet (only if we're building from incomplete cache)
+  // If we have complete cache, we don't need to add placeholder models
+  allEnabledModels.forEach(model => {
+    if (!modelDataMap.has(model.name)) {
+      // This model has no data, but we still want to show it
+      // Only add if we're in a state where we should show placeholders
+      // (i.e., when we don't have complete cache)
+      leaderboardItems.push({
+        rank: 0,
+        name: model.name,
+        accountValue: 0,
+        returnPercent: 0,
+        totalPnl: 0,
+        fees: 0,
+        winRate: 0,
+        biggestWin: 0,
+        biggestLoss: 0,
+        trades: 0,
+        color: model.color,
+        balance: '0.00000000',
+        availableBalance: '0.00000000',
+        marginAvailable: false,
+        initialCapital: model.initialCapital || DEFAULT_INITIAL_CAPITAL,
+        positions: [],
+        longTrades: 0,
+        shortTrades: 0,
+        winTrades: 0,
+        lossTrades: 0,
+        averageWin: 0,
+        averageLoss: 0,
+        maxDrawdown: 0,
+        isPlaceholder: true // Mark as placeholder
+      })
+    }
+  })
 
-  leaderboardItems.sort((a, b) => b.accountValue - a.accountValue)
+  leaderboardItems.sort((a, b) => {
+    // Sort by accountValue, but placeholders go to the end
+    if (a.isPlaceholder && !b.isPlaceholder) return 1
+    if (!a.isPlaceholder && b.isPlaceholder) return -1
+    return b.accountValue - a.accountValue
+  })
   leaderboardItems.forEach((item, index) => {
     item.rank = index + 1
   })
@@ -337,17 +457,33 @@ const loadLeaderboardData = async (silent = false) => {
     let balanceData = getCachedData('balance')
     let tradesData = getCachedData('trades')
     let positionsData = getCachedData('positions')
+    let newLeaderboardData = null // Declare at function scope
 
     if (balanceData) console.log('✅ Using cached balance data for leaderboard')
     if (tradesData) console.log('✅ Using cached trades data for leaderboard')
     if (positionsData) console.log('✅ Using cached positions data for leaderboard')
 
-    // Build from cache first (only if we don't have existing data)
-    let newLeaderboardData = null
+    // Check if we have complete cached data
+    const hasCompleteCache = hasCompleteCachedData(balanceData, tradesData, positionsData)
+    
+    // If we have no existing data, initialize with placeholder or cached data
     if (leaderboardData.value.length === 0) {
-      newLeaderboardData = buildLeaderboardFromData(balanceData, tradesData, positionsData)
-      if (newLeaderboardData) {
-        leaderboardData.value = newLeaderboardData
+      if (hasCompleteCache) {
+        // We have complete cached data, build and display it immediately
+        console.log('✅ Found complete cached data, displaying immediately')
+        newLeaderboardData = buildLeaderboardFromData(balanceData, tradesData, positionsData)
+        if (newLeaderboardData) {
+          leaderboardData.value = newLeaderboardData
+          dataLoaded.value = true // Mark as loaded since we have complete cache
+        } else {
+          // Fallback to placeholder if build fails
+          leaderboardData.value = initializeLeaderboardWithAllModels()
+        }
+      } else {
+        // No complete cache, initialize with placeholder data (showing --)
+        console.log('⚠️ No complete cached data, initializing with placeholder models')
+        leaderboardData.value = initializeLeaderboardWithAllModels()
+        dataLoaded.value = false // Keep as false to show --
       }
     }
 
@@ -384,11 +520,22 @@ const loadLeaderboardData = async (silent = false) => {
     // Only update if we got valid data, otherwise keep existing data
     if (newLeaderboardData && newLeaderboardData.length > 0) {
       leaderboardData.value = newLeaderboardData
+      dataLoaded.value = true // Mark data as loaded
       console.log('✅ Leaderboard data updated successfully')
     } else {
       console.warn('⚠️ Failed to build fresh leaderboard data, keeping existing data')
       if (leaderboardData.value.length === 0) {
-        throw new Error('No leaderboard data available')
+        // If we still have no data, initialize with placeholder
+        leaderboardData.value = initializeLeaderboardWithAllModels()
+        dataLoaded.value = false
+      } else {
+        // If we have existing data (placeholder or cached), check if it's placeholder
+        // If it's placeholder, keep dataLoaded as false to continue showing --
+        // If it's cached data, mark as loaded
+        const hasPlaceholderData = leaderboardData.value.some(item => item.isPlaceholder)
+        if (!hasPlaceholderData) {
+          dataLoaded.value = true // We have real cached data
+        }
       }
     }
   } catch (error) {
@@ -478,6 +625,29 @@ const formatBarValue = (value) => {
     return Math.round(numValue).toLocaleString()
   }
   // Desktop: keep original format (may have decimals)
+  return numValue.toLocaleString()
+}
+
+// Format number: show "--" on initial load, show actual number (including 0) on refresh
+// When showing "--", don't show unit symbols like $ or %
+const formatNumber = (value, options = {}) => {
+  if (!dataLoaded.value) {
+    return '--'
+  }
+  const numValue = value ?? 0
+  if (options.currency) {
+    if (options.decimals !== undefined) {
+      return `$${numValue.toFixed(options.decimals)}`
+    }
+    return `$${numValue.toLocaleString()}`
+  }
+  if (options.percent) {
+    const sign = options.showSign && numValue >= 0 ? '+' : (numValue < 0 ? '' : '')
+    return `${sign}${numValue.toFixed(options.decimals || 2)}%`
+  }
+  if (options.decimals !== undefined) {
+    return numValue.toFixed(options.decimals)
+  }
   return numValue.toLocaleString()
 }
 </script>

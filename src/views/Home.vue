@@ -11,17 +11,23 @@
             .crypto-icon
               img(:src="getCryptoIcon(crypto.symbol)" :alt="crypto.symbol")
             .sym {{ crypto.symbol }}
-          .price ${{ crypto.price.toLocaleString() }}
+          .price {{ formatNumber(crypto.price, { currency: true, useBalanceData: false }) }}
       .ticker-right
         .performance-summary
           .highest {{ $t('home.highest') }}: {{ highestModel.name }}
             .value-row
-              span.rolling-value ${{ highestModel.value.toLocaleString() }}
-              span.positive +{{ highestModel.change.toFixed(2) }}%
+              template(v-if="balanceDataLoaded")
+                span.rolling-value {{ formatNumber(highestModel.value, { currency: true, useBalanceData: true }) }}
+                span.positive {{ formatNumber(highestModel.change, { percent: true, decimals: 2, showSign: true, useBalanceData: true }) }}
+              template(v-else)
+                span.rolling-value --
           .lowest {{ $t('home.lowest') }}: {{ lowestModel.name }}
             .value-row
-              span.rolling-value ${{ lowestModel.value.toLocaleString() }}
-              span.negative {{ lowestModel.change.toFixed(2) }}%
+              template(v-if="balanceDataLoaded")
+                span.rolling-value {{ formatNumber(lowestModel.value, { currency: true, useBalanceData: true }) }}
+                span.negative {{ formatNumber(lowestModel.change, { percent: true, decimals: 2, useBalanceData: true }) }}
+              template(v-else)
+                span.rolling-value --
 
   // Main area: left chart + right sidebar
   main.main-content
@@ -51,7 +57,7 @@
                 .model-image(:style="!model.isBtcPrice && shouldShowBackground(model.name) ? { backgroundColor: model.color } : {}")
                   img(v-if="!model.isBtcPrice" :src="getModelImage(model.name)" :alt="model.name")
                   img(v-else :src="getCryptoIcon('BTC')" alt="BTC")
-                .model-value(:style="{ backgroundColor: model.color }") ${{ (model.balance ? parseFloat(model.balance) : model.value).toLocaleString() }}
+                .model-value(:style="{ backgroundColor: model.color }") {{ formatNumber(model.balance ? parseFloat(model.balance) : model.value, { currency: true, useBalanceData: true }) }}
           //.x-axis
             .tick(v-for="tick in xAxisTicks" :key="tick") {{ tick }}
 
@@ -86,7 +92,7 @@
          //.legend-dot(:style="{ backgroundColor: legend.color }")
          .legend-content-inner
            .legend-name(:style="{ color: legend.color }") {{ legend.name }}
-           .legend-value ${{ legend.value.toLocaleString() }}
+           .legend-value {{ formatNumber(legend.value, { currency: true, useBalanceData: true }) }}
 
   // Connection status
   //.connection-status
@@ -198,6 +204,10 @@ const asterBalanceError = ref(null)
 const chartDataLoading = ref(false)
 const chartDataError = ref(null)
 
+// Track if data has been loaded at least once - separate for crypto prices and balance data
+const cryptoPricesLoaded = ref(false)
+const balanceDataLoaded = ref(false)
+
 const cryptoPrices = ref([
   { symbol: 'BTC', price: 0, change: 0, prevPrice: 0 },
   { symbol: 'ETH', price: 0, change: 0, prevPrice: 0 },
@@ -289,11 +299,19 @@ const loadAsterBalance = async ({ skipInit = false, skipCache = false } = {}) =>
       return isNaN(num) ? 0 : num
     }
 
+    // Track if we have any real data loaded from API
+    // hasRealData will be true if at least one account successfully returned data from API
+    // (even if the value is 0, as long as it came from the API, it's real data)
+    let hasRealData = false
+
     // Update models with API data
     result.accounts.forEach(account => {
-      if (account.success && account.data) {
+      if (account.success && account.data && account.data.length > 0) {
         const usdtBalance = account.data.find(b => b.asset === 'USDT')
         if (usdtBalance) {
+          // If we got data from API (even if value is 0), mark as real data
+          hasRealData = true
+
           const accountValue = parseToNumber(usdtBalance.balance)
           const initialCapital = account.modelInfo.initialCapital || DEFAULT_INITIAL_CAPITAL
           // Calculate change as: (accountValue - initialCapital) / initialCapital * 100
@@ -378,28 +396,41 @@ const loadAsterBalance = async ({ skipInit = false, skipCache = false } = {}) =>
       console.warn('⚠️ Failed to load BTC price for trading models:', error)
     }
 
-    tradingModels.value = balanceData
-    asterBalance.value = balanceData
+    // Only update tradingModels if we have real data or it's a refresh
+    // For refresh scenarios (skipInit), always update since we're updating existing data
+    if (skipInit || hasRealData) {
+      tradingModels.value = balanceData
+      asterBalance.value = balanceData
 
-    // Update balance data in config file
-    balanceData.forEach(modelData => {
-      updateAccountBalance(modelData.name, {
-        accountAlias: modelData.accountAlias,
-        asset: modelData.asset,
-        balance: modelData.balance,
-        crossWalletBalance: modelData.crossWalletBalance,
-        crossUnPnl: modelData.crossUnPnl,
-        availableBalance: modelData.availableBalance,
-        maxWithdrawAmount: modelData.maxWithdrawAmount,
-        marginAvailable: modelData.marginAvailable,
-        updateTime: modelData.updateTime,
-        totalUsdtValue: modelData.totalUsdtValue,
-        uid: modelData.uid,
-        walletName: modelData.walletName
+      // Mark balance data as loaded only if we have real data from API (not just initial 0 values)
+      // For refresh scenarios (skipInit), only mark as loaded if we have real data
+      if (hasRealData) {
+        balanceDataLoaded.value = true
+      }
+
+      // Update balance data in config file
+      balanceData.forEach(modelData => {
+        updateAccountBalance(modelData.name, {
+          accountAlias: modelData.accountAlias,
+          asset: modelData.asset,
+          balance: modelData.balance,
+          crossWalletBalance: modelData.crossWalletBalance,
+          crossUnPnl: modelData.crossUnPnl,
+          availableBalance: modelData.availableBalance,
+          maxWithdrawAmount: modelData.maxWithdrawAmount,
+          marginAvailable: modelData.marginAvailable,
+          updateTime: modelData.updateTime,
+          totalUsdtValue: modelData.totalUsdtValue,
+          uid: modelData.uid,
+          walletName: modelData.walletName
+        })
       })
-    })
 
-    updateRealDataWithAnimation(balanceData)
+      updateRealDataWithAnimation(balanceData)
+    } else {
+      // If no real data, keep existing data and don't update balanceDataLoaded
+      console.log('⚠️ No real data loaded, keeping existing display state')
+    }
   }
 
   // Step 1: Check cache first and use it immediately if exists
@@ -816,7 +847,7 @@ const createRollingNumber = (element, fromValue, toValue, duration = 1000) => {
 
 // Real data update animation
 const updateRealDataWithAnimation = (newBalanceData) => {
-  if (!newBalanceData) return
+  if (!newBalanceData || !balanceDataLoaded.value) return
 
   // Save current highest and lowest values
   const prevHighestValue = highestModel.value.value
@@ -1315,10 +1346,14 @@ const fetchCryptoPrices = async () => {
     const result = await getAllCryptoPrices()
 
     if (result.success) {
+      // Track if we have real price data (not just 0)
+      let hasRealPriceData = false
+
       // Update cryptoPrices data and detect price changes
       cryptoPrices.value.forEach((crypto, index) => {
         const priceData = result.prices.find(p => p.name === crypto.symbol)
-        if (priceData) {
+        if (priceData && priceData.price > 0) {
+          hasRealPriceData = true
           const newPrice = priceData.price
           const priceChangePercent = 0 // Aster Finance ticker/price doesn't provide 24h change
 
@@ -1344,6 +1379,12 @@ const fetchCryptoPrices = async () => {
           }
         }
       })
+
+      // Mark crypto prices as loaded only if we have real price data
+      // For refresh scenarios, always mark as loaded since we're updating existing data
+      if (hasRealPriceData || cryptoPricesLoaded.value) {
+        cryptoPricesLoaded.value = true
+      }
     } else {
       console.error('❌ Failed to fetch crypto prices from Aster Finance:', result.error)
     }
@@ -1402,6 +1443,34 @@ const aboutRFGAI = () => { alert('About RFG AI feature to be implemented') }
 const getActiveDetailComponent = () => {
   const components = { trades: CompletedTrades, model: ModelChatFeed, chat: ModelChatFeed, prompts: Prompts, positions: Positions, readme: Readme }
   return components[activeDetailTab.value]
+}
+
+// Format number: show "--" on initial load, show actual number (including 0) on refresh
+// When showing "--", don't show unit symbols like $ or %
+// useBalanceData: true for model balance data, false for crypto prices
+const formatNumber = (value, options = {}) => {
+  // Determine which loaded state to check based on useBalanceData option
+  // Default to balanceDataLoaded for backward compatibility
+  const isLoaded = options.useBalanceData === false ? cryptoPricesLoaded.value : balanceDataLoaded.value
+  
+  if (!isLoaded) {
+    return '--'
+  }
+  const numValue = value ?? 0
+  if (options.currency) {
+    if (options.decimals !== undefined) {
+      return `$${numValue.toFixed(options.decimals)}`
+    }
+    return `$${numValue.toLocaleString()}`
+  }
+  if (options.percent) {
+    const sign = options.showSign && numValue >= 0 ? '+' : (numValue < 0 ? '' : '')
+    return `${sign}${numValue.toFixed(options.decimals || 2)}%`
+  }
+  if (options.decimals !== undefined) {
+    return numValue.toFixed(options.decimals)
+  }
+  return numValue.toLocaleString()
 }
 
 const getStatusText = () => {

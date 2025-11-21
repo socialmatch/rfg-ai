@@ -22,44 +22,43 @@
     .model-stats
       .stat-item
         .label {{ $t('modelDetail.totalAccountValue') }}
-        .value ${{ currentModel.accountValue.toLocaleString() }}
+        .value {{ formatNumber(currentModel.accountValue, { currency: true }) }}
       .stat-item
         .label {{ $t('modelDetail.availableCash') }}
-        .value ${{ currentModel.availableCash.toLocaleString() }}
+        .value {{ formatNumber(currentModel.availableCash, { currency: true }) }}
       .stat-item
         .label
           span {{ $t('modelDetail.totalPnl') }} ({{$t('modelDetail.winRate')}})
           .tooltip-icon(:title="$t('modelDetail.totalPnlWinRateFormula')") ?
-        .value(:class="currentModel.totalPnl >= 0 ? 'positive' : 'negative'")
-          | ${{ currentModel.totalPnl.toLocaleString() }}
-          | ({{ (currentModel.returnPercent || 0) >= 0 ? '+' : '' }}{{ (currentModel.returnPercent || 0).toFixed(2) }}%)
+        .value(:class="dataLoaded && currentModel.totalPnl >= 0 ? 'positive' : (dataLoaded && currentModel.totalPnl < 0 ? 'negative' : '')")
+          | {{ formatNumber(currentModel.totalPnl, { currency: true }) }}
+          |  {{ formatNumber(currentModel.returnPercent, { percent: true, decimals: 2 }) }}
       .stat-item
         .label {{ $t('modelDetail.totalFees') }}
-        .value(:class="(currentModel.totalFees || 0) >= 0 ? 'positive' : 'negative'")
-          | ${{ formatCurrency(currentModel.totalFees) }}
+        .value(:class="dataLoaded && (currentModel.totalFees || 0) >= 0 ? 'positive' : (dataLoaded && (currentModel.totalFees || 0) < 0 ? 'negative' : '')")
+          | {{ formatNumber(currentModel.totalFees, { currency: true }) }}
 
   // Statistics
   .stats-section
     .stats-grid
-      .stat-card
+      //.stat-card
         .stat-label {{ $t('modelDetail.averageLeverage') }}
-        //.stat-value {{ currentModel.averageLeverage }}
-        .stat-value --
+        .stat-value {{ formatAverageLeverage(currentModel.averageLeverage) }}
       .stat-card
         .stat-label {{ $t('modelDetail.winRate') }}
-        .stat-value {{ currentModel.winRate }}%
+        .stat-value {{ formatNumber(currentModel.winRate, { percent: true, decimals: 1 }) }}
       .stat-card
         .stat-label {{ $t('modelDetail.biggestWin') }}
-        .stat-value.positive ${{ formatCurrency(currentModel.biggestWin) }}
+        .stat-value.positive {{ formatNumber(currentModel.biggestWin, { currency: true }) }}
       .stat-card
         .stat-label {{ $t('modelDetail.biggestLoss') }}
-        .stat-value.negative ${{ formatCurrency(currentModel.biggestLoss) }}
+        .stat-value.negative {{ formatNumber(currentModel.biggestLoss, { currency: true }) }}
       .stat-card
         .stat-label {{ $t('modelDetail.long') }}
-        .stat-value {{ currentModel.holdTimes.long }}%
+        .stat-value {{ formatNumber(currentModel.holdTimes.long, { percent: true, decimals: 0 }) }}
       .stat-card
         .stat-label {{ $t('modelDetail.short') }}
-        .stat-value {{ currentModel.holdTimes.short }}%
+        .stat-value {{ formatNumber(currentModel.holdTimes.short, { percent: true, decimals: 0 }) }}
     //.hold-times
       .hold-times-title Hold Times
       .hold-times-grid
@@ -78,7 +77,7 @@
     .section-header
       .section-title {{ $t('modelDetail.activePositions') }}
       .total-pnl {{ $t('modelDetail.totalUnrealizedPnl') }}
-        span(:class="currentModel.totalUnrealizedPnl >= 0 ? 'positive' : 'negative'") ${{ formatCurrency(currentModel.totalUnrealizedPnl) }}
+        span(:class="dataLoaded && currentModel.totalUnrealizedPnl >= 0 ? 'positive' : (dataLoaded && currentModel.totalUnrealizedPnl < 0 ? 'negative' : '')") {{ formatNumber(currentModel.totalUnrealizedPnl, { currency: true }) }}
     .positions-grid
       .position-card(v-for="position in currentModel.positions" :key="position.id")
         .position-header
@@ -185,6 +184,9 @@ const route = useRoute()
 // Data loading state
 const loading = ref(false)
 const error = ref(null)
+
+// Track if data has been loaded at least once
+const dataLoaded = ref(false)
 
 // Model data - initialized with default data, dynamically get real data later
 const models = ref(getAllModelInfo().map(model => ({
@@ -438,6 +440,7 @@ const loadModelData = async () => {
           }
 
           loading.value = false // Stop loading when data is processed
+          dataLoaded.value = true // Mark data as loaded
           console.log(`✅ Model data updated for ${currentModel.name}`)
         } catch (error) {
           console.error(`❌ Error processing data for ${currentModel.name}:`, error)
@@ -492,14 +495,58 @@ const loadModelData = async () => {
 
 // Format currency function - handle NaN and 4 decimal places
 const formatCurrency = (value) => {
+  if (!dataLoaded.value) {
+    return '--'
+  }
   if (isNaN(value) || value === null || value === undefined) {
     return '0.0000'
   }
   return parseFloat(value).toFixed(4)
 }
 
+// Format number: show "--" on initial load, show actual number (including 0) on refresh
+// When showing "--", don't show unit symbols like $ or %
+const formatNumber = (value, options = {}) => {
+  if (!dataLoaded.value) {
+    return '--'
+  }
+  const numValue = value ?? 0
+  if (options.currency) {
+    if (options.decimals !== undefined) {
+      return `$${numValue.toFixed(options.decimals)}`
+    }
+    return `$${numValue.toLocaleString()}`
+  }
+  if (options.percent) {
+    const sign = options.showSign && numValue >= 0 ? '+' : (numValue < 0 ? '' : '')
+    return `${sign}${numValue.toFixed(options.decimals || 2)}%`
+  }
+  if (options.decimals !== undefined) {
+    return numValue.toFixed(options.decimals)
+  }
+  return numValue.toLocaleString()
+}
+
+// Format average leverage: show "--" on initial load, show "N/A" if no leverage data, otherwise show value with "x" suffix
+const formatAverageLeverage = (value) => {
+  if (!dataLoaded.value) {
+    return '--'
+  }
+  if (value === 'N/A' || value === null || value === undefined) {
+    return 'N/A'
+  }
+  const numValue = parseFloat(value)
+  if (isNaN(numValue)) {
+    return 'N/A'
+  }
+  return `${numValue.toFixed(1)}x`
+}
+
 // Format quantity function
 const formatQuantity = (value) => {
+  if (!dataLoaded.value) {
+    return '--'
+  }
   if (isNaN(value) || value === null || value === undefined) {
     return '0.0000'
   }
@@ -769,7 +816,7 @@ watch(() => route.params.slug, (newSlug, oldSlug) => {
 
 .stats-grid
   display grid
-  grid-template-columns repeat(6, 1fr)
+  grid-template-columns repeat(5, 1fr)
   gap 24px
 
 .stat-card

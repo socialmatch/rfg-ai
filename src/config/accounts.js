@@ -12,7 +12,7 @@ export const ACCOUNT_CONFIGS = [
     id: 'ds1',
     modelName: 'DS1',
     modelSlug: 'ds1',
-    modelColor: '#FF6B6B', // 亮红色
+    modelColor: '#EF4444', // 红色 (Red 500)
     modelIcon: 'Rfg_logo.png',
     uid: 'xiao1',
     initialCapital: DEFAULT_INITIAL_CAPITAL, // 初始本金
@@ -35,7 +35,7 @@ export const ACCOUNT_CONFIGS = [
     id: 'ds2',
     modelName: 'DS2',
     modelSlug: 'ds2',
-    modelColor: '#4ECDC4', // 青绿色
+    modelColor: '#10B981', // 翠绿色 (Emerald 500)
     modelIcon: 'Rfg_logo.png',
     uid: 'xiao2',
     initialCapital: DEFAULT_INITIAL_CAPITAL, // 初始本金
@@ -58,7 +58,7 @@ export const ACCOUNT_CONFIGS = [
     id: 'ds3',
     modelName: 'DS3',
     modelSlug: 'ds3',
-    modelColor: '#45B7D1', // 天蓝色
+    modelColor: '#3B82F6', // 蓝色 (Blue 500)
     modelIcon: 'Rfg_logo.png',
     uid: 'xiao3',
     initialCapital: DEFAULT_INITIAL_CAPITAL, // 初始本金
@@ -81,7 +81,7 @@ export const ACCOUNT_CONFIGS = [
     id: 'ds4',
     modelName: 'DS4',
     modelSlug: 'ds4',
-    modelColor: '#FFA07A', // 浅橙色
+    modelColor: '#F59E0B', // 琥珀色 (Amber 500)
     modelIcon: 'Rfg_logo.png',
     uid: 'xiao4',
     initialCapital: DEFAULT_INITIAL_CAPITAL, // 初始本金
@@ -104,7 +104,7 @@ export const ACCOUNT_CONFIGS = [
     id: 'ds5',
     modelName: 'DS5',
     modelSlug: 'ds5',
-    modelColor: '#98D8C8', // 薄荷绿
+    modelColor: '#06B6D4', // 青色 (Cyan 500)
     modelIcon: 'Rfg_logo.png',
     uid: 'xiao5',
     initialCapital: DEFAULT_INITIAL_CAPITAL, // 初始本金
@@ -127,7 +127,7 @@ export const ACCOUNT_CONFIGS = [
     id: 'zy3',
     modelName: 'ZY3',
     modelSlug: 'zy3',
-    modelColor: '#F7DC6F', // 亮黄色
+    modelColor: '#EAB308', // 黄色 (Yellow 500)
     modelIcon: 'Rfg_logo.png',
     uid: 'xiao6',
     initialCapital: DEFAULT_INITIAL_CAPITAL, // 初始本金
@@ -150,7 +150,7 @@ export const ACCOUNT_CONFIGS = [
     id: 'zy4',
     modelName: 'ZY4',
     modelSlug: 'zy4',
-    modelColor: '#BB8FCE', // 淡紫色
+    modelColor: '#8B5CF6', // 紫色 (Violet 500)
     modelIcon: 'Rfg_logo.png',
     uid: 'xiao7',
     initialCapital: DEFAULT_INITIAL_CAPITAL, // 初始本金
@@ -173,7 +173,7 @@ export const ACCOUNT_CONFIGS = [
     id: 'zy6',
     modelName: 'ZY6',
     modelSlug: 'zy6',
-    modelColor: '#85C1E2', // 浅蓝色
+    modelColor: '#EC4899', // 粉红色 (Pink 500)
     modelIcon: 'Rfg_logo.png',
     uid: 'xiao8',
     initialCapital: DEFAULT_INITIAL_CAPITAL, // 初始本金
@@ -196,7 +196,7 @@ export const ACCOUNT_CONFIGS = [
     id: 'ds6',
     modelName: 'DS6',
     modelSlug: 'ds6',
-    modelColor: '#F1948A', // 粉红色
+    modelColor: '#14B8A6', // 蓝绿色 (Teal 500)
     modelIcon: 'Rfg_logo.png',
     uid: 'rfg-6',
     initialCapital: DEFAULT_INITIAL_CAPITAL, // 初始本金
@@ -219,7 +219,7 @@ export const ACCOUNT_CONFIGS = [
     id: 'ds7',
     modelName: 'DS7',
     modelSlug: 'ds7',
-    modelColor: '#FFB347', // 橙色
+    modelColor: '#F97316', // 橙色 (Orange 500)
     modelIcon: 'Rfg_logo.png',
     uid: 'ds7',
     initialCapital: DEFAULT_INITIAL_CAPITAL, // 初始本金
@@ -242,7 +242,7 @@ export const ACCOUNT_CONFIGS = [
     id: 'zy7',
     modelName: 'ZY7',
     modelSlug: 'zy7',
-    modelColor: '#90EE90', // 浅绿色
+    modelColor: '#6366F1', // 靛蓝色 (Indigo 500)
     modelIcon: 'Rfg_logo.png',
     uid: 'zy7',
     initialCapital: DEFAULT_INITIAL_CAPITAL, // 初始本金
