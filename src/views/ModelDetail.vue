@@ -27,7 +27,9 @@
         .label {{ $t('modelDetail.availableCash') }}
         .value ${{ currentModel.availableCash.toLocaleString() }}
       .stat-item
-        .label {{ $t('modelDetail.totalPnl') }}
+        .label
+          span {{ $t('modelDetail.totalPnl') }} ({{$t('modelDetail.winRate')}})
+          .tooltip-icon(:title="$t('modelDetail.totalPnlWinRateFormula')") ?
         .value(:class="currentModel.totalPnl >= 0 ? 'positive' : 'negative'")
           | ${{ currentModel.totalPnl.toLocaleString() }}
           | ({{ (currentModel.returnPercent || 0) >= 0 ? '+' : '' }}{{ (currentModel.returnPercent || 0).toFixed(2) }}%)
@@ -323,10 +325,36 @@ const loadModelData = async () => {
           const maxDrawdown = calculateMaxDrawdown(tradesData)
 
           const initialCapital = accountConfig.initialCapital || DEFAULT_INITIAL_CAPITAL
-          // Calculate total P&L same as Leaderboard: accountValue - initialCapital
-          // accountValue is already calculated from apiData.total_value (same as balance.balance in Leaderboard)
-          const totalPnl = accountValue - initialCapital
-          const returnPercent = initialCapital > 0 ? (totalPnl / initialCapital) * 100 : 0
+          const fees = stats.totalCommission || 0
+
+          // 新的 TOTAL P&L 计算公式: ACCT VALUE + FEES - 初始本金
+          const totalPnl = accountValue + fees - initialCapital
+
+          // 新的回报率计算公式: (ACCT VALUE + FEES - 初始本金) / 初始本金
+          const returnPercent = initialCapital > 0 ? ((accountValue + fees - initialCapital) / initialCapital) * 100 : 0
+
+          // 计算新的胜率: (已平仓盈利订单数 + 未平仓盈利订单数) / (已平仓订单数 + 未平仓订单数)
+          // 已平仓的盈利订单数量
+          const closedWinTrades = tradesData.filter(trade => {
+            const pnl = parseFloat(trade.realizedPnl || 0)
+            return pnl > 0
+          }).length
+
+          // 当前未平仓的盈利订单数量
+          const openWinPositions = positionsData.filter(position => {
+            const pnl = parseFloat(position.unRealizedProfit ?? position.netUnrealizedPnl ?? 0)
+            return pnl > 0
+          }).length
+
+          // 已平仓的订单总数
+          const closedTradesCount = tradesData.length
+
+          // 当前持仓的订单总数
+          const openPositionsCount = positionsData.length
+
+          // 计算胜率
+          const totalOrders = closedTradesCount + openPositionsCount
+          const winRate = totalOrders > 0 ? ((closedWinTrades + openWinPositions) / totalOrders) * 100 : 0
 
           // Update model data
           const modelIndex = models.value.findIndex(m => m.slug === currentModelSlug)
@@ -337,7 +365,7 @@ const loadModelData = async () => {
               availableCash: availableCash,
               totalPnl: totalPnl,
               totalUnrealizedPnl: totalUnrealizedPositionsPnl,
-              totalFees: stats.totalCommission || 0,
+              totalFees: fees,
               netRealized: stats.totalProfit || 0,
               returnPercent: returnPercent,
               averageLeverage: (() => {
@@ -348,7 +376,7 @@ const loadModelData = async () => {
                 const avg = leverageValues.reduce((sum, value) => sum + value, 0) / leverageValues.length
                 return avg.toFixed(1)
               })(),
-              averageConfidence: stats.winRate || 0,
+              averageConfidence: Math.round(winRate * 100) / 100, // 保留2位小数
               biggestWin: stats.biggestWin || 0,
               biggestLoss: stats.biggestLoss || 0,
               holdTimes: {
@@ -357,7 +385,7 @@ const loadModelData = async () => {
                 flat: 0
               },
               totalTrades: stats.totalTrades || 0,
-              winRate: stats.winRate || 0,
+              winRate: Math.round(winRate * 100) / 100, // 使用新计算的胜率，保留2位小数
               winTrades: stats.winTrades || 0,
               lossTrades: stats.lossTrades || 0,
               averageWin: stats.averageWin || 0,
@@ -640,6 +668,59 @@ watch(() => route.params.slug, (newSlug, oldSlug) => {
     font-size 14px
     color #94a3b8
     margin-bottom 4px
+    display flex
+    align-items center
+    gap 6px
+
+    .tooltip-icon
+      width 16px
+      height 16px
+      border-radius 50%
+      background #3b82f6
+      color #fff
+      font-size 11px
+      font-weight 700
+      display flex
+      align-items center
+      justify-content center
+      cursor help
+      position relative
+      flex-shrink 0
+
+      &:hover::after
+        content attr(title)
+        position absolute
+        top 100%
+        left 50%
+        transform translateX(-50%)
+        margin-top 8px
+        padding 10px 14px
+        background #1e293b
+        border 1px solid #2b3444
+        border-radius 6px
+        color #f8fafc
+        font-size 12px
+        font-weight 400
+        white-space pre-line
+        min-width 300px
+        max-width 450px
+        z-index 10000
+        box-shadow 0 4px 12px rgba(0, 0, 0, 0.3)
+        pointer-events none
+        text-align left
+        line-height 1.5
+
+      &:hover::before
+        content ''
+        position absolute
+        top 100%
+        left 50%
+        transform translateX(-50%)
+        margin-top 2px
+        border 6px solid transparent
+        border-bottom-color #2b3444
+        z-index 10001
+        pointer-events none
 
   .value
     font-size 18px

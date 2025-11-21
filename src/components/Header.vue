@@ -22,7 +22,7 @@ header.header
             .model-name {{ model.name }}
 
     .header-actions
-      LanguageSwitcher
+      //LanguageSwitcher
       button.btn-secondary(@click="aboutRFGAI" :class="{ active: $route.name === 'about' }") {{ $t('common.aboutRfgAi') }}
 </template>
 
@@ -98,7 +98,7 @@ const handleDocumentClick = (event) => {
   if (isMobile.value && showModelsDropdown.value) {
     const modelsNavItem = event.target.closest('.nav-item')
     const dropdown = event.target.closest('.models-dropdown')
-    
+
     if (!modelsNavItem && !dropdown) {
       showModelsDropdown.value = false
     }
@@ -322,7 +322,7 @@ watch(() => route.path, () => {
   .logo
     flex 0 1 auto
     min-width 0
-    
+
     h1
       font-size 16px
       line-height 1.2
@@ -369,7 +369,7 @@ watch(() => route.path, () => {
     visibility hidden
     transform translateY(100%)
     z-index 1000
-    
+
     &.show
       display block
       opacity 1

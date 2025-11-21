@@ -16,10 +16,16 @@
       .col.rank {{ $t('leaderboard.rank') }}
       .col {{ $t('leaderboard.model') }}
       .col {{ $t('leaderboard.accountValue') }}
-      .col {{ $t('leaderboard.returnPercent') }}
-      .col {{ $t('leaderboard.totalPnl') }}
+      .col
+        span {{ $t('leaderboard.returnPercent') }}
+        .tooltip-icon(:title="$t('leaderboard.returnPercentFormula')") ?
+      .col
+        span {{ $t('leaderboard.totalPnl') }}
+        .tooltip-icon(:title="$t('leaderboard.totalPnlFormula')") ?
       .col {{ $t('trades.fees') }}
-      .col {{ $t('leaderboard.winRate') }}
+      .col
+        span {{ $t('leaderboard.winRate') }}
+        .tooltip-icon(:title="$t('leaderboard.winRateFormula')") ?
       .col {{ $t('modelDetail.biggestWin') }}
       .col {{ $t('modelDetail.biggestLoss') }}
       .col {{ $t('leaderboard.totalTrades') }}
@@ -240,8 +246,39 @@ const buildLeaderboardFromData = (balanceData, tradesData, positionsData) => {
     const stats = data.stats || {}
     const accountValue = balance ? parseFloat(balance.balance) : 0
     const initialCapital = data.modelInfo.initialCapital || DEFAULT_INITIAL_CAPITAL
-    const totalPnl = accountValue - initialCapital
-    const returnPercent = initialCapital > 0 ? (totalPnl / initialCapital) * 100 : 0
+    const fees = stats.totalCommission || 0
+    
+    // 新的 TOTAL P&L 计算公式: ACCT VALUE + FEES - 初始本金
+    const totalPnl = accountValue + fees - initialCapital
+    
+    // 新的回报率计算公式: (ACCT VALUE + FEES - 初始本金) / 初始本金
+    const returnPercent = initialCapital > 0 ? ((accountValue + fees - initialCapital) / initialCapital) * 100 : 0
+    
+    // 计算新的胜率: (已平仓盈利订单数 + 未平仓盈利订单数) / (已平仓订单数 + 未平仓订单数)
+    const closedTrades = data.trades || []
+    const positions = data.positions || []
+    
+    // 已平仓的盈利订单数量
+    const closedWinTrades = closedTrades.filter(trade => {
+      const pnl = parseFloat(trade.realizedPnl || 0)
+      return pnl > 0
+    }).length
+    
+    // 当前未平仓的盈利订单数量
+    const openWinPositions = positions.filter(position => {
+      const pnl = parseFloat(position.unrealPnl || 0)
+      return pnl > 0
+    }).length
+    
+    // 已平仓的订单总数
+    const closedTradesCount = closedTrades.length
+    
+    // 当前持仓的订单总数
+    const openPositionsCount = positions.length
+    
+    // 计算胜率
+    const totalOrders = closedTradesCount + openPositionsCount
+    const winRate = totalOrders > 0 ? ((closedWinTrades + openWinPositions) / totalOrders) * 100 : 0
 
     leaderboardItems.push({
       rank: 0,
@@ -249,8 +286,8 @@ const buildLeaderboardFromData = (balanceData, tradesData, positionsData) => {
       accountValue: accountValue,
       returnPercent: returnPercent,
       totalPnl: totalPnl,
-      fees: stats.totalCommission || 0,
-      winRate: stats.winRate || 0,
+      fees: fees,
+      winRate: Math.round(winRate * 100) / 100, // 保留2位小数
       biggestWin: stats.biggestWin || 0,
       biggestLoss: stats.biggestLoss || 0,
       sharpe: stats.profitLossRatio || 0,
@@ -505,6 +542,61 @@ const formatBarValue = (value) => {
   font-weight 700
   font-size 14px
   color #f8fafc
+
+  .col
+    display flex
+    align-items center
+    gap 6px
+
+    .tooltip-icon
+      width 16px
+      height 16px
+      border-radius 50%
+      background #3b82f6
+      color #fff
+      font-size 11px
+      font-weight 700
+      display flex
+      align-items center
+      justify-content center
+      cursor help
+      position relative
+      flex-shrink 0
+
+      &:hover::after
+        content attr(title)
+        position absolute
+        top 50%
+        left 100%
+        transform translateY(-50%)
+        margin-left 8px
+        padding 8px 12px
+        background #1e293b
+        border 1px solid #2b3444
+        border-radius 6px
+        color #f8fafc
+        font-size 12px
+        font-weight 400
+        white-space pre-line
+        min-width 250px
+        max-width 350px
+        z-index 10000
+        box-shadow 0 4px 12px rgba(0, 0, 0, 0.3)
+        pointer-events none
+        text-align left
+        line-height 1.5
+
+      &:hover::before
+        content ''
+        position absolute
+        top 50%
+        left 100%
+        transform translateY(-50%)
+        margin-left 2px
+        border 6px solid transparent
+        border-right-color #2b3444
+        z-index 10001
+        pointer-events none
 
 .table-body
   .table-row
