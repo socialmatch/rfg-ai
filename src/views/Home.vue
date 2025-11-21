@@ -759,6 +759,7 @@ const buildChart = async () => {
             color: '#94a3b8',
             font: { size: 11, weight: 'bold' },
             maxTicksLimit: 10, // Limit x-axis ticks for better performance with large datasets
+            padding: 8, // 为x轴标签添加内边距，避免被遮挡
             callback: function(value, index, ticks) {
               // Use labels from closure
               if (!labels || !labels[value]) return ''
@@ -1783,7 +1784,7 @@ onUnmounted(() => {
 
 .chart-frame
   position relative
-  padding 8px 160px 6px 22px  // 右边从8px改为48px，增加40px间距
+  padding 8px 160px 40px 22px  // 底部padding从6px增加到40px，为x轴时间标签预留空间
   flex 1 // fill remaining height below header
   min-height 320px
 
@@ -2126,7 +2127,7 @@ onUnmounted(() => {
   .chart-frame
     height 400px !important
     width 100%
-    padding 8px
+    padding 8px 8px 40px 8px  // 底部padding增加到40px，为x轴时间标签预留空间
     flex none !important
 
   .chart-canvas
