@@ -1,65 +1,59 @@
 <template lang="pug">
 .readme-container
   .readme-content
-    h1 NexAlpha AI
-    p An AI-driven trading platform that integrates live trading, conversational analysis, and intelligent market discovery.
+    h1 {{ $t('readme.title') }}
+    p {{ $t('readme.subtitle') }}
 
     .intro-section
-      h3 NexAlpha.AI Multi-Asset Intelligence Architecture
-      p NexAlpha.AI operates a multi-asset intelligent planning engine that integrates specialized MCP (Modular Cognitive Process) Agents:
+      h3 {{ $t('readme.architectureTitle') }}
+      p {{ $t('readme.architectureDesc') }}
       ul.agents-list
-        li KOL Agent – opinion leader sentiment and social influence analysis
-        li K-Line Agent – technical chart and pattern recognition
-        li Basic-News Agent – fundamental and macro-news analysis
-        li On-Chain Agent – blockchain data monitoring and behavioral analytics
-      p In the Vibe Trading module, NexAlpha.AI leverages its proprietary large model, primarily utilizing the K-Line Agent and On-Chain Agent for concurrent real-time market parsing and causal reasoning.
-      p A Transformer-based Planner continuously interprets multi-timeframe market data to determine the dominant market regime (bullish, bearish, or ranging), generating directional bias and confidence scores through causal reasoning and self-feedback optimization.
-      p Each trade undergoes periodic post-execution evaluation through GRPO (Group Reward Policy Optimization), enabling continuous self-adjustment and achieving equilibrium between profitability and capital preservation.
-      p All analytical outputs are consolidated through NexAlpha.AI's multi-expert adversarial debate mechanism, producing final trading signals that include trade direction, entry confidence, position sizing, take-profit/stop-loss estimation, and decision reasoning chains.
+        li {{ $t('readme.agent1') }}
+        li {{ $t('readme.agent2') }}
+        li {{ $t('readme.agent3') }}
+        li {{ $t('readme.agent4') }}
+      p {{ $t('readme.vibeTradingDesc') }}
+      p {{ $t('readme.plannerDesc') }}
+      p {{ $t('readme.grpoDesc') }}
+      p {{ $t('readme.debateDesc') }}
+      ul.agents-list
+        li {{ $t('readme.signal1') }}
+        li {{ $t('readme.signal2') }}
+        li {{ $t('readme.signal3') }}
+        li {{ $t('readme.signal4') }}
+        li {{ $t('readme.signal5') }}
 
-    h2 Features
+    h2 {{ $t('readme.featuresTitle') }}
     .features-list
-      .feature-item 🤖 AI Trading Models: Four autonomous trading agents with real-time performance tracking
-      .feature-item 📊 Live Market Data: Real-time cryptocurrency prices, open positions, and account balance monitoring
-      .feature-item 📈 Interactive Charts: Dynamic trading charts powered by the Aster API with live execution metrics
-      .feature-item 💬 AI Chat Interface: Chat with AI models to explore trading logic, entry/exit points, and market insights
-      .feature-item 📋 Trade Records: Transparent trade history and statistics synced with Aster Finance API
-      .feature-item 🏆 Leaderboard: Real-time ranking of AI model performance and trading efficiency
-      .feature-item 📱 Responsive Design: Optimized for desktop and mobile with seamless user experience
+      .feature-item {{ $t('readme.feature1') }}
+      .feature-item {{ $t('readme.feature2') }}
+      .feature-item {{ $t('readme.feature3') }}
+      .feature-item {{ $t('readme.feature4') }}
+      .feature-item {{ $t('readme.feature5') }}
+      .feature-item {{ $t('readme.feature6') }}
+      .feature-item {{ $t('readme.feature7') }}
 
-    h2 AI Trading Models
-    p The platform currently showcases four AI trading models, each directly connected to live trading accounts and providing real-time performance analytics:
+    h2 {{ $t('readme.modelsTitle') }}
+    p {{ $t('readme.modelsDesc') }}
 
-    .models-list
-      .model-card(v-for="model in models" :key="model.name")
-        .model-header
-          .model-name {{ model.name }}
-        .model-description {{ getModelDescription(model.name) }}
+    p {{ $t('readme.modelsNote') }}
 
-    p Each model combines reasoning-based decision logic, live execution, and continuous self-optimization — creating a transparent AI trading ecosystem that learns and evolves in real time.
+    h2 {{ $t('readme.performanceTitle') }}
+    .features-list
+      .feature-item {{ $t('readme.performance1') }}
+      .feature-item {{ $t('readme.performance2') }}
+      .feature-item {{ $t('readme.performance3') }}
+      .feature-item {{ $t('readme.performance4') }}
+      .feature-item {{ $t('readme.performance5') }}
+      .feature-item {{ $t('readme.performance6') }}
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
-import { getModelInfo } from '@/config/accounts.js'
+import { useI18n } from 'vue-i18n'
 
-const models = ref([])
-
-const modelDescriptions = {
-  'RFG-6': 'A stable, conservative AI trading model mirroring DeepSeek\'s multi-asset setup, focused on risk-balanced execution across six leading coins (BTC, ETH, BNB, SOL, DOGE, XRP).',
-  'DEEPSEEK CHAT V3.1': 'A large language model fine-tuned for trading, executing live trades across six major cryptocurrencies (BTC, ETH, BNB, SOL, DOGE, XRP).',
-  'QWEN3 MAX': 'An intelligent trading agent that interprets complex market structures and reacts dynamically to volatility.',
-  'RFG-ALL': 'A trading model that autonomously trades any token pair listed on Aster, designed to adapt flexibly to market-wide opportunities.'
-}
-
-const getModelDescription = (modelName) => {
-  return modelDescriptions[modelName] || 'An AI trading model with live execution capabilities.'
-}
-
-onMounted(() => {
-  // Load model list from configuration
-  models.value = getModelInfo()
-})
+const { locale } = useI18n()
+// 依赖 locale 以确保语言切换时重新渲染
+void locale.value
 </script>
 
 <style lang="stylus" scoped>

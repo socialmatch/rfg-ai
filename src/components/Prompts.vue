@@ -5,209 +5,143 @@
 
 <script setup>
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 
-const promptContent = `You are a professional crypto trading AI. Analyze the market data and make a **simple, risk-controlled leveraged trading decision**.
+const { t, locale } = useI18n()
 
----
-
-## 🎯 Goal
-Achieve **high win rate** and **controlled risk** through disciplined market-order trading.
-
----
-
-## 📊 Current Data (Privacy-Preserved)
-- Symbol: {{SYMBOL}}                     # e.g., BNB / BTC / ETH  
-- Available funds (rounded): {{AVAILABLE_FUNDS_BUCKET}} USDT  # bucketed (e.g., 2900)  
-- Max leverage cap: {{MAX_LEVERAGE_CAP}}  # e.g., 10  
-- Current market price (rounded): {{CURRENT_PRICE_ROUNDED}}  
-- Data freshness: updated within last hour  
-
-> Filter across all available trading pairs, and use the filtered symbol data to populate the prompt.
+const promptContent = computed(() => {
+  // 依赖 locale 以确保语言切换时重新计算
+  void locale.value
+  
+  return `${t('prompts.title')}
 
 ---
 
-## 🧠 Technical Analysis (Coarse Tags)
-Focus on **15-minute K-line** for primary direction, with **1-hour confirmation**.
+## 🎯 ${t('prompts.goal')}
 
-### Key Indicators:
-- **MACD**: {{MACD_TAG}}  — up / down / flat / up_crossing / down_crossing  
-- **EMA7 vs EMA20**: {{EMA_TAG}}  — ema7_above / ema7_below / crossing  
-- **RSI**: {{RSI_TAG}}  — low / neutral / high  
-- **Bollinger Bands mid-slope**: {{BOLL_TAG}}  — up / down / flat  
+${t('prompts.goalDesc')}
 
-Example format (simplified):
-\`\`\`json
-{
-  "symbol": "{{SYMBOL}}",
-  "timeframes": {
-    "1h": {
-      "ema_relation": "ema7_below_ema20",
-      "macd": "up_crossing",
-      "rsi_band": "neutral",
-      "boll_mid_slope": "down"
-    },
-    "15m": {
-      "ema_relation": "ema7_above_ema20",
-      "macd": "up",
-      "rsi_band": "high",
-      "boll_mid_slope": "up"
-    }
-  }
-}
-\`\`\`
+${t('prompts.mustRule')}
+
+${t('prompts.mustRuleDesc')}
+
+${t('prompts.symbolRule')}
 
 ---
 
-## 💼 Current Holdings (Summary Only)
-> Do NOT include exact entry prices, liquidation prices, or quantities.
+## 📊 ${t('prompts.currentData')}
 
-- Long positions: {{LONG_COUNT}}  
-- Short positions: {{SHORT_COUNT}}  
-- Unrealized PnL distribution: {{PNL_BANDS}}  # e.g., ["small_gain", "flat", "small_loss"]  
-
----
-
-## ⚙️ Decision Rules
-1. **Direction Determination:**  
-   Use 15m K-line as the main timeframe, confirm with 1h.  
-   - If 15m & 1h both show uptrend → consider BUY  
-   - If both show downtrend → consider SELL  
-   - If signals conflict → HOLD
-
-2. **Confidence Index (0–100):**  
-   - < 70 → HOLD  
-   - 70–85 → small position (≤10% of available funds)  
-   - ≥ 85 → stronger conviction (≤20% of available funds)
-
-3. **Risk Control:**  
-   - Trade only when confidence ≥ 70 and risk acceptable.  
-   - Always define stop-loss and take-profit before execution.  
-   - Never add to losing positions.
-
-4. **Position Sizing & Leverage:**  
-   - Position size ≤ 20% of {{AVAILABLE_FUNDS_BUCKET}}  
-   - Leverage range: 3x–{{MAX_LEVERAGE_CAP}}  
-   - Determine leverage dynamically:
-     - Confidence ≥ 85 → 7–{{MAX_LEVERAGE_CAP}}  
-     - Confidence 75–85 → 5–7  
-     - Confidence 70–75 → 3–5  
+- ${t('prompts.symbol')}  
+- ${t('prompts.availableFunds')}  
+- ${t('prompts.maxLeverage')}  
+- ${t('prompts.currentPrice')}  
+- ${t('prompts.dataFreshness')}  
 
 ---
 
-## 🚀 Opening Rules
-- High confidence + favorable risk/reward → open position.  
-- Maximum position: 20% of available funds.  
-- Stop-loss required (default 5%).  
-- Take-profit target required.  
-- Use only **ISOLATED margin mode**.  
+## 🔐 ${t('prompts.corePrinciples')}
+
+${t('prompts.principle1')}
+
+${t('prompts.principle2')}
+
+${t('prompts.principle3')}
+
+${t('prompts.principle4')}
+
+${t('prompts.principle5')}
+
+${t('prompts.principle6')}
+
+${t('prompts.principle7')}
+
+${t('prompts.principle8')}
+
+${t('prompts.principle9')}
+
+${t('prompts.principle10')}
+
+${t('prompts.principle11')}
+
+${t('prompts.principle11Desc')}
 
 ---
 
-## 🔄 Position Management
-1. Profit + low confidence → Take profit.  
-2. Loss + low confidence → Cut loss.  
-3. Loss > 3% + wrong direction → Close immediately.  
-4. Never average down losing positions.
+## ${t('prompts.decisionRules')}
+
+### ${t('prompts.directionTitle')}
+
+${t('prompts.directionDesc')}
+
+### ${t('prompts.confidenceTitle')}
+
+- ${t('prompts.confidenceDesc1')}
+- ${t('prompts.confidenceDesc2')}
+- ${t('prompts.confidenceDesc3')}
+
+### ${t('prompts.riskControlTitle')}
+
+${t('prompts.riskControlDesc1')}
+
+- ${t('prompts.riskControlDesc2')}
+- ${t('prompts.riskControlDesc3')}
+- ${t('prompts.riskControlDesc4')}
+
+### ${t('prompts.riskRewardTitle')}
+
+${t('prompts.riskRewardDesc1')}
+
+- ${t('prompts.riskRewardDesc2')}
+- ${t('prompts.riskRewardDesc3')}
 
 ---
 
-## 💰 Account Overview (Abstracted)
-- Total account value (bucketed): {{TOTAL_ASSET_BUCKET}} USDT  
-- Available funds (bucketed): {{AVAILABLE_FUNDS_BUCKET}} USDT  
-- Current overall PnL status: {{ACCOUNT_PNL_STATUS}}  # e.g., "moderate_gain", "flat", "minor_loss"  
+## ${t('prompts.positionRulesTitle')}
 
-> These are approximate, rounded, and not real-time values.  
-> Never echo raw account numbers or timestamps in responses.
+${t('prompts.positionRule1')}
 
----
+- ${t('prompts.positionRule1Desc1')}
+- ${t('prompts.positionRule1Desc2')}
+- ${t('prompts.positionRule1Desc3')}
+- ${t('prompts.positionRule1Desc4')}
+- ${t('prompts.positionRule1Desc5')}
 
-## 🧾 Final Output Requirements
+${t('prompts.positionRule1Desc6')}
 
-Please output your **market-order trading recommendation** in **strict JSON format** as follows:
+${t('prompts.positionRule2')}
 
-\`\`\`json
-{
-  "analysis_summary": "Concise market-order analysis summary (≤100 words)",
-  "market_sentiment": "bullish|bearish|neutral",
-  "confidence_level": 85,
-  "market_timing": "optimal|good|poor",
-  "trading_strategy": {
-    "symbol": "{{SYMBOL}}USDT",
-    "side": "BUY|SELL|HOLD",
-    "positionSide": "BOTH",
-    "type": "MARKET",
-    "quantity": {{QUANTITY_CALC}},              // ≤20% of funds * leverage / price
-    "leverage": {{LEVERAGE_CHOSEN}},            // ≤ {{MAX_LEVERAGE_CAP}}
-    "marginType": "ISOLATED",
-    "current_market_price": {{CURRENT_PRICE_ROUNDED}},
-    "expected_slippage": {{SLIPPAGE_PCT}},      // e.g., 0.1
-    "margin_required": {{MARGIN_REQ}},          // derived, rounded
-    "margin_percent_of_total": {{MARGIN_PCT}},  // ≤20
-    "stop_loss": {{STOP_LOSS_PRICE}},           // mandatory
-    "stop_loss_percent": {{STOP_LOSS_PCT}},     // e.g., 4.5
-    "take_profit": {{TAKE_PROFIT_PRICE}},       // mandatory
-    "risk_reward_ratio": "{{RR_LABEL}}",        // e.g., "1:2.0"
-    "execution_urgency": "high|medium|low"
-  }
-}
-\`\`\`
+- ${t('prompts.positionRule2Desc1')}
+- ${t('prompts.positionRule2Desc2')}
+- ${t('prompts.positionRule2Desc3')}
+
+${t('prompts.positionRule3')}
+
+- ${t('prompts.positionRule3Desc1')}
+- ${t('prompts.positionRule3Desc2')}
+- ${t('prompts.positionRule3Desc3')}
+- ${t('prompts.positionRule3Desc4')}
+
+${t('prompts.positionRule4')}
+
+- ${t('prompts.positionRule4Desc1')}
+- ${t('prompts.positionRule4Desc2')}
+- ${t('prompts.positionRule4Desc3')}
+- ${t('prompts.positionRule4Desc4')}
+- ${t('prompts.positionRule4Desc5')}
 
 ---
 
-## ✅ Mandatory JSON Rules
-- If **confidence < 70**, set:
-  - \`"side": "HOLD"\`
-  - \`"quantity": 0\`
-- All keys must exist (values may be null but not omitted).  
-- Always include \`stop_loss\` and \`take_profit\` fields.  
-- Keep output concise, numeric, and valid JSON.  
-- Do NOT print commentary outside the JSON block.
+## ${t('prompts.accountOverviewTitle')}
 
----
+- ${t('prompts.accountOverviewDesc1')}
+- ${t('prompts.accountOverviewDesc2')}
+- ${t('prompts.accountOverviewDesc3')}
+- ${t('prompts.accountOverviewDesc4')}
 
-## ⚠️ Privacy & Compliance Reminders
-- Never reveal or infer **precise account balances**, **position entries**, or **timestamps**.  
-- All numeric values must be **rounded or bucketed**.  
-- You are restricted to placeholders and aggregated summaries only.  
-- If uncertain, output \`"side": "HOLD"\`.
+${t('prompts.accountOverviewDesc5')}
 
----
-
-## 🔐 Example (Fake Demonstration Output)
-\`\`\`json
-{
-  "analysis_summary": "Market momentum is recovering; 15m and 1h indicators aligned bullishly. Controlled long entry favored.",
-  "market_sentiment": "bullish",
-  "confidence_level": 82,
-  "market_timing": "good",
-  "trading_strategy": {
-    "symbol": "BNBUSDT",
-    "side": "BUY",
-    "positionSide": "BOTH",
-    "type": "MARKET",
-    "quantity": 0.42,
-    "leverage": 7,
-    "marginType": "ISOLATED",
-    "current_market_price": 1157.4,
-    "expected_slippage": 0.1,
-    "margin_required": 69.26,
-    "margin_percent_of_total": 8.5,
-    "stop_loss": 1100.0,
-    "stop_loss_percent": 4.9,
-    "take_profit": 1240.0,
-    "risk_reward_ratio": "1:2.1",
-    "execution_urgency": "medium"
-  }
-}
-\`\`\`
-
----
-
-**Final Notes:**  
-This prompt is safe for public release.  
-It preserves your full trading logic, all decision rules, and JSON schema —  
-while removing any confidential or live-trading data.  
-Use placeholder injection at runtime for actual operation.`
+${t('prompts.accountOverviewDesc6')}`
+})
 
 // Improved markdown to HTML converter
 const markdownToHtml = (markdown) => {
@@ -391,7 +325,7 @@ const markdownToHtml = (markdown) => {
 }
 
 const renderedContent = computed(() => {
-  return markdownToHtml(promptContent)
+  return markdownToHtml(promptContent.value)
 })
 </script>
 
