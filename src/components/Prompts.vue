@@ -5,160 +5,145 @@
 
 <script setup>
 import { computed, ref, watch, onMounted, nextTick } from 'vue'
-import { useI18n } from 'vue-i18n'
 
-const { t, locale } = useI18n()
-
-// Helper function to escape Vue template placeholders
-const escapeVuePlaceholders = (text) => {
-  if (!text) return text
-  // Escape {{ and }} to prevent Vue from parsing them
-  return String(text)
-    .replace(/\{\{/g, '&#123;&#123;')
-    .replace(/\}\}/g, '&#125;&#125;')
-}
-
+// Direct Chinese content - no i18n to avoid Vue template parsing issues
 const promptContent = computed(() => {
-  // 依赖 locale 以确保语言切换时重新计算
-  void locale.value
-  
-  // Escape placeholders in each translation before concatenating
-  return `${escapeVuePlaceholders(t('prompts.title'))}
+  return `你是一名专业的加密货币量化交易 AI。
 
 ---
 
-## 🎯 ${escapeVuePlaceholders(t('prompts.goal'))}
+## 🎯 目标是：在风险可控的前提下，实现 高胜率 + 高收益 的多空合约策略。
 
-${escapeVuePlaceholders(t('prompts.goalDesc'))}
+每 15 分钟分析一次 6 个币种（BTC、ETH、SOL、BNB、DOGE、XRP）的最新数据，并输出 严格 JSON 格式 的交易策略。
 
-${escapeVuePlaceholders(t('prompts.mustRule'))}
+必须基于传入的数据，按照下述 硬性规则 输出严格 JSON 格式的交易策略。
 
-${escapeVuePlaceholders(t('prompts.mustRuleDesc'))}
+不得虚构数据、不得使用未提供的数据，不得改变数据含义。
 
-${escapeVuePlaceholders(t('prompts.symbolRule'))}
-
----
-
-## 📊 ${escapeVuePlaceholders(t('prompts.currentData'))}
-
-- ${escapeVuePlaceholders(t('prompts.symbol'))}  
-- ${escapeVuePlaceholders(t('prompts.availableFunds'))}  
-- ${escapeVuePlaceholders(t('prompts.maxLeverage'))}  
-- ${escapeVuePlaceholders(t('prompts.currentPrice'))}  
-- ${escapeVuePlaceholders(t('prompts.dataFreshness'))}  
+对于当前指定的目标币种（symbol），你必须输出完整 JSON。
 
 ---
 
-## 🔐 ${escapeVuePlaceholders(t('prompts.corePrinciples'))}
+## 📊 当前数据（隐私保护）
 
-${escapeVuePlaceholders(t('prompts.principle1'))}
-
-${escapeVuePlaceholders(t('prompts.principle2'))}
-
-${escapeVuePlaceholders(t('prompts.principle3'))}
-
-${escapeVuePlaceholders(t('prompts.principle4'))}
-
-${escapeVuePlaceholders(t('prompts.principle5'))}
-
-${escapeVuePlaceholders(t('prompts.principle6'))}
-
-${escapeVuePlaceholders(t('prompts.principle7'))}
-
-${escapeVuePlaceholders(t('prompts.principle8'))}
-
-${escapeVuePlaceholders(t('prompts.principle9'))}
-
-${escapeVuePlaceholders(t('prompts.principle10'))}
-
-${escapeVuePlaceholders(t('prompts.principle11'))}
-
-${escapeVuePlaceholders(t('prompts.principle11Desc'))}
+- 符号：{{SYMBOL}} # 例如，BNB / BTC / ETH
+- 可用资金（四舍五入）：{{AVAILABLE_FUNDS_BUCKET}} USDT # 桶（例如 2900）
+- 最大杠杆上限：{{MAX_LEVERAGE_CAP}} # 例如，10
+- 当前市场价格（四舍五入）：{{CURRENT_PRICE_ROUNDED}}
+- 数据新鲜度：最近一小时内更新
 
 ---
 
-## ${escapeVuePlaceholders(t('prompts.decisionRules'))}
+## 🔐 核心原则与交易员准则
 
-### ${escapeVuePlaceholders(t('prompts.directionTitle'))}
+1. 所有判断必须完全基于提供的数据；任何缺失数据 → 不可推断、不可虚构。
 
-${escapeVuePlaceholders(t('prompts.directionDesc'))}
+2. 最终开仓方向仅由  Dk 决定；若 Dk=None → 禁止开仓。
 
-### ${escapeVuePlaceholders(t('prompts.confidenceTitle'))}
+3. CI（信心指数）不满足 **开仓CI动态要求** → 一律 HOLD，不允许开仓。
 
-- ${escapeVuePlaceholders(t('prompts.confidenceDesc1'))}
-- ${escapeVuePlaceholders(t('prompts.confidenceDesc2'))}
-- ${escapeVuePlaceholders(t('prompts.confidenceDesc3'))}
+4. RR ≤ 1 → 禁止开仓。
 
-### ${escapeVuePlaceholders(t('prompts.riskControlTitle'))}
+5. 每次最多开 1 个币种，且单次开仓最大保证金 ≤ 可用资产总额的 20%，杠杆= 10x。
 
-${escapeVuePlaceholders(t('prompts.riskControlDesc1'))}
+6. 亏损持仓禁止加仓；只有在盈利且 CI 满足 **开仓CI动态要求** 且方向一致时加仓。
 
-- ${escapeVuePlaceholders(t('prompts.riskControlDesc2'))}
-- ${escapeVuePlaceholders(t('prompts.riskControlDesc3'))}
-- ${escapeVuePlaceholders(t('prompts.riskControlDesc4'))}
+7. 持仓亏损 ≥ 3% → 必须止损。
 
-### ${escapeVuePlaceholders(t('prompts.riskRewardTitle'))}
+8. 数据冲突 / 结构不明 / 信号不共振 / 方向不一致 / 风险过高 → 必须输出 HOLD。
 
-${escapeVuePlaceholders(t('prompts.riskRewardDesc1'))}
+9. 连续 3 单亏损 → 暂停开仓，直到出现 CI≥85 且 RR≥1.3 的信号才能恢复。
 
-- ${escapeVuePlaceholders(t('prompts.riskRewardDesc2'))}
-- ${escapeVuePlaceholders(t('prompts.riskRewardDesc3'))}
+10. 同一币种连续 3 单亏损 → 对该币种启用防守式开仓（即当该币种出现CI ≥ 85 且 RR ≥ 1.3 的信号才开仓）。
 
----
+11. 所有输出必须遵守 JSON 结构；不得输出额外内容，不得替换方向、指标或风控逻辑。
 
-## ${escapeVuePlaceholders(t('prompts.positionRulesTitle'))}
-
-${escapeVuePlaceholders(t('prompts.positionRule1'))}
-
-- ${escapeVuePlaceholders(t('prompts.positionRule1Desc1'))}
-- ${escapeVuePlaceholders(t('prompts.positionRule1Desc2'))}
-- ${escapeVuePlaceholders(t('prompts.positionRule1Desc3'))}
-- ${escapeVuePlaceholders(t('prompts.positionRule1Desc4'))}
-- ${escapeVuePlaceholders(t('prompts.positionRule1Desc5'))}
-
-${escapeVuePlaceholders(t('prompts.positionRule1Desc6'))}
-
-${escapeVuePlaceholders(t('prompts.positionRule2'))}
-
-- ${escapeVuePlaceholders(t('prompts.positionRule2Desc1'))}
-- ${escapeVuePlaceholders(t('prompts.positionRule2Desc2'))}
-- ${escapeVuePlaceholders(t('prompts.positionRule2Desc3'))}
-
-${escapeVuePlaceholders(t('prompts.positionRule3'))}
-
-- ${escapeVuePlaceholders(t('prompts.positionRule3Desc1'))}
-- ${escapeVuePlaceholders(t('prompts.positionRule3Desc2'))}
-- ${escapeVuePlaceholders(t('prompts.positionRule3Desc3'))}
-- ${escapeVuePlaceholders(t('prompts.positionRule3Desc4'))}
-
-${escapeVuePlaceholders(t('prompts.positionRule4'))}
-
-- ${escapeVuePlaceholders(t('prompts.positionRule4Desc1'))}
-- ${escapeVuePlaceholders(t('prompts.positionRule4Desc2'))}
-- ${escapeVuePlaceholders(t('prompts.positionRule4Desc3'))}
-- ${escapeVuePlaceholders(t('prompts.positionRule4Desc4'))}
-- ${escapeVuePlaceholders(t('prompts.positionRule4Desc5'))}
+技术分、盘口分、盈亏比、风险指数、信心指数等参数由外部计算输入，不得篡改。
 
 ---
 
-## ${escapeVuePlaceholders(t('prompts.accountOverviewTitle'))}
+## ⚙️ 决策规则（Decision Rules）
 
-- ${escapeVuePlaceholders(t('prompts.accountOverviewDesc1'))}
-- ${escapeVuePlaceholders(t('prompts.accountOverviewDesc2'))}
-- ${escapeVuePlaceholders(t('prompts.accountOverviewDesc3'))}
-- ${escapeVuePlaceholders(t('prompts.accountOverviewDesc4'))}
+### 方向判断（Direction Determination）：
 
-${escapeVuePlaceholders(t('prompts.accountOverviewDesc5'))}
+使用 15分钟K线 作为主要周期，并由 1小时K线 确认趋势。
 
-${escapeVuePlaceholders(t('prompts.accountOverviewDesc6'))}`
+### 信心指数 Confidence Index（0–100）：
+
+- 信心指数仅代表 信号强度，不代表方向
+- < 70 → 观望（HOLD）
+- ≥ 70→ 可以执行**开仓CI动态要求**
+
+### 风险控制（Risk Control）：
+
+你只判断范围：
+- ≤ 0.4 → 低风险
+- 0.4 - 0.7 → 中风险
+- ≥ 0.7 → 高风险 → 可直接 HOLD
+
+### 盈亏比
+
+你只判断：
+- RR > 1 → 可继续判断
+- RR ≤ 1 → 必须 HOLD
+
+---
+
+## 开仓 / 加仓 / 持仓规则
+
+1. 开仓前置条件（必须全部满足）：
+
+- D ∈ {"多","空"}，且 Dk ≠ None；
+- RR > 1；
+- CI ≥ **开仓CI动态要求**；
+- RiskIndex ≤ 0.7
+- 当前币种无亏损持仓。
+
+否则：side 必须输出为 "HOLD"
+
+2. 仓位与保证金：
+
+- 单次开仓使用保证金 ≤ 当前可用资金 20%；
+- 仓位大小根据 CI、RiskIndex 和可用资金计算，需在 reasoning 中合理化说明。
+- 杠杆固定为 10x。
+
+3. 加仓（仅在盈利时）：
+
+- 满足全部开仓前置条件
+- 已有持仓盈利，且当前方向 D 与持仓方向一致，才允许考虑加仓；
+- 单次加仓保证金不得超过当前盈利；
+- 多次加仓后，总加仓保证金 < 总盈利。
+
+4. 持仓止盈止损（核心纪律）：
+
+- 当持仓盈利且 信心指数较小或 当持仓盈利且 当前判断多空方向与所开仓位多空方向相反时，可以主动止盈。
+- 持仓亏损 ≥ 3% → 无条件止损；
+- 未实现利润从最高点回撤至 50% 时 → 必须止盈 （非常重要）；
+- 持仓亏损且当前方向与持仓方向相反 → 可以主动止损；
+- 禁止在亏损时加仓，也禁止动用账户剩余资金给亏损仓位补仓。
+
+---
+
+## 💰 账户概况（抽象处理）
+
+- 账户总价值（区间化）：{{TOTAL_ASSET_BUCKET}} USDT
+- 可用资金（区间化）：{{AVAILABLE_FUNDS_BUCKET}} USDT
+- 当前整体盈亏状态：{{ACCOUNT_PNL_STATUS}}
+- 例如："moderate_gain"（中度盈利）、"flat"（持平）、"minor_loss"（小额亏损）
+
+所有数据均为大致区间值，并非实时数值。
+
+在输出中永远不要回显原始账户数据或时间戳。`
 })
 
 // Improved markdown to HTML converter
 const markdownToHtml = (markdown) => {
   let html = markdown
   
-  // Note: Vue placeholders are already escaped in promptContent computed
-  // No need to escape again here
+  // First: Escape Vue template placeholders to prevent parsing
+  // This must be done before any other processing
+  html = html.replace(/\{\{/g, '&#123;&#123;')
+  html = html.replace(/\}\}/g, '&#125;&#125;')
   
   // Process code blocks first (before other processing)
   html = html.replace(/```json\n([\s\S]*?)```/g, '<pre><code class="language-json">$1</code></pre>')
