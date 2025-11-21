@@ -32,7 +32,7 @@
           .tooltip-icon(:title="$t('modelDetail.totalPnlWinRateFormula')") ?
         .value(:class="dataLoaded && currentModel.totalPnl >= 0 ? 'positive' : (dataLoaded && currentModel.totalPnl < 0 ? 'negative' : '')")
           | {{ formatNumber(currentModel.totalPnl, { currency: true }) }}
-          |  {{ formatNumber(currentModel.returnPercent, { percent: true, decimals: 2 }) }}
+          |  ({{ formatNumber(currentModel.returnPercent, { percent: true, decimals: 2 }) }})
       .stat-item
         .label {{ $t('modelDetail.totalFees') }}
         .value(:class="dataLoaded && (currentModel.totalFees || 0) >= 0 ? 'positive' : (dataLoaded && (currentModel.totalFees || 0) < 0 ? 'negative' : '')")
@@ -406,7 +406,7 @@ const loadModelData = async () => {
                 liquidationPrice: parseFloat(position.liquidationPrice || 0),
                 margin: parseFloat(position.isolatedMargin || 0),
                 unrealPnl: parseFloat(position.unRealizedProfit || 0),
-                notional: parseFloat(position.notional || 0)
+                notional: Math.abs(parseFloat(position.notional || 0)) // Display absolute value as amount
               })),
               recentTrades: tradesData
                 .sort((a, b) => new Date(b.time) - new Date(a.time))
@@ -418,8 +418,9 @@ const loadModelData = async () => {
                   const exitPrice = parseFloat(trade.exitPrice ?? entryPrice)
                   const quantity = parseFloat(trade.quantity ?? 0)
                   const absQty = Math.abs(quantity)
-                  const notionalEntry = !isNaN(entryPrice) ? entryPrice * absQty : 0
-                  const notionalExit = !isNaN(exitPrice) ? exitPrice * absQty : notionalEntry + parseFloat(trade.realizedPnl ?? 0)
+                  // Notional values should be absolute amounts (always positive)
+                  const notionalEntry = !isNaN(entryPrice) ? Math.abs(entryPrice * absQty) : 0
+                  const notionalExit = !isNaN(exitPrice) ? Math.abs(exitPrice * absQty) : notionalEntry
                   return {
                     id: index + 1,
                     side,

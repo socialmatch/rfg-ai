@@ -307,18 +307,42 @@ const loadAsterBalance = async ({ skipInit = false, skipCache = false } = {}) =>
     // Update models with API data
     result.accounts.forEach(account => {
       if (account.success && account.data && account.data.length > 0) {
-        const usdtBalance = account.data.find(b => b.asset === 'USDT')
-        if (usdtBalance) {
+        // Try to find USDT balance first, if not found, use the first available balance
+        let balanceData = account.data.find(b => b.asset === 'USDT')
+        if (!balanceData && account.data.length > 0) {
+          // If no USDT balance, use the first available balance (e.g., BTC)
+          balanceData = account.data[0]
+        }
+        
+        if (balanceData) {
           // If we got data from API (even if value is 0), mark as real data
           hasRealData = true
 
-          const accountValue = parseToNumber(usdtBalance.balance)
+          // Use totalUsdtValue if available (converted to USDT), otherwise use balance
+          // For BTC or other non-USDT assets, totalUsdtValue should contain the USDT equivalent value
+          const accountValue = parseToNumber(balanceData.totalUsdtValue ?? balanceData.totalValue ?? balanceData.balance)
           const initialCapital = account.modelInfo.initialCapital || DEFAULT_INITIAL_CAPITAL
           // Calculate change as: (accountValue - initialCapital) / initialCapital * 100
-          const changePercent = initialCapital > 0 ? ((accountValue - initialCapital) / initialCapital) * 100 : 0
+          // Ensure we have valid numbers for calculation
+          const changePercent = (initialCapital > 0 && !isNaN(accountValue) && !isNaN(initialCapital)) 
+            ? ((accountValue - initialCapital) / initialCapital) * 100 
+            : 0
+          
+          // Debug log for troubleshooting
+          if (account.modelInfo.name && (isNaN(accountValue) || accountValue === 0 || changePercent === 0)) {
+            console.log(`🔍 Balance calculation for ${account.modelInfo.name}:`, {
+              accountValue,
+              initialCapital,
+              changePercent,
+              totalUsdtValue: balanceData.totalUsdtValue,
+              totalValue: balanceData.totalValue,
+              balance: balanceData.balance,
+              asset: balanceData.asset
+            })
+          }
 
-          const availableBalanceValue = parseToNumber(usdtBalance.availableBalance ?? usdtBalance.availableCash)
-          const availableCashValue = parseToNumber(usdtBalance.availableCash)
+          const availableBalanceValue = parseToNumber(balanceData.availableBalance ?? balanceData.availableCash)
+          const availableCashValue = parseToNumber(balanceData.availableCash)
           const finalAvailableCash = !isNaN(availableCashValue) && availableCashValue !== 0 ? availableCashValue : availableBalanceValue
 
           const modelData = {
@@ -326,19 +350,19 @@ const loadAsterBalance = async ({ skipInit = false, skipCache = false } = {}) =>
             value: accountValue,
             change: changePercent,
             color: account.modelInfo.color,
-            accountAlias: usdtBalance.accountAlias,
-            asset: usdtBalance.asset,
+            accountAlias: balanceData.accountAlias,
+            asset: balanceData.asset,
             balance: accountValue,
-            crossWalletBalance: parseToNumber(usdtBalance.crossWalletBalance),
-            crossUnPnl: parseToNumber(usdtBalance.crossUnPnl),
+            crossWalletBalance: parseToNumber(balanceData.crossWalletBalance),
+            crossUnPnl: parseToNumber(balanceData.crossUnPnl),
             availableBalance: availableBalanceValue,
             availableCash: finalAvailableCash,
-            maxWithdrawAmount: parseToNumber(usdtBalance.maxWithdrawAmount),
-            marginAvailable: usdtBalance.marginAvailable,
-            updateTime: usdtBalance.updateTime,
-            totalUsdtValue: parseToNumber(usdtBalance.totalUsdtValue),
-            uid: usdtBalance.uid,
-            walletName: usdtBalance.walletName
+            maxWithdrawAmount: parseToNumber(balanceData.maxWithdrawAmount),
+            marginAvailable: balanceData.marginAvailable,
+            updateTime: balanceData.updateTime,
+            totalUsdtValue: parseToNumber(balanceData.totalUsdtValue ?? accountValue),
+            uid: balanceData.uid,
+            walletName: balanceData.walletName
           }
 
           balanceDataMap.set(account.modelInfo.name, modelData)
@@ -348,7 +372,7 @@ const loadAsterBalance = async ({ skipInit = false, skipCache = false } = {}) =>
             modelInfo: account.modelInfo,
             availableBalance: availableBalanceValue,
             availableCash: finalAvailableCash,
-            totalValue: parseToNumber(usdtBalance.totalValue ?? usdtBalance.balance)
+            totalValue: parseToNumber(balanceData.totalValue ?? balanceData.totalUsdtValue ?? accountValue)
           })
         }
       }
@@ -375,12 +399,17 @@ const loadAsterBalance = async ({ skipInit = false, skipCache = false } = {}) =>
         const btcQuantity = DEFAULT_INITIAL_CAPITAL / firstPrice
         const latestPrice = parseFloat(btcResult.data[btcResult.data.length - 1][4])
         const latestValue = btcQuantity * latestPrice
+        
+        // Calculate percentage change: (currentValue - initialCapital) / initialCapital * 100
+        const btcChangePercent = DEFAULT_INITIAL_CAPITAL > 0 && !isNaN(latestValue) && !isNaN(DEFAULT_INITIAL_CAPITAL)
+          ? ((latestValue - DEFAULT_INITIAL_CAPITAL) / DEFAULT_INITIAL_CAPITAL) * 100
+          : 0
 
         const existingIndex = balanceData.findIndex(item => item.name === 'BTC BUY&HOLD')
         const btcModel = {
           name: 'BTC BUY&HOLD',
           value: latestValue,
-          change: 0,
+          change: btcChangePercent,
           color: '#f7931a',
           isBtcPrice: true
         }

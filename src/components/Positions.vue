@@ -124,7 +124,7 @@ const convertAsterPositions = (asterPositions, asterAccountData) => {
     }
 
     const side = parseFloat(position.positionAmt) > 0 ? 'LONG' : 'SHORT'
-    const notional = parseFloat(position.notional || 0)
+    const notional = Math.abs(parseFloat(position.notional || 0)) // Display absolute value as amount
     const unrealPnl = parseFloat(position.unRealizedProfit || 0)
     const entryPrice = parseFloat(position.entryPrice || 0)
     const positionAmt = parseFloat(position.positionAmt || 0)

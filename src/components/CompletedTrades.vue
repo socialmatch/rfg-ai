@@ -139,8 +139,9 @@ const convertAsterTrades = (asterTrades) => {
       const modelConfig = trade.uid ? getAccountByUid(trade.uid) : null
       const modelName = modelConfig?.modelName || trade.walletName || 'UNKNOWN'
       const absQty = Math.abs(quantity)
-      const notionalStart = !isNaN(entryPrice) ? entryPrice * absQty : 0
-      const notionalEnd = !isNaN(exitPrice) ? exitPrice * absQty : notionalStart + realizedPnl
+      // Notional values should be absolute amounts (always positive)
+      const notionalStart = !isNaN(entryPrice) ? Math.abs(entryPrice * absQty) : 0
+      const notionalEnd = !isNaN(exitPrice) ? Math.abs(exitPrice * absQty) : notionalStart
 
       // Note: action text will be translated in template using $t
       return {

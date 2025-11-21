@@ -36,7 +36,7 @@
   "trades": {
     "price": "价格",
     "quantity": "数量",
-    "notional": "名义价值",
+    "notional": "成交金额",
     "holdingTime": "持仓时长",
     "entryTime": "开仓时间",
     "closeTime": "平仓时间",
@@ -82,14 +82,14 @@
     "entryTime": "开仓时间",
     "closeTime": "平仓时间",
     "fees": "手续费",
-    "notionalEntry": "开仓名义价值",
-    "notionalExit": "平仓名义价值",
+    "notionalEntry": "开仓金额",
+    "notionalExit": "平仓金额",
     "netPnl": "净盈亏",
     "entryTimeLabel": "开仓时间",
     "liquidationPrice": "强平价格",
     "margin": "保证金",
     "unrealizedPnl": "未实现盈亏",
-    "notional": "名义价值"
+    "notional": "成交金额"
   },
   "positions": {
     "availableCash": "可用保证金",
