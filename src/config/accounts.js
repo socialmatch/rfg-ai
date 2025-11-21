@@ -10,7 +10,7 @@ export const DEFAULT_INITIAL_CAPITAL = 500
 export const ACCOUNT_CONFIGS = [
   {
     id: 'ds1',
-    modelName: 'NextAlpha 无限制型',
+    modelName: 'NexAlpha 无限制型',
     modelSlug: 'ds1',
     modelColor: '#EF4444', // 红色 (Red 500)
     modelIcon: 'Rfg_logo.png',
@@ -79,7 +79,7 @@ export const ACCOUNT_CONFIGS = [
   },
   {
     id: 'ds4',
-    modelName: 'NextAlpha 激进型 1',
+    modelName: 'NexAlpha 激进型 1',
     modelSlug: 'ds4',
     modelColor: '#F59E0B', // 琥珀色 (Amber 500)
     modelIcon: 'Rfg_logo.png',
@@ -148,7 +148,7 @@ export const ACCOUNT_CONFIGS = [
   },
   {
     id: 'zy4',
-    modelName: 'NextAlpha 激进型 2',
+    modelName: 'NexAlpha 激进型 2',
     modelSlug: 'zy4',
     modelColor: '#8B5CF6', // 紫色 (Violet 500)
     modelIcon: 'Rfg_logo.png',
@@ -171,7 +171,7 @@ export const ACCOUNT_CONFIGS = [
   },
   {
     id: 'zy6',
-    modelName: 'NextAlpha 平衡型 2',
+    modelName: 'NexAlpha 平衡型 2',
     modelSlug: 'zy6',
     modelColor: '#EC4899', // 粉红色 (Pink 500)
     modelIcon: 'Rfg_logo.png',
@@ -194,7 +194,7 @@ export const ACCOUNT_CONFIGS = [
   },
   {
     id: 'ds6',
-    modelName: 'NextAlpha 平衡型 1',
+    modelName: 'NexAlpha 平衡型 1',
     modelSlug: 'ds6',
     modelColor: '#14B8A6', // 蓝绿色 (Teal 500)
     modelIcon: 'Rfg_logo.png',
@@ -217,7 +217,7 @@ export const ACCOUNT_CONFIGS = [
   },
   {
     id: 'ds7',
-    modelName: 'NextAlpha 最新测试版 1',
+    modelName: 'NexAlpha 最新测试版 1',
     modelSlug: 'ds7',
     modelColor: '#F97316', // 橙色 (Orange 500)
     modelIcon: 'Rfg_logo.png',
@@ -240,7 +240,7 @@ export const ACCOUNT_CONFIGS = [
   },
   {
     id: 'zy7',
-    modelName: 'NextAlpha 最新测试版 2',
+    modelName: 'NexAlpha 最新测试版 2',
     modelSlug: 'zy7',
     modelColor: '#6366F1', // 靛蓝色 (Indigo 500)
     modelIcon: 'Rfg_logo.png',
