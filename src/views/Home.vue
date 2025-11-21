@@ -87,8 +87,7 @@
   // Bottom model legend bar
   .legend-bar
     .legend-content
-       .legend-item(v-for="legend in legends" :key="legend.name"
-         :style="{ display: selectedModel === 'ALL MODELS' || selectedModel === legend.name ? 'flex' : 'none' }")
+       .legend-item(v-for="legend in legends" :key="legend.name")
          //.legend-dot(:style="{ backgroundColor: legend.color }")
          .legend-content-inner
            .legend-name(:style="{ color: legend.color }") {{ legend.name }}
@@ -136,7 +135,7 @@ import Prompts from '@/components/Prompts.vue'
 import { getAllModelsProcessedBalance } from '@/utils/newBalanceService.js'
 import { getAllModelsProcessedPositions } from '@/utils/newPositionsService.js'
 import { getAllModelsProcessedTrades } from '@/utils/newTradesService.js'
-import { getAllModelInfo, getModelIconPath, updateAccountBalance, DEFAULT_INITIAL_CAPITAL } from '@/config/accounts.js'
+import { getAllModelInfo, getModelInfo, getModelIconPath, updateAccountBalance, DEFAULT_INITIAL_CAPITAL } from '@/config/accounts.js'
 import { getAllModelsChartData, processChartData } from '@/utils/chartDataService.js'
 import { getAllCryptoPrices } from '@/utils/cryptoPriceService.js'
 import { getBtcPriceData } from '@/utils/btcPriceService.js'
@@ -170,7 +169,8 @@ const iconPositionUpdate = ref(0) // Used to trigger icon position recalculation
 const selectedModel = ref('ALL MODELS')
 const modelOptions = computed(() => {
   const allModels = ['ALL MODELS']
-  const configModels = getAllModelInfo().map(model => model.name)
+  // Only include enabled models in the filter options
+  const configModels = getModelInfo().map(model => model.name)
   return [...allModels, ...configModels]
 })
 
@@ -218,9 +218,9 @@ const cryptoPrices = ref([
 ])
 
 // Trading models data - using unified config and balance data
-// Initialize from config to ensure all models from ACCOUNT_CONFIGS are shown
+// Initialize from config to ensure all enabled models are shown
 const initializeTradingModelsFromConfig = () => {
-  const configModels = getAllModelInfo().filter(model => model.enabled)
+  const configModels = getModelInfo()
   return configModels.map(model => ({
     name: model.name,
     value: 0,
@@ -276,7 +276,7 @@ const loadAsterBalance = async ({ skipInit = false, skipCache = false } = {}) =>
 
   // Helper function to process and update UI with data
   const processAndUpdateData = async (result, { skipInit = false } = {}) => {
-    const configModels = getAllModelInfo().filter(model => model.enabled)
+    const configModels = getModelInfo()
     const balanceDataMap = new Map()
 
     if (skipInit && tradingModels.value.length > 0) {
@@ -558,7 +558,7 @@ const loadChartData = async () => {
 
   try {
     // Get enabled models with uid
-    const enabledModels = getAllModelInfo().filter(model => model.enabled && model.uid)
+    const enabledModels = getModelInfo().filter(model => model.uid)
 
     if (enabledModels.length === 0) {
       console.warn('⚠️ No models with UID found for chart data')
@@ -1452,7 +1452,7 @@ const formatNumber = (value, options = {}) => {
   // Determine which loaded state to check based on useBalanceData option
   // Default to balanceDataLoaded for backward compatibility
   const isLoaded = options.useBalanceData === false ? cryptoPricesLoaded.value : balanceDataLoaded.value
-  
+
   if (!isLoaded) {
     return '--'
   }
@@ -1947,7 +1947,7 @@ onUnmounted(() => {
   width 100%
   padding 10px 16px
   display grid
-  grid-template-columns repeat(auto-fit, minmax(180px, 1fr))
+  grid-template-columns repeat(auto-fit, minmax(120px, 1fr))
   gap 10px
 
 .legend-item

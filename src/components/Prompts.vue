@@ -147,6 +147,11 @@ ${t('prompts.accountOverviewDesc6')}`
 const markdownToHtml = (markdown) => {
   let html = markdown
   
+  // Escape Vue template placeholders ({{ }}) to prevent Vue from parsing them
+  // Replace {{ with &#123;&#123; and }} with &#125;&#125;
+  html = html.replace(/\{\{/g, '&#123;&#123;')
+  html = html.replace(/\}\}/g, '&#125;&#125;')
+  
   // Process code blocks first (before other processing)
   html = html.replace(/```json\n([\s\S]*?)```/g, '<pre><code class="language-json">$1</code></pre>')
   html = html.replace(/```(\w+)?\n([\s\S]*?)```/g, '<pre><code class="language-$1">$2</code></pre>')
