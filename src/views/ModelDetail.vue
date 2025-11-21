@@ -28,7 +28,7 @@
         .value {{ formatNumber(currentModel.availableCash, { currency: true }) }}
       .stat-item
         .label
-          span {{ $t('modelDetail.totalPnl') }} ({{$t('modelDetail.winRate')}})
+          span {{ $t('modelDetail.totalPnl') }} ({{$t('modelDetail.returnPercent')}})
           .tooltip-icon(:title="$t('modelDetail.totalPnlWinRateFormula')") ?
         .value(:class="dataLoaded && currentModel.totalPnl >= 0 ? 'positive' : (dataLoaded && currentModel.totalPnl < 0 ? 'negative' : '')")
           | {{ formatNumber(currentModel.totalPnl, { currency: true }) }}
