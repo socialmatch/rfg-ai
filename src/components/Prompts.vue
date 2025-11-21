@@ -1,10 +1,10 @@
 <template lang="pug">
 .prompts-container
-  .prompts-content(v-html="renderedContent")
+  .prompts-content(ref="contentRef")
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, ref, watch, onMounted, nextTick } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 const { t, locale } = useI18n()
@@ -334,11 +334,34 @@ const markdownToHtml = (markdown) => {
   html = html.replace(/<p><\/p>/g, '')
   html = html.replace(/\n\n+/g, '\n')
   
+  // Final safety: ensure all {{ }} are escaped (in case any were missed)
+  // This is a double-check to prevent Vue from parsing placeholders
+  html = html.replace(/\{\{/g, '&#123;&#123;')
+  html = html.replace(/\}\}/g, '&#125;&#125;')
+  
   return html
 }
 
 const renderedContent = computed(() => {
   return markdownToHtml(promptContent.value)
+})
+
+// Use ref to set content directly, avoiding Vue template parsing
+const contentRef = ref(null)
+
+// Update content when renderedContent changes
+watch(renderedContent, (newContent) => {
+  if (contentRef.value && newContent) {
+    contentRef.value.innerHTML = newContent
+  }
+}, { immediate: true })
+
+onMounted(() => {
+  nextTick(() => {
+    if (contentRef.value && renderedContent.value) {
+      contentRef.value.innerHTML = renderedContent.value
+    }
+  })
 })
 </script>
 

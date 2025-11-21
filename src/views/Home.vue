@@ -1401,7 +1401,7 @@ const startPriceUpdates = () => {
   priceUpdateInterval = setInterval(() => {
     console.log('🔄 Refreshing crypto prices...')
     fetchCryptoPrices()
-  }, 5000)
+  }, 30000)
 }
 
 const stopPriceUpdates = () => {
