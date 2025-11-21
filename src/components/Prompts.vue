@@ -9,148 +9,156 @@ import { useI18n } from 'vue-i18n'
 
 const { t, locale } = useI18n()
 
+// Helper function to escape Vue template placeholders
+const escapeVuePlaceholders = (text) => {
+  if (!text) return text
+  // Escape {{ and }} to prevent Vue from parsing them
+  return String(text)
+    .replace(/\{\{/g, '&#123;&#123;')
+    .replace(/\}\}/g, '&#125;&#125;')
+}
+
 const promptContent = computed(() => {
   // 依赖 locale 以确保语言切换时重新计算
   void locale.value
   
-  return `${t('prompts.title')}
+  // Escape placeholders in each translation before concatenating
+  return `${escapeVuePlaceholders(t('prompts.title'))}
 
 ---
 
-## 🎯 ${t('prompts.goal')}
+## 🎯 ${escapeVuePlaceholders(t('prompts.goal'))}
 
-${t('prompts.goalDesc')}
+${escapeVuePlaceholders(t('prompts.goalDesc'))}
 
-${t('prompts.mustRule')}
+${escapeVuePlaceholders(t('prompts.mustRule'))}
 
-${t('prompts.mustRuleDesc')}
+${escapeVuePlaceholders(t('prompts.mustRuleDesc'))}
 
-${t('prompts.symbolRule')}
-
----
-
-## 📊 ${t('prompts.currentData')}
-
-- ${t('prompts.symbol')}  
-- ${t('prompts.availableFunds')}  
-- ${t('prompts.maxLeverage')}  
-- ${t('prompts.currentPrice')}  
-- ${t('prompts.dataFreshness')}  
+${escapeVuePlaceholders(t('prompts.symbolRule'))}
 
 ---
 
-## 🔐 ${t('prompts.corePrinciples')}
+## 📊 ${escapeVuePlaceholders(t('prompts.currentData'))}
 
-${t('prompts.principle1')}
-
-${t('prompts.principle2')}
-
-${t('prompts.principle3')}
-
-${t('prompts.principle4')}
-
-${t('prompts.principle5')}
-
-${t('prompts.principle6')}
-
-${t('prompts.principle7')}
-
-${t('prompts.principle8')}
-
-${t('prompts.principle9')}
-
-${t('prompts.principle10')}
-
-${t('prompts.principle11')}
-
-${t('prompts.principle11Desc')}
+- ${escapeVuePlaceholders(t('prompts.symbol'))}  
+- ${escapeVuePlaceholders(t('prompts.availableFunds'))}  
+- ${escapeVuePlaceholders(t('prompts.maxLeverage'))}  
+- ${escapeVuePlaceholders(t('prompts.currentPrice'))}  
+- ${escapeVuePlaceholders(t('prompts.dataFreshness'))}  
 
 ---
 
-## ${t('prompts.decisionRules')}
+## 🔐 ${escapeVuePlaceholders(t('prompts.corePrinciples'))}
 
-### ${t('prompts.directionTitle')}
+${escapeVuePlaceholders(t('prompts.principle1'))}
 
-${t('prompts.directionDesc')}
+${escapeVuePlaceholders(t('prompts.principle2'))}
 
-### ${t('prompts.confidenceTitle')}
+${escapeVuePlaceholders(t('prompts.principle3'))}
 
-- ${t('prompts.confidenceDesc1')}
-- ${t('prompts.confidenceDesc2')}
-- ${t('prompts.confidenceDesc3')}
+${escapeVuePlaceholders(t('prompts.principle4'))}
 
-### ${t('prompts.riskControlTitle')}
+${escapeVuePlaceholders(t('prompts.principle5'))}
 
-${t('prompts.riskControlDesc1')}
+${escapeVuePlaceholders(t('prompts.principle6'))}
 
-- ${t('prompts.riskControlDesc2')}
-- ${t('prompts.riskControlDesc3')}
-- ${t('prompts.riskControlDesc4')}
+${escapeVuePlaceholders(t('prompts.principle7'))}
 
-### ${t('prompts.riskRewardTitle')}
+${escapeVuePlaceholders(t('prompts.principle8'))}
 
-${t('prompts.riskRewardDesc1')}
+${escapeVuePlaceholders(t('prompts.principle9'))}
 
-- ${t('prompts.riskRewardDesc2')}
-- ${t('prompts.riskRewardDesc3')}
+${escapeVuePlaceholders(t('prompts.principle10'))}
 
----
+${escapeVuePlaceholders(t('prompts.principle11'))}
 
-## ${t('prompts.positionRulesTitle')}
-
-${t('prompts.positionRule1')}
-
-- ${t('prompts.positionRule1Desc1')}
-- ${t('prompts.positionRule1Desc2')}
-- ${t('prompts.positionRule1Desc3')}
-- ${t('prompts.positionRule1Desc4')}
-- ${t('prompts.positionRule1Desc5')}
-
-${t('prompts.positionRule1Desc6')}
-
-${t('prompts.positionRule2')}
-
-- ${t('prompts.positionRule2Desc1')}
-- ${t('prompts.positionRule2Desc2')}
-- ${t('prompts.positionRule2Desc3')}
-
-${t('prompts.positionRule3')}
-
-- ${t('prompts.positionRule3Desc1')}
-- ${t('prompts.positionRule3Desc2')}
-- ${t('prompts.positionRule3Desc3')}
-- ${t('prompts.positionRule3Desc4')}
-
-${t('prompts.positionRule4')}
-
-- ${t('prompts.positionRule4Desc1')}
-- ${t('prompts.positionRule4Desc2')}
-- ${t('prompts.positionRule4Desc3')}
-- ${t('prompts.positionRule4Desc4')}
-- ${t('prompts.positionRule4Desc5')}
+${escapeVuePlaceholders(t('prompts.principle11Desc'))}
 
 ---
 
-## ${t('prompts.accountOverviewTitle')}
+## ${escapeVuePlaceholders(t('prompts.decisionRules'))}
 
-- ${t('prompts.accountOverviewDesc1')}
-- ${t('prompts.accountOverviewDesc2')}
-- ${t('prompts.accountOverviewDesc3')}
-- ${t('prompts.accountOverviewDesc4')}
+### ${escapeVuePlaceholders(t('prompts.directionTitle'))}
 
-${t('prompts.accountOverviewDesc5')}
+${escapeVuePlaceholders(t('prompts.directionDesc'))}
 
-${t('prompts.accountOverviewDesc6')}`
+### ${escapeVuePlaceholders(t('prompts.confidenceTitle'))}
+
+- ${escapeVuePlaceholders(t('prompts.confidenceDesc1'))}
+- ${escapeVuePlaceholders(t('prompts.confidenceDesc2'))}
+- ${escapeVuePlaceholders(t('prompts.confidenceDesc3'))}
+
+### ${escapeVuePlaceholders(t('prompts.riskControlTitle'))}
+
+${escapeVuePlaceholders(t('prompts.riskControlDesc1'))}
+
+- ${escapeVuePlaceholders(t('prompts.riskControlDesc2'))}
+- ${escapeVuePlaceholders(t('prompts.riskControlDesc3'))}
+- ${escapeVuePlaceholders(t('prompts.riskControlDesc4'))}
+
+### ${escapeVuePlaceholders(t('prompts.riskRewardTitle'))}
+
+${escapeVuePlaceholders(t('prompts.riskRewardDesc1'))}
+
+- ${escapeVuePlaceholders(t('prompts.riskRewardDesc2'))}
+- ${escapeVuePlaceholders(t('prompts.riskRewardDesc3'))}
+
+---
+
+## ${escapeVuePlaceholders(t('prompts.positionRulesTitle'))}
+
+${escapeVuePlaceholders(t('prompts.positionRule1'))}
+
+- ${escapeVuePlaceholders(t('prompts.positionRule1Desc1'))}
+- ${escapeVuePlaceholders(t('prompts.positionRule1Desc2'))}
+- ${escapeVuePlaceholders(t('prompts.positionRule1Desc3'))}
+- ${escapeVuePlaceholders(t('prompts.positionRule1Desc4'))}
+- ${escapeVuePlaceholders(t('prompts.positionRule1Desc5'))}
+
+${escapeVuePlaceholders(t('prompts.positionRule1Desc6'))}
+
+${escapeVuePlaceholders(t('prompts.positionRule2'))}
+
+- ${escapeVuePlaceholders(t('prompts.positionRule2Desc1'))}
+- ${escapeVuePlaceholders(t('prompts.positionRule2Desc2'))}
+- ${escapeVuePlaceholders(t('prompts.positionRule2Desc3'))}
+
+${escapeVuePlaceholders(t('prompts.positionRule3'))}
+
+- ${escapeVuePlaceholders(t('prompts.positionRule3Desc1'))}
+- ${escapeVuePlaceholders(t('prompts.positionRule3Desc2'))}
+- ${escapeVuePlaceholders(t('prompts.positionRule3Desc3'))}
+- ${escapeVuePlaceholders(t('prompts.positionRule3Desc4'))}
+
+${escapeVuePlaceholders(t('prompts.positionRule4'))}
+
+- ${escapeVuePlaceholders(t('prompts.positionRule4Desc1'))}
+- ${escapeVuePlaceholders(t('prompts.positionRule4Desc2'))}
+- ${escapeVuePlaceholders(t('prompts.positionRule4Desc3'))}
+- ${escapeVuePlaceholders(t('prompts.positionRule4Desc4'))}
+- ${escapeVuePlaceholders(t('prompts.positionRule4Desc5'))}
+
+---
+
+## ${escapeVuePlaceholders(t('prompts.accountOverviewTitle'))}
+
+- ${escapeVuePlaceholders(t('prompts.accountOverviewDesc1'))}
+- ${escapeVuePlaceholders(t('prompts.accountOverviewDesc2'))}
+- ${escapeVuePlaceholders(t('prompts.accountOverviewDesc3'))}
+- ${escapeVuePlaceholders(t('prompts.accountOverviewDesc4'))}
+
+${escapeVuePlaceholders(t('prompts.accountOverviewDesc5'))}
+
+${escapeVuePlaceholders(t('prompts.accountOverviewDesc6'))}`
 })
 
 // Improved markdown to HTML converter
 const markdownToHtml = (markdown) => {
   let html = markdown
   
-  // Escape Vue template placeholders ({{ }}) to prevent Vue from parsing them
-  // Replace {{ with &#123;&#123; and }} with &#125;&#125;
-  html = html.replace(/\{\{/g, '&#123;&#123;')
-  html = html.replace(/\}\}/g, '&#125;&#125;')
+  // Note: Vue placeholders are already escaped in promptContent computed
+  // No need to escape again here
   
   // Process code blocks first (before other processing)
   html = html.replace(/```json\n([\s\S]*?)```/g, '<pre><code class="language-json">$1</code></pre>')
