@@ -10,7 +10,7 @@ export const DEFAULT_INITIAL_CAPITAL = 500
 export const ACCOUNT_CONFIGS = [
   {
     id: 'ds1',
-    modelName: 'DS1',
+    modelName: 'NextAlpha 无限制型',
     modelSlug: 'ds1',
     modelColor: '#EF4444', // 红色 (Red 500)
     modelIcon: 'Rfg_logo.png',
@@ -42,7 +42,7 @@ export const ACCOUNT_CONFIGS = [
     description: 'A large language model fine-tuned for trading, executing live trades across six major cryptocurrencies (BTC, ETH, BNB, SOL, DOGE, XRP).',
     "user_address": "0x5591a0894e7e7d4950c8ce17048a2c3ba5f4f2ff",
     "signer_address": "0xbF7F859886C873d2BA4dC43610d8e295469a7b71",
-    enabled: true,
+    enabled: false,
     // 账户余额相关字段（从API获取后会更新）
     accountAlias: "Deep",
     asset: "USDT",
@@ -65,7 +65,7 @@ export const ACCOUNT_CONFIGS = [
     description: 'A trading model that autonomously trades any token pair listed on Aster, designed to adapt flexibly to market-wide opportunities.',
     "user_address": "0x0956e309e65e64519fc17d07eb3da3f30c293680",
     "signer_address": "0x41e4d0D232fe922417127e047cF3801552744158",
-    enabled: true,
+    enabled: false,
     // 账户余额相关字段（从API获取后会更新）
     accountAlias: "RfgX",
     asset: "USDT",
@@ -79,7 +79,7 @@ export const ACCOUNT_CONFIGS = [
   },
   {
     id: 'ds4',
-    modelName: 'DS4',
+    modelName: 'NextAlpha 激进型 1',
     modelSlug: 'ds4',
     modelColor: '#F59E0B', // 琥珀色 (Amber 500)
     modelIcon: 'Rfg_logo.png',
@@ -111,7 +111,7 @@ export const ACCOUNT_CONFIGS = [
     description: 'A stable, conservative AI trading model mirroring DeepSeek\'s multi-asset setup, focused on risk-balanced execution across six leading coins (BTC, ETH, BNB, SOL, DOGE, XRP).',
     "user_address": "0xb597b1f7235f2fb3250416f39ad1caf459c9eb58",
     "signer_address": "0xc20BA21AC4705971609d8Ba9B002B6f91662b005",
-    enabled: true,
+    enabled: false,
     // 账户余额相关字段（从API获取后会更新）
     accountAlias: "RfgX",
     asset: "USDT",
@@ -134,7 +134,7 @@ export const ACCOUNT_CONFIGS = [
     description: 'A large language model fine-tuned for trading, executing live trades across six major cryptocurrencies (BTC, ETH, BNB, SOL, DOGE, XRP).',
     "user_address": "0x4d62c2959c06efe620a4e1e95dbe060d56e5f59e",
     "signer_address": "0x7744b0d7f624D00625755FD0e871cA0d752673Db",
-    enabled: true,
+    enabled: false,
     // 账户余额相关字段（从API获取后会更新）
     accountAlias: "RfgX",
     asset: "USDT",
@@ -148,7 +148,7 @@ export const ACCOUNT_CONFIGS = [
   },
   {
     id: 'zy4',
-    modelName: 'ZY4',
+    modelName: 'NextAlpha 激进型 2',
     modelSlug: 'zy4',
     modelColor: '#8B5CF6', // 紫色 (Violet 500)
     modelIcon: 'Rfg_logo.png',
@@ -171,7 +171,7 @@ export const ACCOUNT_CONFIGS = [
   },
   {
     id: 'zy6',
-    modelName: 'ZY6',
+    modelName: 'NextAlpha 平衡型 2',
     modelSlug: 'zy6',
     modelColor: '#EC4899', // 粉红色 (Pink 500)
     modelIcon: 'Rfg_logo.png',
@@ -194,7 +194,7 @@ export const ACCOUNT_CONFIGS = [
   },
   {
     id: 'ds6',
-    modelName: 'DS6',
+    modelName: 'NextAlpha 平衡型 1',
     modelSlug: 'ds6',
     modelColor: '#14B8A6', // 蓝绿色 (Teal 500)
     modelIcon: 'Rfg_logo.png',
@@ -217,7 +217,7 @@ export const ACCOUNT_CONFIGS = [
   },
   {
     id: 'ds7',
-    modelName: 'DS7',
+    modelName: 'NextAlpha 最新测试版 1',
     modelSlug: 'ds7',
     modelColor: '#F97316', // 橙色 (Orange 500)
     modelIcon: 'Rfg_logo.png',
@@ -240,7 +240,7 @@ export const ACCOUNT_CONFIGS = [
   },
   {
     id: 'zy7',
-    modelName: 'ZY7',
+    modelName: 'NextAlpha 最新测试版 2',
     modelSlug: 'zy7',
     modelColor: '#6366F1', // 靛蓝色 (Indigo 500)
     modelIcon: 'Rfg_logo.png',

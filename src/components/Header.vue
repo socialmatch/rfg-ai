@@ -31,7 +31,7 @@ import { ref, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import LanguageSwitcher from '@/components/LanguageSwitcher.vue'
 
-import { getAllModelInfo, getModelIconPath } from '@/config/accounts.js'
+import { getModelInfo, getModelIconPath } from '@/config/accounts.js'
 
 const router = useRouter()
 const route = useRoute()
@@ -51,8 +51,8 @@ if (typeof window !== 'undefined') {
   checkMobile() // 初始检查
 }
 
-// 从配置文件获取模型数据
-const models = ref(getAllModelInfo().map(model => ({
+// 从配置文件获取模型数据（只获取启用的模型）
+const models = ref(getModelInfo().map(model => ({
   name: model.name,
   slug: model.slug,
   icon: getModelIconPath(model.name),
@@ -202,7 +202,7 @@ watch(() => route.path, () => {
   border-radius 8px
   box-shadow 0 8px 25px rgba(0, 0, 0, 0.3)
   z-index 10001
-  min-width 240px
+  min-width 260px
   margin-top 8px
   // PC端：默认隐藏，hover时显示
   display none
