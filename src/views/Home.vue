@@ -313,7 +313,7 @@ const loadAsterBalance = async ({ skipInit = false, skipCache = false } = {}) =>
           // If no USDT balance, use the first available balance (e.g., BTC)
           balanceData = account.data[0]
         }
-        
+
         if (balanceData) {
           // If we got data from API (even if value is 0), mark as real data
           hasRealData = true
@@ -324,10 +324,10 @@ const loadAsterBalance = async ({ skipInit = false, skipCache = false } = {}) =>
           const initialCapital = account.modelInfo.initialCapital || DEFAULT_INITIAL_CAPITAL
           // Calculate change as: (accountValue - initialCapital) / initialCapital * 100
           // Ensure we have valid numbers for calculation
-          const changePercent = (initialCapital > 0 && !isNaN(accountValue) && !isNaN(initialCapital)) 
-            ? ((accountValue - initialCapital) / initialCapital) * 100 
+          const changePercent = (initialCapital > 0 && !isNaN(accountValue) && !isNaN(initialCapital))
+            ? ((accountValue - initialCapital) / initialCapital) * 100
             : 0
-          
+
           // Debug log for troubleshooting
           if (account.modelInfo.name && (isNaN(accountValue) || accountValue === 0 || changePercent === 0)) {
             console.log(`🔍 Balance calculation for ${account.modelInfo.name}:`, {
@@ -399,7 +399,7 @@ const loadAsterBalance = async ({ skipInit = false, skipCache = false } = {}) =>
         const btcQuantity = DEFAULT_INITIAL_CAPITAL / firstPrice
         const latestPrice = parseFloat(btcResult.data[btcResult.data.length - 1][4])
         const latestValue = btcQuantity * latestPrice
-        
+
         // Calculate percentage change: (currentValue - initialCapital) / initialCapital * 100
         const btcChangePercent = DEFAULT_INITIAL_CAPITAL > 0 && !isNaN(latestValue) && !isNaN(DEFAULT_INITIAL_CAPITAL)
           ? ((latestValue - DEFAULT_INITIAL_CAPITAL) / DEFAULT_INITIAL_CAPITAL) * 100
@@ -759,6 +759,7 @@ const buildChart = async () => {
             color: '#94a3b8',
             font: { size: 11, weight: 'bold' },
             maxTicksLimit: 10, // Limit x-axis ticks for better performance with large datasets
+            padding: 8, // 为x轴标签添加内边距，避免被遮挡
             callback: function(value, index, ticks) {
               // Use labels from closure
               if (!labels || !labels[value]) return ''
@@ -1783,7 +1784,7 @@ onUnmounted(() => {
 
 .chart-frame
   position relative
-  padding 8px 160px 6px 22px  // 右边从8px改为48px，增加40px间距
+  padding 8px 160px 40px 22px  // 底部padding从6px增加到40px，为x轴时间标签预留空间
   flex 1 // fill remaining height below header
   min-height 320px
 
@@ -2126,7 +2127,7 @@ onUnmounted(() => {
   .chart-frame
     height 400px !important
     width 100%
-    padding 8px
+    padding 8px 8px 40px 8px  // 底部padding增加到40px，为x轴时间标签预留空间
     flex none !important
 
   .chart-canvas
