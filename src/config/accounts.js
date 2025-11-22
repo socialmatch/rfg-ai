@@ -260,6 +260,52 @@ export const ACCOUNT_CONFIGS = [
     maxWithdrawAmount: "0.00000000",
     marginAvailable: true,
     updateTime: 0
+  },
+  {
+    id: 'ds8',
+    modelName: 'DS8',
+    modelSlug: 'ds8',
+    modelColor: '#0EA5E9', // 天空蓝色 (Sky 500)
+    modelIcon: 'Rfg_logo.png',
+    uid: 'ds8',
+    initialCapital: DEFAULT_INITIAL_CAPITAL, // 初始本金
+    description: 'A stable, conservative AI trading model mirroring DeepSeek\'s multi-asset setup, focused on risk-balanced execution across six leading coins (BTC, ETH, BNB, SOL, DOGE, XRP).',
+    "user_address": "0x0000000000000000000000000000000000000000",
+    "signer_address": "0x0000000000000000000000000000000000000000",
+    enabled: true,
+    // 账户余额相关字段（从API获取后会更新）
+    accountAlias: "RfgX",
+    asset: "USDT",
+    balance: "0.00000000",
+    crossWalletBalance: "0.00000000",
+    crossUnPnl: "0.00000000",
+    availableBalance: "0.00000000",
+    maxWithdrawAmount: "0.00000000",
+    marginAvailable: true,
+    updateTime: 0
+  },
+  {
+    id: 'zy8',
+    modelName: 'ZY8',
+    modelSlug: 'zy8',
+    modelColor: '#22C55E', // 绿色 (Green 500)
+    modelIcon: 'Rfg_logo.png',
+    uid: 'zy8',
+    initialCapital: DEFAULT_INITIAL_CAPITAL, // 初始本金
+    description: 'A large language model fine-tuned for trading, executing live trades across six major cryptocurrencies (BTC, ETH, BNB, SOL, DOGE, XRP).',
+    "user_address": "0x0000000000000000000000000000000000000000",
+    "signer_address": "0x0000000000000000000000000000000000000000",
+    enabled: true,
+    // 账户余额相关字段（从API获取后会更新）
+    accountAlias: "RfgX",
+    asset: "USDT",
+    balance: "0.00000000",
+    crossWalletBalance: "0.00000000",
+    crossUnPnl: "0.00000000",
+    availableBalance: "0.00000000",
+    maxWithdrawAmount: "0.00000000",
+    marginAvailable: true,
+    updateTime: 0
   }
 ]
 
