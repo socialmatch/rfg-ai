@@ -191,6 +191,52 @@ export const ACCOUNT_CONFIGS = [
     maxWithdrawAmount: "0.00000000",
     marginAvailable: true,
     updateTime: 0
+  },
+  {
+    id: 'ds9',
+    modelName: 'DS9',
+    modelSlug: 'ds9',
+    modelColor: '#EF4444', // 红色 (Red 500)
+    modelIcon: 'Rfg_logo.png',
+    uid: 'ds9',
+    initialCapital: DEFAULT_INITIAL_CAPITAL, // 初始本金
+    description: 'A stable, conservative AI trading model mirroring DeepSeek\'s multi-asset setup, focused on risk-balanced execution across six leading coins (BTC, ETH, BNB, SOL, DOGE, XRP).',
+    "user_address": "0x0000000000000000000000000000000000000000",
+    "signer_address": "0x0000000000000000000000000000000000000000",
+    enabled: true,
+    // 账户余额相关字段（从API获取后会更新）
+    accountAlias: "RfgX",
+    asset: "USDT",
+    balance: "0.00000000",
+    crossWalletBalance: "0.00000000",
+    crossUnPnl: "0.00000000",
+    availableBalance: "0.00000000",
+    maxWithdrawAmount: "0.00000000",
+    marginAvailable: true,
+    updateTime: 0
+  },
+  {
+    id: 'zy9',
+    modelName: 'ZY9',
+    modelSlug: 'zy9',
+    modelColor: '#06B6D4', // 青色 (Cyan 500)
+    modelIcon: 'Rfg_logo.png',
+    uid: 'zy9',
+    initialCapital: DEFAULT_INITIAL_CAPITAL, // 初始本金
+    description: 'An intelligent trading agent that interprets complex market structures and reacts dynamically to volatility.',
+    "user_address": "0x0000000000000000000000000000000000000000",
+    "signer_address": "0x0000000000000000000000000000000000000000",
+    enabled: true,
+    // 账户余额相关字段（从API获取后会更新）
+    accountAlias: "RfgX",
+    asset: "USDT",
+    balance: "0.00000000",
+    crossWalletBalance: "0.00000000",
+    crossUnPnl: "0.00000000",
+    availableBalance: "0.00000000",
+    maxWithdrawAmount: "0.00000000",
+    marginAvailable: true,
+    updateTime: 0
   }
 ]
 
