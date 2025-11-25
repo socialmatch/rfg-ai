@@ -43,7 +43,7 @@ const handleBackdropClick = () => {
   left 0
   right 0
   bottom 0
-  background rgba(15, 23, 42, 0.85)
+  background rgba(15, 23, 42, 0.95)
   // 毛玻璃效果
   backdrop-filter blur(12px) saturate(180%)
   -webkit-backdrop-filter blur(12px) saturate(180%)
