@@ -194,8 +194,8 @@ export const ACCOUNT_CONFIGS = [
   },
   {
     id: 'ds9',
-    modelName: 'DS9_B',
-    modelSlug: 'ds9_b',
+    modelName: 'DS9_BN',
+    modelSlug: 'ds9_bn',
     modelColor: '#EF4444', // 红色 (Red 500)
     modelIcon: 'Rfg_logo.png',
     uid: 'ds9',
@@ -217,8 +217,8 @@ export const ACCOUNT_CONFIGS = [
   },
   {
     id: 'zy9',
-    modelName: 'ZY9_B',
-    modelSlug: 'zy9_b',
+    modelName: 'ZY9_BN',
+    modelSlug: 'zy9_bn',
     modelColor: '#06B6D4', // 青色 (Cyan 500)
     modelIcon: 'Rfg_logo.png',
     uid: 'zy9',
@@ -240,8 +240,8 @@ export const ACCOUNT_CONFIGS = [
   },
   {
     id: 'zy4_b',
-    modelName: 'ZY4_B',
-    modelSlug: 'zy4_b',
+    modelName: 'ZY4_BN',
+    modelSlug: 'zy4_bn',
     modelColor: '#A855F7', // 紫色变种 (Purple 500)
     modelIcon: 'Rfg_logo.png',
     uid: 'zy4_b',
@@ -263,8 +263,8 @@ export const ACCOUNT_CONFIGS = [
   },
   {
     id: 'zy10',
-    modelName: 'ZY10_B',
-    modelSlug: 'zy10_b',
+    modelName: 'ZY10_BN',
+    modelSlug: 'zy10_bn',
     modelColor: '#84CC16', // 青柠色 (Lime 500)
     modelIcon: 'Rfg_logo.png',
     uid: 'zy10',
@@ -286,8 +286,8 @@ export const ACCOUNT_CONFIGS = [
   },
   {
     id: 'zy11',
-    modelName: 'ZY11_B',
-    modelSlug: 'zy11_b',
+    modelName: 'ZY11_BN',
+    modelSlug: 'zy11_bn',
     modelColor: '#F59E0B', // 琥珀色 (Amber 500)
     modelIcon: 'Rfg_logo.png',
     uid: 'zy11',
@@ -309,8 +309,8 @@ export const ACCOUNT_CONFIGS = [
   },
   {
     id: 'zy6_b',
-    modelName: 'ZY6_B',
-    modelSlug: 'zy6_b',
+    modelName: 'ZY6_BN',
+    modelSlug: 'zy6_bn',
     modelColor: '#F472B6', // 粉红色变种 (Pink 400)
     modelIcon: 'Rfg_logo.png',
     uid: 'zy6_b',
@@ -332,8 +332,8 @@ export const ACCOUNT_CONFIGS = [
   },
   {
     id: 'zy7_b',
-    modelName: 'ZY7_B',
-    modelSlug: 'zy7_b',
+    modelName: 'ZY7_BN',
+    modelSlug: 'zy7_bn',
     modelColor: '#818CF8', // 靛蓝色变种 (Indigo 400)
     modelIcon: 'Rfg_logo.png',
     uid: 'zy7_b',
@@ -355,8 +355,8 @@ export const ACCOUNT_CONFIGS = [
   },
   {
     id: 'zy8_b',
-    modelName: 'ZY8_B',
-    modelSlug: 'zy8_b',
+    modelName: 'ZY8_BN',
+    modelSlug: 'zy8_bn',
     modelColor: '#10B981', // 绿色变种 (Emerald 500)
     modelIcon: 'Rfg_logo.png',
     uid: 'zy8_b',
