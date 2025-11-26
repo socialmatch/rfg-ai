@@ -194,8 +194,8 @@ export const ACCOUNT_CONFIGS = [
   },
   {
     id: 'ds9',
-    modelName: 'DS9',
-    modelSlug: 'ds9',
+    modelName: 'DS9_B',
+    modelSlug: 'ds9_b',
     modelColor: '#EF4444', // 红色 (Red 500)
     modelIcon: 'Rfg_logo.png',
     uid: 'ds9',
@@ -217,13 +217,151 @@ export const ACCOUNT_CONFIGS = [
   },
   {
     id: 'zy9',
-    modelName: 'ZY9',
-    modelSlug: 'zy9',
+    modelName: 'ZY9_B',
+    modelSlug: 'zy9_b',
     modelColor: '#06B6D4', // 青色 (Cyan 500)
     modelIcon: 'Rfg_logo.png',
     uid: 'zy9',
     initialCapital: DEFAULT_INITIAL_CAPITAL, // 初始本金
     description: 'An intelligent trading agent that interprets complex market structures and reacts dynamically to volatility.',
+    "user_address": "0x0000000000000000000000000000000000000000",
+    "signer_address": "0x0000000000000000000000000000000000000000",
+    enabled: true,
+    // 账户余额相关字段（从API获取后会更新）
+    accountAlias: "RfgX",
+    asset: "USDT",
+    balance: "0.00000000",
+    crossWalletBalance: "0.00000000",
+    crossUnPnl: "0.00000000",
+    availableBalance: "0.00000000",
+    maxWithdrawAmount: "0.00000000",
+    marginAvailable: true,
+    updateTime: 0
+  },
+  {
+    id: 'zy4_b',
+    modelName: 'ZY4_B',
+    modelSlug: 'zy4_b',
+    modelColor: '#A855F7', // 紫色变种 (Purple 500)
+    modelIcon: 'Rfg_logo.png',
+    uid: 'zy4_b',
+    initialCapital: DEFAULT_INITIAL_CAPITAL, // 初始本金
+    description: 'A trading model that autonomously trades any token pair listed on Aster, designed to adapt flexibly to market-wide opportunities.',
+    "user_address": "0x0000000000000000000000000000000000000000",
+    "signer_address": "0x0000000000000000000000000000000000000000",
+    enabled: true,
+    // 账户余额相关字段（从API获取后会更新）
+    accountAlias: "RfgX",
+    asset: "USDT",
+    balance: "0.00000000",
+    crossWalletBalance: "0.00000000",
+    crossUnPnl: "0.00000000",
+    availableBalance: "0.00000000",
+    maxWithdrawAmount: "0.00000000",
+    marginAvailable: true,
+    updateTime: 0
+  },
+  {
+    id: 'zy10',
+    modelName: 'ZY10_B',
+    modelSlug: 'zy10_b',
+    modelColor: '#84CC16', // 青柠色 (Lime 500)
+    modelIcon: 'Rfg_logo.png',
+    uid: 'zy10',
+    initialCapital: DEFAULT_INITIAL_CAPITAL, // 初始本金
+    description: 'An intelligent trading agent that interprets complex market structures and reacts dynamically to volatility.',
+    "user_address": "0x0000000000000000000000000000000000000000",
+    "signer_address": "0x0000000000000000000000000000000000000000",
+    enabled: true,
+    // 账户余额相关字段（从API获取后会更新）
+    accountAlias: "RfgX",
+    asset: "USDT",
+    balance: "0.00000000",
+    crossWalletBalance: "0.00000000",
+    crossUnPnl: "0.00000000",
+    availableBalance: "0.00000000",
+    maxWithdrawAmount: "0.00000000",
+    marginAvailable: true,
+    updateTime: 0
+  },
+  {
+    id: 'zy11',
+    modelName: 'ZY11_B',
+    modelSlug: 'zy11_b',
+    modelColor: '#F59E0B', // 琥珀色 (Amber 500)
+    modelIcon: 'Rfg_logo.png',
+    uid: 'zy11',
+    initialCapital: DEFAULT_INITIAL_CAPITAL, // 初始本金
+    description: 'An intelligent trading agent that interprets complex market structures and reacts dynamically to volatility.',
+    "user_address": "0x0000000000000000000000000000000000000000",
+    "signer_address": "0x0000000000000000000000000000000000000000",
+    enabled: true,
+    // 账户余额相关字段（从API获取后会更新）
+    accountAlias: "RfgX",
+    asset: "USDT",
+    balance: "0.00000000",
+    crossWalletBalance: "0.00000000",
+    crossUnPnl: "0.00000000",
+    availableBalance: "0.00000000",
+    maxWithdrawAmount: "0.00000000",
+    marginAvailable: true,
+    updateTime: 0
+  },
+  {
+    id: 'zy6_b',
+    modelName: 'ZY6_B',
+    modelSlug: 'zy6_b',
+    modelColor: '#F472B6', // 粉红色变种 (Pink 400)
+    modelIcon: 'Rfg_logo.png',
+    uid: 'zy6_b',
+    initialCapital: DEFAULT_INITIAL_CAPITAL, // 初始本金
+    description: 'An intelligent trading agent that interprets complex market structures and reacts dynamically to volatility.',
+    "user_address": "0x0000000000000000000000000000000000000000",
+    "signer_address": "0x0000000000000000000000000000000000000000",
+    enabled: true,
+    // 账户余额相关字段（从API获取后会更新）
+    accountAlias: "RfgX",
+    asset: "USDT",
+    balance: "0.00000000",
+    crossWalletBalance: "0.00000000",
+    crossUnPnl: "0.00000000",
+    availableBalance: "0.00000000",
+    maxWithdrawAmount: "0.00000000",
+    marginAvailable: true,
+    updateTime: 0
+  },
+  {
+    id: 'zy7_b',
+    modelName: 'ZY7_B',
+    modelSlug: 'zy7_b',
+    modelColor: '#818CF8', // 靛蓝色变种 (Indigo 400)
+    modelIcon: 'Rfg_logo.png',
+    uid: 'zy7_b',
+    initialCapital: DEFAULT_INITIAL_CAPITAL, // 初始本金
+    description: 'An intelligent trading agent that interprets complex market structures and reacts dynamically to volatility.',
+    "user_address": "0x0000000000000000000000000000000000000000",
+    "signer_address": "0x0000000000000000000000000000000000000000",
+    enabled: true,
+    // 账户余额相关字段（从API获取后会更新）
+    accountAlias: "RfgX",
+    asset: "USDT",
+    balance: "0.00000000",
+    crossWalletBalance: "0.00000000",
+    crossUnPnl: "0.00000000",
+    availableBalance: "0.00000000",
+    maxWithdrawAmount: "0.00000000",
+    marginAvailable: true,
+    updateTime: 0
+  },
+  {
+    id: 'zy8_b',
+    modelName: 'ZY8_B',
+    modelSlug: 'zy8_b',
+    modelColor: '#10B981', // 绿色变种 (Emerald 500)
+    modelIcon: 'Rfg_logo.png',
+    uid: 'zy8_b',
+    initialCapital: DEFAULT_INITIAL_CAPITAL, // 初始本金
+    description: 'A large language model fine-tuned for trading, executing live trades across six major cryptocurrencies (BTC, ETH, BNB, SOL, DOGE, XRP).',
     "user_address": "0x0000000000000000000000000000000000000000",
     "signer_address": "0x0000000000000000000000000000000000000000",
     enabled: true,

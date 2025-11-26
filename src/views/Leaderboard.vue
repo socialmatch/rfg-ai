@@ -73,8 +73,8 @@
       .model-diff
         .bar-chart(v-for="model in leaderboardData" :key="model.name")
           .bar-visual
-            .bar(:style="{ height: getBarHeight(model.accountValue || 0) + '%', backgroundColor: model.color || '#64748b' }")
             .bar-value ${{ formatBarValue(model.accountValue) }}
+            .bar(:style="{ height: getBarHeight(model.accountValue || 0) + '%', backgroundColor: model.color || '#64748b' }")
             .bar-icon
               img(:src="getModelIcon(model.name)" :alt="model.name")
           .model-info
@@ -146,36 +146,36 @@ const hasCompleteCachedData = (balanceData, tradesData, positionsData) => {
   if (!balanceData || !balanceData.success) return false
   if (!tradesData || !tradesData.success) return false
   if (!positionsData || !positionsData.success) return false
-  
+
   // Get all enabled models
   const allEnabledModels = getAllModelInfo().filter(model => model.enabled)
   const enabledModelNames = new Set(allEnabledModels.map(m => m.name))
-  
+
   // Check if we have data for all enabled models in balance data
   const balanceModelNames = new Set(
     balanceData.accounts
       .filter(acc => acc.success && acc.data && acc.data.length > 0)
       .map(acc => acc.modelInfo.name)
   )
-  
+
   // Check if we have data for all enabled models in trades data
   const tradesModelNames = new Set(
     tradesData.accounts
       .filter(acc => acc.data && acc.data.length > 0)
       .map(acc => acc.modelInfo.name)
   )
-  
+
   // Check if we have data for all enabled models in positions data
   const positionsModelNames = new Set(
     positionsData.accounts
       .filter(acc => acc.success && acc.data)
       .map(acc => acc.modelInfo.name)
   )
-  
+
   // We consider it complete if we have balance data for all models
   // (trades and positions might be empty for some models, which is OK)
   const hasAllBalanceData = allEnabledModels.every(model => balanceModelNames.has(model.name))
-  
+
   return hasAllBalanceData
 }
 
@@ -315,9 +315,9 @@ const buildLeaderboardFromData = (balanceData, tradesData, positionsData) => {
   // Get all enabled models to ensure we include all models even if they have no data
   const allEnabledModels = getAllModelInfo().filter(model => model.enabled)
   const allEnabledModelNames = new Set(allEnabledModels.map(m => m.name))
-  
+
   const leaderboardItems = []
-  
+
   // First, process models that have data
   modelDataMap.forEach((data, modelName) => {
     const balance = data.balance
@@ -325,35 +325,35 @@ const buildLeaderboardFromData = (balanceData, tradesData, positionsData) => {
     const accountValue = balance ? parseFloat(balance.balance) : 0
     const initialCapital = data.modelInfo.initialCapital || DEFAULT_INITIAL_CAPITAL
     const fees = stats.totalCommission || 0
-    
+
     // 新的 TOTAL P&L 计算公式: ACCT VALUE + FEES - 初始本金
     const totalPnl = accountValue + fees - initialCapital
-    
+
     // 新的回报率计算公式: (ACCT VALUE + FEES - 初始本金) / 初始本金
     const returnPercent = initialCapital > 0 ? ((accountValue + fees - initialCapital) / initialCapital) * 100 : 0
-    
+
     // 计算新的胜率: (已平仓盈利订单数 + 未平仓盈利订单数) / (已平仓订单数 + 未平仓订单数)
     const closedTrades = data.trades || []
     const positions = data.positions || []
-    
+
     // 已平仓的盈利订单数量
     const closedWinTrades = closedTrades.filter(trade => {
       const pnl = parseFloat(trade.realizedPnl || 0)
       return pnl > 0
     }).length
-    
+
     // 当前未平仓的盈利订单数量
     const openWinPositions = positions.filter(position => {
       const pnl = parseFloat(position.unrealPnl || 0)
       return pnl > 0
     }).length
-    
+
     // 已平仓的订单总数
     const closedTradesCount = closedTrades.length
-    
+
     // 当前持仓的订单总数
     const openPositionsCount = positions.length
-    
+
     // 计算胜率
     const totalOrders = closedTradesCount + openPositionsCount
     const winRate = totalOrders > 0 ? ((closedWinTrades + openWinPositions) / totalOrders) * 100 : 0
@@ -388,7 +388,7 @@ const buildLeaderboardFromData = (balanceData, tradesData, positionsData) => {
 
     console.log('🔍 Built leaderboard item for', modelName, 'with positions:', data.positions || [])
   })
-  
+
   // Add models that don't have data yet (only if we're building from incomplete cache)
   // If we have complete cache, we don't need to add placeholder models
   allEnabledModels.forEach(model => {
@@ -465,7 +465,7 @@ const loadLeaderboardData = async (silent = false) => {
 
     // Check if we have complete cached data
     const hasCompleteCache = hasCompleteCachedData(balanceData, tradesData, positionsData)
-    
+
     // If we have no existing data, initialize with placeholder or cached data
     if (leaderboardData.value.length === 0) {
       if (hasCompleteCache) {
