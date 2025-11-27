@@ -326,11 +326,11 @@ const buildLeaderboardFromData = (balanceData, tradesData, positionsData) => {
     const initialCapital = data.modelInfo.initialCapital || DEFAULT_INITIAL_CAPITAL
     const fees = stats.totalCommission || 0
 
-    // 新的 TOTAL P&L 计算公式: ACCT VALUE + FEES - 初始本金
-    const totalPnl = accountValue + fees - initialCapital
+    // 总盈亏 = 当前余额 - 初始本金
+    const totalPnl = accountValue - initialCapital
 
-    // 新的回报率计算公式: (ACCT VALUE + FEES - 初始本金) / 初始本金
-    const returnPercent = initialCapital > 0 ? ((accountValue + fees - initialCapital) / initialCapital) * 100 : 0
+    // 回报率 = （当前余额 - 初始本金）/ 初始本金
+    const returnPercent = initialCapital > 0 ? ((accountValue - initialCapital) / initialCapital) * 100 : 0
 
     // 计算新的胜率: (已平仓盈利订单数 + 未平仓盈利订单数) / (已平仓订单数 + 未平仓订单数)
     const closedTrades = data.trades || []
