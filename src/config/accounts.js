@@ -230,8 +230,8 @@ export const ACCOUNT_CONFIGS = [
   },
   {
     id: 'zy11',
-    modelName: 'ZY11',
-    modelSlug: 'zy11',
+    modelName: 'LL11',
+    modelSlug: 'll11',
     modelColor: '#22C55E', // 绿色 (Green 500)
     modelIcon: 'Rfg_logo.png',
     uid: 'ZY11',
