@@ -230,8 +230,8 @@ export const ACCOUNT_CONFIGS = [
   },
   {
     id: 'zy11-flu',
-    modelName: 'ZY11-FLu',
-    modelSlug: 'zy11-flu',
+    modelName: 'LL11-7',
+    modelSlug: 'LL11-7',
     modelColor: '#22C55E', // 绿色 (Green 500)
     modelIcon: 'Rfg_logo.png',
     uid: 'ZY11-FLu',
@@ -252,8 +252,8 @@ export const ACCOUNT_CONFIGS = [
   },
   {
     id: 'ds11-flu',
-    modelName: 'DS11-FLu',
-    modelSlug: 'ds11-flu',
+    modelName: 'LL11-6',
+    modelSlug: 'LL11-6',
     modelColor: '#10B981', // 绿色变种 (Emerald 500)
     modelIcon: 'Rfg_logo.png',
     uid: 'DS11-FLu',
