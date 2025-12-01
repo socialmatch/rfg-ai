@@ -313,7 +313,7 @@ const loadAsterBalance = async ({ skipInit = false, skipCache = false } = {}) =>
           // If no USDT balance, use the first available balance (e.g., BTC)
           balanceData = account.data[0]
         }
-        
+
         if (balanceData) {
           // If we got data from API (even if value is 0), mark as real data
           hasRealData = true
@@ -324,10 +324,10 @@ const loadAsterBalance = async ({ skipInit = false, skipCache = false } = {}) =>
           const initialCapital = account.modelInfo.initialCapital || DEFAULT_INITIAL_CAPITAL
           // Calculate change as: (accountValue - initialCapital) / initialCapital * 100
           // Ensure we have valid numbers for calculation
-          const changePercent = (initialCapital > 0 && !isNaN(accountValue) && !isNaN(initialCapital)) 
-            ? ((accountValue - initialCapital) / initialCapital) * 100 
+          const changePercent = (initialCapital > 0 && !isNaN(accountValue) && !isNaN(initialCapital))
+            ? ((accountValue - initialCapital) / initialCapital) * 100
             : 0
-          
+
           // Debug log for troubleshooting
           if (account.modelInfo.name && (isNaN(accountValue) || accountValue === 0 || changePercent === 0)) {
             console.log(`🔍 Balance calculation for ${account.modelInfo.name}:`, {
@@ -399,7 +399,7 @@ const loadAsterBalance = async ({ skipInit = false, skipCache = false } = {}) =>
         const btcQuantity = DEFAULT_INITIAL_CAPITAL / firstPrice
         const latestPrice = parseFloat(btcResult.data[btcResult.data.length - 1][4])
         const latestValue = btcQuantity * latestPrice
-        
+
         // Calculate percentage change: (currentValue - initialCapital) / initialCapital * 100
         const btcChangePercent = DEFAULT_INITIAL_CAPITAL > 0 && !isNaN(latestValue) && !isNaN(DEFAULT_INITIAL_CAPITAL)
           ? ((latestValue - DEFAULT_INITIAL_CAPITAL) / DEFAULT_INITIAL_CAPITAL) * 100
@@ -982,7 +982,7 @@ const startBalanceUpdates = () => {
   balanceUpdateInterval = setInterval(() => {
     console.log('🔄 Refreshing model balance data...')
     loadAsterBalance({ skipInit: true, skipCache: true })
-  }, 15000) // Update balance every 15 seconds
+  }, 120000) // Update balance every 15 seconds
 }
 
 const stopBalanceUpdates = () => {
@@ -996,7 +996,7 @@ const startPositionsUpdates = () => {
   positionsUpdateInterval = setInterval(() => {
     console.log('🔄 Refreshing positions data...')
     loadAsterAccountData({ skipCache: true })
-  }, 15000) // Update positions every 15 seconds
+  }, 180000) // Update positions every 15 seconds
 }
 
 const stopPositionsUpdates = () => {
@@ -1431,7 +1431,7 @@ const startPriceUpdates = () => {
   priceUpdateInterval = setInterval(() => {
     console.log('🔄 Refreshing crypto prices...')
     fetchCryptoPrices()
-  }, 30000)
+  }, 60000)
 }
 
 const stopPriceUpdates = () => {

@@ -599,7 +599,7 @@ onMounted(() => {
   refreshTimer = setInterval(() => {
     console.log('🔄 Auto-refreshing leaderboard data...')
     loadLeaderboardData(true) // Silent refresh, keep existing data visible
-  }, 30000)
+  }, 300000)
 })
 
 // Clean up timer when component unmounts
