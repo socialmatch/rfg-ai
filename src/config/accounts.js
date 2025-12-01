@@ -271,6 +271,28 @@ export const ACCOUNT_CONFIGS = [
     maxWithdrawAmount: "0.00000000",
     marginAvailable: true,
     updateTime: 0
+  },
+  {
+    id: 'zy6-bn-new',
+    modelName: 'ZY6-BN-new',
+    modelSlug: 'zy6-bn-new',
+    modelColor: '#EAB308', // 黄色 (Yellow 500)，与现有颜色不同
+    modelIcon: 'Rfg_logo.png',
+    uid: 'ZY6-BN-new',
+    initialCapital: DEFAULT_INITIAL_CAPITAL,
+    description: 'An intelligent trading agent that interprets complex market structures and reacts dynamically to volatility.',
+    "user_address": "0x0000000000000000000000000000000000000000",
+    "signer_address": "0x0000000000000000000000000000000000000000",
+    enabled: true,
+    accountAlias: "RfgX",
+    asset: "USDT",
+    balance: "0.00000000",
+    crossWalletBalance: "0.00000000",
+    crossUnPnl: "0.00000000",
+    availableBalance: "0.00000000",
+    maxWithdrawAmount: "0.00000000",
+    marginAvailable: true,
+    updateTime: 0
   }
 ]
 
