@@ -10,7 +10,7 @@ export const DEFAULT_INITIAL_CAPITAL = 500
 export const ACCOUNT_CONFIGS = [
   {
     id: 'ds4-bn',
-    modelName: 'DS4-BN',
+    modelName: '自研D4-BN',
     modelSlug: 'ds4-bn',
     modelColor: '#F59E0B', // 琥珀色 (Amber 500)
     modelIcon: 'Rfg_logo.png',
@@ -32,7 +32,7 @@ export const ACCOUNT_CONFIGS = [
   },
   {
     id: 'ds6-bn',
-    modelName: 'DS6-BN',
+    modelName: '自研D6-BN',
     modelSlug: 'ds6-bn',
     modelColor: '#14B8A6', // 蓝绿色 (Teal 500)
     modelIcon: 'Rfg_logo.png',
@@ -54,7 +54,7 @@ export const ACCOUNT_CONFIGS = [
   },
   {
     id: 'ds9-bn',
-    modelName: 'DS9-BN',
+    modelName: '自研D9-BN',
     modelSlug: 'ds9-bn',
     modelColor: '#EF4444', // 红色 (Red 500)
     modelIcon: 'Rfg_logo.png',
@@ -76,7 +76,7 @@ export const ACCOUNT_CONFIGS = [
   },
   {
     id: 'ds10-bn',
-    modelName: 'DS10-BN',
+    modelName: '自研D10-BN',
     modelSlug: 'ds10-bn',
     modelColor: '#0EA5E9', // 天空蓝色 (Sky 500)
     modelIcon: 'Rfg_logo.png',
@@ -98,7 +98,7 @@ export const ACCOUNT_CONFIGS = [
   },
   {
     id: 'zy4-bn',
-    modelName: 'ZY4-BN',
+    modelName: '自研Y4-BN',
     modelSlug: 'zy4-bn',
     modelColor: '#8B5CF6', // 紫色 (Violet 500)
     modelIcon: 'Rfg_logo.png',
@@ -120,7 +120,7 @@ export const ACCOUNT_CONFIGS = [
   },
   {
     id: 'zy6-bn',
-    modelName: 'ZY6-BN',
+    modelName: '自研Y6-BN',
     modelSlug: 'zy6-bn',
     modelColor: '#EC4899', // 粉红色 (Pink 500)
     modelIcon: 'Rfg_logo.png',
@@ -142,7 +142,7 @@ export const ACCOUNT_CONFIGS = [
   },
   {
     id: 'zy9-bn',
-    modelName: 'ZY9-BN',
+    modelName: '自研Y9-BN',
     modelSlug: 'zy9-bn',
     modelColor: '#06B6D4', // 青色 (Cyan 500)
     modelIcon: 'Rfg_logo.png',
@@ -164,7 +164,7 @@ export const ACCOUNT_CONFIGS = [
   },
   {
     id: 'zy10-bn',
-    modelName: 'ZY10-BN',
+    modelName: '自研Y10-BN',
     modelSlug: 'zy10-bn',
     modelColor: '#84CC16', // 青柠色 (Lime 500)
     modelIcon: 'Rfg_logo.png',
@@ -230,7 +230,7 @@ export const ACCOUNT_CONFIGS = [
   },
   {
     id: 'zy6-bn-new',
-    modelName: 'ZY6-BN-new',
+    modelName: '自研Y6-BN-new',
     modelSlug: 'zy6-bn-new',
     modelColor: '#EAB308', // 黄色 (Yellow 500)，与现有颜色不同
     modelIcon: 'Rfg_logo.png',
@@ -252,7 +252,7 @@ export const ACCOUNT_CONFIGS = [
   },
   {
     id: 'ds9-bn-new',
-    modelName: 'DS9-BN-new',
+    modelName: '自研D9-BN-new',
     modelSlug: 'ds9-bn-new',
     modelColor: '#F97316', // 橙色 (Orange 500)
     modelIcon: 'Rfg_logo.png',
@@ -274,7 +274,7 @@ export const ACCOUNT_CONFIGS = [
   },
   {
     id: 'zy6-bn-w-new',
-    modelName: 'ZY6-BN-w-new',
+    modelName: '自研Y6-BN-w-new',
     modelSlug: 'zy6-bn-w-new',
     modelColor: '#6366F1', // 靛蓝色 (Indigo 500)
     modelIcon: 'Rfg_logo.png',
