@@ -425,11 +425,22 @@ const loadAsterBalance = async ({ skipInit = false, skipCache = false } = {}) =>
       console.warn('⚠️ Failed to load BTC price for trading models:', error)
     }
 
+    // Filter out accounts with balance less than 500 (keep BTC BUY&HOLD)
+    const filteredBalanceData = balanceData.filter(item => {
+      // Keep BTC BUY&HOLD model
+      if (item.isBtcPrice || item.name === 'BTC BUY&HOLD') {
+        return true
+      }
+      // Filter out accounts with balance less than 500
+      const accountBalance = item.value || item.balance || 0
+      return accountBalance >= 500
+    })
+
     // Only update tradingModels if we have real data or it's a refresh
     // For refresh scenarios (skipInit), always update since we're updating existing data
     if (skipInit || hasRealData) {
-      tradingModels.value = balanceData
-      asterBalance.value = balanceData
+      tradingModels.value = filteredBalanceData
+      asterBalance.value = filteredBalanceData
 
       // Mark balance data as loaded only if we have real data from API (not just initial 0 values)
       // For refresh scenarios (skipInit), only mark as loaded if we have real data
@@ -437,7 +448,7 @@ const loadAsterBalance = async ({ skipInit = false, skipCache = false } = {}) =>
         balanceDataLoaded.value = true
       }
 
-      // Update balance data in config file
+      // Update balance data in config file (update all accounts, not just filtered ones)
       balanceData.forEach(modelData => {
         updateAccountBalance(modelData.name, {
           accountAlias: modelData.accountAlias,
@@ -455,7 +466,7 @@ const loadAsterBalance = async ({ skipInit = false, skipCache = false } = {}) =>
         })
       })
 
-      updateRealDataWithAnimation(balanceData)
+      updateRealDataWithAnimation(filteredBalanceData)
     } else {
       // If no real data, keep existing data and don't update balanceDataLoaded
       console.log('⚠️ No real data loaded, keeping existing display state')

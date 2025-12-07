@@ -431,17 +431,24 @@ const buildLeaderboardFromData = (balanceData, tradesData, positionsData) => {
     if (!a.isPlaceholder && b.isPlaceholder) return -1
     return b.accountValue - a.accountValue
   })
-  leaderboardItems.forEach((item, index) => {
+
+  // Filter out accounts with balance less than 500
+  const filteredLeaderboardItems = leaderboardItems.filter(item => {
+    const accountBalance = item.accountValue || 0
+    return accountBalance >= 500
+  })
+
+  filteredLeaderboardItems.forEach((item, index) => {
     item.rank = index + 1
   })
 
   console.log('✅ Leaderboard data built:', {
-    totalModels: leaderboardItems.length,
-    data: leaderboardItems
+    totalModels: filteredLeaderboardItems.length,
+    data: filteredLeaderboardItems
   })
 
   // Return the built data instead of directly updating leaderboardData.value
-  return leaderboardItems.length > 0 ? leaderboardItems : null
+  return filteredLeaderboardItems.length > 0 ? filteredLeaderboardItems : null
 }
 
 // Dynamically load leaderboard data
