@@ -15,6 +15,8 @@ export const ACCOUNT_CONFIGS = [
     modelColor: '#F59E0B', // 琥珀色 (Amber 500)
     modelIcon: 'Rfg_logo.png',
     uid: 'DS4-BN',
+    wallet_uid: 'aD9dZQQdiDtbd7mvdPmjd9WkpWUkBED6i5RZpQfaPKURMSKTEPH6q79Z9fRKAKr5',
+    ws_uid: 'u_c3403a432bed42fc',
     initialCapital: DEFAULT_INITIAL_CAPITAL,
     description: 'An intelligent trading agent that interprets complex market structures and reacts dynamically to volatility.',
     "user_address": "0x0000000000000000000000000000000000000000",
@@ -37,6 +39,8 @@ export const ACCOUNT_CONFIGS = [
     modelColor: '#14B8A6', // 蓝绿色 (Teal 500)
     modelIcon: 'Rfg_logo.png',
     uid: 'DS6-BN',
+    wallet_uid: '2LxOX2EEL2sys39iySQdRw3IOpeZCkhizxAHdjbcMvx6x6SQs4PbAkrgOTx8oO0O',
+    ws_uid: 'u_c3403a432bed42fc',
     initialCapital: DEFAULT_INITIAL_CAPITAL,
     description: 'A stable, conservative AI trading model mirroring DeepSeek\'s multi-asset setup, focused on risk-balanced execution across six leading coins (BTC, ETH, BNB, SOL, DOGE, XRP).',
     "user_address": "0x0000000000000000000000000000000000000000",
@@ -59,6 +63,8 @@ export const ACCOUNT_CONFIGS = [
     modelColor: '#EF4444', // 红色 (Red 500)
     modelIcon: 'Rfg_logo.png',
     uid: 'DS9-BN',
+    wallet_uid: 'OjPgG1BrmoOCk42yTBHvNtpoqKOzLh9UqQP8xoJXSnA2THipzKKCLiGbvrpnGwGK',
+    ws_uid: 'u_c3403a432bed42fc',
     initialCapital: DEFAULT_INITIAL_CAPITAL,
     description: 'A stable, conservative AI trading model mirroring DeepSeek\'s multi-asset setup, focused on risk-balanced execution across six leading coins (BTC, ETH, BNB, SOL, DOGE, XRP).',
     "user_address": "0x0000000000000000000000000000000000000000",
@@ -81,6 +87,8 @@ export const ACCOUNT_CONFIGS = [
     modelColor: '#0EA5E9', // 天空蓝色 (Sky 500)
     modelIcon: 'Rfg_logo.png',
     uid: 'DS10-BN',
+    wallet_uid: '5g8tz5aQZww7bCTzFOIMnm3miA2EAFNggw4PzOSy2Pp9EDZmQCdkOsgItuBnK4Db',
+    ws_uid: 'u_c3403a432bed42fc',
     initialCapital: DEFAULT_INITIAL_CAPITAL,
     description: 'A stable, conservative AI trading model mirroring DeepSeek\'s multi-asset setup, focused on risk-balanced execution across six leading coins (BTC, ETH, BNB, SOL, DOGE, XRP).',
     "user_address": "0x0000000000000000000000000000000000000000",
@@ -103,6 +111,8 @@ export const ACCOUNT_CONFIGS = [
     modelColor: '#8B5CF6', // 紫色 (Violet 500)
     modelIcon: 'Rfg_logo.png',
     uid: 'ZY4-BN',
+    wallet_uid: 'IlDCWqHFPuhFQoAqdBPKe2sVrWrgj3CVSVBO9GeC7KP572M5jPicS3gk5TB8VgH8',
+    ws_uid: 'u_c3403a432bed42fc',
     initialCapital: DEFAULT_INITIAL_CAPITAL,
     description: 'A trading model that autonomously trades any token pair listed on Aster, designed to adapt flexibly to market-wide opportunities.',
     "user_address": "0x0000000000000000000000000000000000000000",
@@ -125,6 +135,8 @@ export const ACCOUNT_CONFIGS = [
     modelColor: '#EC4899', // 粉红色 (Pink 500)
     modelIcon: 'Rfg_logo.png',
     uid: 'ZY6-BN',
+    wallet_uid: 'Wjt3GW22NDyLTjtZNQ2cfRYJIhoxJgzd02lab5fD7rvl7FQ6VI6yliSe0zLULOwE',
+    ws_uid: 'u_c3403a432bed42fc',
     initialCapital: DEFAULT_INITIAL_CAPITAL,
     description: 'An intelligent trading agent that interprets complex market structures and reacts dynamically to volatility.',
     "user_address": "0x0000000000000000000000000000000000000000",
@@ -147,6 +159,8 @@ export const ACCOUNT_CONFIGS = [
     modelColor: '#06B6D4', // 青色 (Cyan 500)
     modelIcon: 'Rfg_logo.png',
     uid: 'ZY9-BN',
+    wallet_uid: 'MuIrjwGaJe1UThQ1r9jT1JcA9Uolq251pvmRU6Bt2LqW8U9iFJQzKc3jvrWUenF6',
+    ws_uid: 'u_c3403a432bed42fc',
     initialCapital: DEFAULT_INITIAL_CAPITAL,
     description: 'An intelligent trading agent that interprets complex market structures and reacts dynamically to volatility.',
     "user_address": "0x0000000000000000000000000000000000000000",
@@ -169,6 +183,8 @@ export const ACCOUNT_CONFIGS = [
     modelColor: '#84CC16', // 青柠色 (Lime 500)
     modelIcon: 'Rfg_logo.png',
     uid: 'ZY10-BN',
+    wallet_uid: 'GIein8FvRV9hsBJzjNGfgJNbEeKgfqqzKyOeB7ZgKgD6snmEiRkw1eisqawUjl6z',
+    ws_uid: 'u_c3403a432bed42fc',
     initialCapital: DEFAULT_INITIAL_CAPITAL,
     description: 'An intelligent trading agent that interprets complex market structures and reacts dynamically to volatility.',
     "user_address": "0x0000000000000000000000000000000000000000",
@@ -191,6 +207,8 @@ export const ACCOUNT_CONFIGS = [
     modelColor: '#22C55E', // 绿色 (Green 500)
     modelIcon: 'Rfg_logo.png',
     uid: 'ZY11-FLu',
+    wallet_uid: '6XTcavF1F7ODFpQlvjtjJXMYDcvCfnYvH8zSQFUd350UoNAS3JHm0cyljxBoPxZC',
+    ws_uid: 'u_c3403a432bed42fc',
     initialCapital: DEFAULT_INITIAL_CAPITAL,
     description: 'An intelligent trading agent that interprets complex market structures and reacts dynamically to volatility.',
     "user_address": "0x0000000000000000000000000000000000000000",
@@ -213,6 +231,8 @@ export const ACCOUNT_CONFIGS = [
     modelColor: '#10B981', // 绿色变种 (Emerald 500)
     modelIcon: 'Rfg_logo.png',
     uid: 'DS11-FLu',
+    wallet_uid: '2RpnyZhJJgjrU2NMA16NlG2ZQlmzqFPxv6ivClNuaMnLhcO6gC9Ksy34LI8Q0JNU',
+    ws_uid: 'u_c3403a432bed42fc',
     initialCapital: DEFAULT_INITIAL_CAPITAL,
     description: 'A stable, conservative AI trading model mirroring DeepSeek\'s multi-asset setup, focused on risk-balanced execution across six leading coins (BTC, ETH, BNB, SOL, DOGE, XRP).',
     "user_address": "0x0000000000000000000000000000000000000000",
@@ -235,6 +255,8 @@ export const ACCOUNT_CONFIGS = [
     modelColor: '#EAB308', // 黄色 (Yellow 500)，与现有颜色不同
     modelIcon: 'Rfg_logo.png',
     uid: 'ZY6-BN-new',
+    wallet_uid: '35mD6KlIzPjNCeGq3MMolaPiK9nsAbuOL7FEJxX0ebKwPeyJs9aozyskb92LUg73',
+    ws_uid: 'u_c3403a432bed42fc',
     initialCapital: DEFAULT_INITIAL_CAPITAL,
     description: 'An intelligent trading agent that interprets complex market structures and reacts dynamically to volatility.',
     "user_address": "0x0000000000000000000000000000000000000000",
@@ -257,6 +279,8 @@ export const ACCOUNT_CONFIGS = [
     modelColor: '#F97316', // 橙色 (Orange 500)
     modelIcon: 'Rfg_logo.png',
     uid: 'DS9-BN-new',
+    wallet_uid: 'k6zGjGPFQEWYQnIEk1keQHruR0f1xFqxFmOf5Lqzxwbu0srbpNSye5X8UlFGnJrY',
+    ws_uid: 'u_c3403a432bed42fc',
     initialCapital: DEFAULT_INITIAL_CAPITAL,
     description: 'A stable, conservative AI trading model mirroring DeepSeek\'s multi-asset setup, focused on risk-balanced execution across six leading coins (BTC, ETH, BNB, SOL, DOGE, XRP).',
     "user_address": "0x0000000000000000000000000000000000000000",
@@ -279,6 +303,8 @@ export const ACCOUNT_CONFIGS = [
     modelColor: '#6366F1', // 靛蓝色 (Indigo 500)
     modelIcon: 'Rfg_logo.png',
     uid: 'ZY6-BN-w-new',
+    wallet_uid: 'hd8fI5xumeyDVM8KDHzKfQiRdPCBZtQjrdtvcNYBM7djKODaHnfTrp72vHsls9bs',
+    ws_uid: 'u_c3403a432bed42fc',
     initialCapital: DEFAULT_INITIAL_CAPITAL,
     description: 'An intelligent trading agent that interprets complex market structures and reacts dynamically to volatility.',
     "user_address": "0x0000000000000000000000000000000000000000",
@@ -301,6 +327,8 @@ export const ACCOUNT_CONFIGS = [
     modelColor: '#991B1B', // 深红色 (Red 800)
     modelIcon: 'Rfg_logo.png',
     uid: 'LL_anti_martin_V2',
+    wallet_uid: 'vfLqBcuvD5o40KdkH5fC4D5kL0SX1asfkhuQm5wSaTF51CEtat5RXujU8PYLAI0k',
+    ws_uid: 'u_c3403a432bed42fc',
     initialCapital: DEFAULT_INITIAL_CAPITAL,
     description: 'An intelligent trading agent that interprets complex market structures and reacts dynamically to volatility.',
     "user_address": "0x0000000000000000000000000000000000000000",
@@ -347,6 +375,8 @@ export const getModelInfo = () => {
     color: account.modelColor,
     icon: account.modelIcon,
     uid: account.uid,
+    wallet_uid: account.wallet_uid,
+    ws_uid: account.ws_uid,
     enabled: account.enabled
   }))
 }

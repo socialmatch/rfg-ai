@@ -89,13 +89,12 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import Header from '@/components/Header.vue'
-import { getAllModelInfo, getModelIconPath, getAccountBalanceData, getAccountByModelName, DEFAULT_INITIAL_CAPITAL } from '@/config/accounts.js'
-import { getAllModelsProcessedBalance } from '@/utils/newBalanceService.js'
+import { getAllModelInfo, getModelIconPath, getAccountBalanceData, getAccountByModelName, getAccountByUid, DEFAULT_INITIAL_CAPITAL } from '@/config/accounts.js'
 import { getAllModelsProcessedTrades } from '@/utils/newTradesService.js'
-import { getAllModelsProcessedPositions } from '@/utils/newPositionsService.js'
 import { calculateTradingStats, calculateSharpeRatio, calculateMaxDrawdown } from '@/utils/tradingStatsCalculator.js'
 import { getCryptoIcon, isSupportedCrypto } from '@/utils/cryptoIcons.js'
-import { getCachedData, setCachedData } from '@/utils/dataCache.js'
+import { getCachedData, setCachedData, getAllModelsCachedData } from '@/utils/dataCache.js'
+import { onDataUpdate, initializeWebSocketConnections, areConnectionsInitialized } from '@/utils/balancePositionsWebSocket.js'
 
 const router = useRouter()
 
@@ -152,9 +151,20 @@ const hasCompleteCachedData = (balanceData, tradesData, positionsData) => {
   const enabledModelNames = new Set(allEnabledModels.map(m => m.name))
 
   // Check if we have data for all enabled models in balance data
+  // Handle both array format (processed) and object format (raw from WebSocket)
   const balanceModelNames = new Set(
     balanceData.accounts
-      .filter(acc => acc.success && acc.data && acc.data.length > 0)
+      .filter(acc => {
+        if (!acc.success || !acc.data) return false
+        // Check if data is array (processed format) or object (raw format)
+        if (Array.isArray(acc.data)) {
+          return acc.data.length > 0
+        } else if (typeof acc.data === 'object') {
+          // Raw format from WebSocket - check if it has required fields
+          return acc.data.total_value !== undefined || acc.data.available_cash !== undefined
+        }
+        return false
+      })
       .map(acc => acc.modelInfo.name)
   )
 
@@ -228,19 +238,53 @@ const buildLeaderboardFromData = (balanceData, tradesData, positionsData) => {
 
   if (hasBalance) {
     balanceData.accounts.forEach(account => {
-      if (account.success && account.data && account.data.length > 0) {
-        const usdtBalance = account.data.find(b => b.asset === 'USDT')
+      if (account.success && account.data) {
+        // Handle both processed format (array) and raw format (object)
+        let usdtBalance = null
+        
+        if (Array.isArray(account.data) && account.data.length > 0) {
+          // Processed format: array of balance objects
+          usdtBalance = account.data.find(b => b.asset === 'USDT')
+        } else if (account.data && typeof account.data === 'object') {
+          // Raw format: single balance object from WebSocket
+          // Convert to processed format
+          const data = account.data
+          usdtBalance = {
+            "accountAlias": data.mark || "",
+            "asset": "USDT",
+            "balance": data.total_value ? data.total_value.toString() : "0",
+            "crossWalletBalance": data.total_value ? data.total_value.toString() : "0",
+            "crossUnPnl": (data.total_value - data.available_cash) ? (data.total_value - data.available_cash).toString() : "0",
+            "availableBalance": data.available_cash ? data.available_cash.toString() : "0",
+            "maxWithdrawAmount": data.available_cash ? data.available_cash.toString() : "0",
+            "marginAvailable": true,
+            "updateTime": data.timestamp || 0,
+            "totalUsdtValue": data.total_value || 0,
+            "uid": data.uid,
+            "walletName": data.wallet_name,
+            "availableCash": data.available_cash || 0,
+            "totalValue": data.total_value || 0
+          }
+        }
+        
         if (usdtBalance) {
+          // Calculate account value: use totalUsdtValue if available, otherwise calculate from crossWalletBalance + crossUnPnl
+          const totalValue = parseFloat(usdtBalance.totalUsdtValue || usdtBalance.totalValue || 0)
+          const calculatedValue = parseFloat(usdtBalance.crossWalletBalance || 0) + parseFloat(usdtBalance.crossUnPnl || 0)
+          const accountValue = totalValue > 0 ? totalValue : (calculatedValue > 0 ? calculatedValue : parseFloat(usdtBalance.balance || 0))
+          
           modelDataMap.set(account.modelInfo.name, {
             ...modelDataMap.get(account.modelInfo.name) || {},
             modelInfo: account.modelInfo,
             balance: usdtBalance,
-            accountValue: parseFloat(usdtBalance.crossWalletBalance + usdtBalance.crossUnPnl),
-            unrealizedPnL: parseFloat(usdtBalance.crossUnPnl),
-            totalUsdtValue: parseFloat(usdtBalance.totalUsdtValue || usdtBalance.balance),
+            accountValue: accountValue,
+            unrealizedPnL: parseFloat(usdtBalance.crossUnPnl || 0),
+            totalUsdtValue: totalValue || calculatedValue || parseFloat(usdtBalance.balance || 0),
             uid: usdtBalance.uid,
             walletName: usdtBalance.walletName
           })
+          
+          console.log(`✅ Set balance for ${account.modelInfo.name}: accountValue=${accountValue}, totalValue=${totalValue}`)
         }
       }
     })
@@ -322,7 +366,10 @@ const buildLeaderboardFromData = (balanceData, tradesData, positionsData) => {
   modelDataMap.forEach((data, modelName) => {
     const balance = data.balance
     const stats = data.stats || {}
-    const accountValue = balance ? parseFloat(balance.balance) : 0
+    // Use totalUsdtValue or totalValue if available, otherwise use balance
+    const accountValue = balance ? (
+      parseFloat(balance.totalUsdtValue || balance.totalValue || balance.balance || 0)
+    ) : 0
     const initialCapital = data.modelInfo.initialCapital || DEFAULT_INITIAL_CAPITAL
     const fees = stats.totalCommission || 0
 
@@ -445,6 +492,9 @@ const buildLeaderboardFromData = (balanceData, tradesData, positionsData) => {
 }
 
 // Dynamically load leaderboard data
+// NOTE: Balance and positions data are now fetched via WebSocket (wss://testapi1.rfgmeme.ai/account/info/)
+// The HTTP API calls for getAllModelsProcessedBalance and getAllModelsProcessedPositions have been removed
+// Data is read from cache which is updated in real-time by WebSocket connections
 const loadLeaderboardData = async (silent = false) => {
   // Only show loading indicator on initial load, not on auto-refresh
   if (!silent) {
@@ -454,65 +504,83 @@ const loadLeaderboardData = async (silent = false) => {
   try {
     console.log('🔄 Loading leaderboard data...')
 
-    let balanceData = getCachedData('balance')
+    // Get all enabled models
+    const allEnabledModels = getAllModelInfo().filter(model => model.enabled && model.uid)
+    
+    // Read balance and positions from API cache (updated by WebSocket in real-time)
+    // These are no longer fetched via HTTP API - only via WebSocket
+    let balanceData = getAllModelsCachedData('aster/balance', allEnabledModels)
+    let positionsData = getAllModelsCachedData('aster/positions', allEnabledModels)
+    
+    // Read trades from aggregated cache (trades are not updated via WebSocket, still use HTTP API)
     let tradesData = getCachedData('trades')
-    let positionsData = getCachedData('positions')
+    
     let newLeaderboardData = null // Declare at function scope
 
-    if (balanceData) console.log('✅ Using cached balance data for leaderboard')
+    if (balanceData) {
+      console.log(`✅ Using WebSocket-updated balance data for leaderboard (${balanceData.accounts.length} accounts)`)
+      balanceData.accounts.forEach(acc => {
+        console.log(`  - ${acc.modelInfo.name}: ${acc.data?.total_value || acc.data?.totalUsdtValue || 'N/A'}`)
+      })
+    } else {
+      console.warn('⚠️ No balance data available from WebSocket cache')
+    }
     if (tradesData) console.log('✅ Using cached trades data for leaderboard')
-    if (positionsData) console.log('✅ Using cached positions data for leaderboard')
+    if (positionsData) {
+      console.log(`✅ Using WebSocket-updated positions data for leaderboard (${positionsData.accounts.length} accounts)`)
+    } else {
+      console.warn('⚠️ No positions data available from WebSocket cache')
+    }
 
-    // Check if we have complete cached data
-    const hasCompleteCache = hasCompleteCachedData(balanceData, tradesData, positionsData)
+    // Check if we have any cached data (even partial)
+    const hasAnyCache = (balanceData && balanceData.success && balanceData.accounts.length > 0) ||
+                        (tradesData && tradesData.success) ||
+                        (positionsData && positionsData.success)
 
     // If we have no existing data, initialize with placeholder or cached data
     if (leaderboardData.value.length === 0) {
-      if (hasCompleteCache) {
-        // We have complete cached data, build and display it immediately
-        console.log('✅ Found complete cached data, displaying immediately')
+      if (hasAnyCache) {
+        // We have some cached data, build and display it immediately
+        console.log('✅ Found cached data, displaying immediately')
         newLeaderboardData = buildLeaderboardFromData(balanceData, tradesData, positionsData)
-        if (newLeaderboardData) {
+        if (newLeaderboardData && newLeaderboardData.length > 0) {
           leaderboardData.value = newLeaderboardData
-          dataLoaded.value = true // Mark as loaded since we have complete cache
+          dataLoaded.value = true // Mark as loaded since we have some data
         } else {
           // Fallback to placeholder if build fails
           leaderboardData.value = initializeLeaderboardWithAllModels()
+          dataLoaded.value = false
         }
       } else {
-        // No complete cache, initialize with placeholder data (showing --)
-        console.log('⚠️ No complete cached data, initializing with placeholder models')
+        // No cache, initialize with placeholder data (showing --)
+        console.log('⚠️ No cached data, initializing with placeholder models')
         leaderboardData.value = initializeLeaderboardWithAllModels()
         dataLoaded.value = false // Keep as false to show --
       }
     }
 
-    // Fetch fresh data in background
-    const fetchConfigs = [
-      { key: 'balance', cacheKey: 'balance', promise: getAllModelsProcessedBalance(true) },
-      { key: 'trades', cacheKey: 'trades', promise: getAllModelsProcessedTrades(undefined, undefined, true) },
-      { key: 'positions', cacheKey: 'positions', promise: getAllModelsProcessedPositions(true) }
-    ]
-
-    const results = await Promise.allSettled(fetchConfigs.map(p => p.promise))
-
-    results.forEach((result, index) => {
-      const { key, cacheKey } = fetchConfigs[index]
-      if (result.status === 'fulfilled') {
-        const data = result.value
-        if (data && data.success) {
-          console.log(`✅ Fetched fresh ${key} data for leaderboard`)
-          setCachedData(cacheKey, data)
-          if (key === 'balance') balanceData = data
-          if (key === 'trades') tradesData = data
-          if (key === 'positions') positionsData = data
-        } else {
-          console.warn(`⚠️ ${key} data fetch returned unsuccessful response:`, data?.error)
-        }
+    // Fetch fresh trades data in background (balance and positions are updated via WebSocket)
+    // Only fetch trades since it's not updated via WebSocket
+    try {
+      console.log('🔄 Fetching fresh trades data for leaderboard...')
+      const tradesResult = await getAllModelsProcessedTrades(undefined, undefined, true)
+      if (tradesResult && tradesResult.success) {
+        console.log('✅ Fetched fresh trades data for leaderboard')
+        setCachedData('trades', tradesResult)
+        tradesData = tradesResult
       } else {
-        console.error(`❌ ${key} data fetch failed:`, result.reason)
+        console.warn('⚠️ Trades data fetch returned unsuccessful response:', tradesResult?.error)
       }
-    })
+    } catch (error) {
+      console.error('❌ Trades data fetch failed:', error)
+    }
+
+    // Re-read balance and positions from API cache (updated by WebSocket)
+    balanceData = getAllModelsCachedData('aster/balance', allEnabledModels)
+    positionsData = getAllModelsCachedData('aster/positions', allEnabledModels)
+    
+    if (balanceData) console.log('✅ Using WebSocket-updated balance data for leaderboard')
+    if (positionsData) console.log('✅ Using WebSocket-updated positions data for leaderboard')
 
     // Build fresh data in background, only update if successful
     newLeaderboardData = buildLeaderboardFromData(balanceData, tradesData, positionsData)
@@ -591,23 +659,55 @@ const shouldShowBackground = (modelName) => {
 }
 
 // Load data when component mounts
+// WebSocket unsubscribe function
+let wsUnsubscribe = null
+
+// Handle WebSocket data updates for leaderboard
+const handleWebSocketDataUpdate = async (uid, balanceData, positionsData) => {
+  try {
+    console.log(`📨 WebSocket data update received for ${uid}, updating leaderboard...`)
+    
+    // Reload leaderboard data silently - it will use cached balance and positions (updated by WebSocket)
+    // and cached trades (not updated via WebSocket)
+    await loadLeaderboardData(true) // Silent refresh
+  } catch (error) {
+    console.error(`❌ Error handling WebSocket data update:`, error)
+  }
+}
+
 onMounted(() => {
+  // Check and initialize WebSocket connections if not already initialized
+  if (!areConnectionsInitialized()) {
+    console.log('🔌 WebSocket connections not initialized, initializing now...')
+    initializeWebSocketConnections()
+  } else {
+    console.log('✅ WebSocket connections already initialized')
+  }
+
   loadLeaderboardData(false) // Initial load with loading indicator
 
-  // Set up auto-refresh every 30 seconds (30000ms)
-  // Use silent mode to avoid showing loading indicator on auto-refresh
+  // Register WebSocket data update callback
+  wsUnsubscribe = onDataUpdate(handleWebSocketDataUpdate)
+
+  // Reduce auto-refresh interval since WebSocket provides real-time updates
+  // Keep a longer interval as fallback (10 minutes = 600000ms)
   refreshTimer = setInterval(() => {
-    console.log('🔄 Auto-refreshing leaderboard data...')
+    console.log('🔄 Auto-refreshing leaderboard data (fallback)...')
     loadLeaderboardData(true) // Silent refresh, keep existing data visible
-  }, 300000)
+  }, 600000)
 })
 
-// Clean up timer when component unmounts
+// Clean up timer and WebSocket subscription when component unmounts
 onUnmounted(() => {
   if (refreshTimer) {
     clearInterval(refreshTimer)
     refreshTimer = null
     console.log('🛑 Stopped leaderboard auto-refresh')
+  }
+  
+  if (wsUnsubscribe) {
+    wsUnsubscribe()
+    wsUnsubscribe = null
   }
 })
 

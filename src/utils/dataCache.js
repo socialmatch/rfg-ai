@@ -164,15 +164,16 @@ export const hasAllModelsCached = (apiName, models) => {
  * Get all cached data for an API across all models
  * @param {string} apiName - API name
  * @param {Array} models - Array of model objects with uid property
- * @returns {Object|null} Aggregated cached data or null
+ * @returns {Object|null} Aggregated cached data or null (returns data even if only some models have cache)
  */
 export const getAllModelsCachedData = (apiName, models) => {
-  if (!hasAllModelsCached(apiName, models)) {
+  if (!models || models.length === 0) {
     return null
   }
   
   const results = []
   for (const model of models) {
+    if (!model.uid) continue
     const cached = getCachedApiData(apiName, model.uid)
     if (cached) {
       results.push({
@@ -184,7 +185,7 @@ export const getAllModelsCachedData = (apiName, models) => {
   }
   
   if (results.length > 0) {
-    console.log(`✅ Retrieved cached data for ${apiName} for ${results.length} models`)
+    console.log(`✅ Retrieved cached data for ${apiName} for ${results.length}/${models.length} models`)
     return {
       success: true,
       accounts: results

@@ -135,12 +135,13 @@ import Prompts from '@/components/Prompts.vue'
 import { getAllModelsProcessedBalance } from '@/utils/newBalanceService.js'
 import { getAllModelsProcessedPositions } from '@/utils/newPositionsService.js'
 import { getAllModelsProcessedTrades } from '@/utils/newTradesService.js'
-import { getAllModelInfo, getModelInfo, getModelIconPath, updateAccountBalance, DEFAULT_INITIAL_CAPITAL } from '@/config/accounts.js'
+import { getAllModelInfo, getModelInfo, getModelIconPath, updateAccountBalance, DEFAULT_INITIAL_CAPITAL, getAccountByUid } from '@/config/accounts.js'
 import { getAllModelsChartData, processChartData } from '@/utils/chartDataService.js'
 import { getAllCryptoPrices } from '@/utils/cryptoPriceService.js'
 import { getBtcPriceData } from '@/utils/btcPriceService.js'
 import { getCachedData, setCachedData } from '@/utils/dataCache.js'
 import { getCryptoIcon } from '@/utils/cryptoIcons.js'
+import { initializeWebSocketConnections, closeAllWebSocketConnections, onDataUpdate } from '@/utils/balancePositionsWebSocket.js'
 
 Chart.register(...registerables, zoomPlugin)
 
@@ -221,25 +222,31 @@ const cryptoPrices = ref([
 // Initialize from config to ensure all enabled models are shown
 const initializeTradingModelsFromConfig = () => {
   const configModels = getModelInfo()
-  return configModels.map(model => ({
-    name: model.name,
-    value: 0,
-    change: 0,
-    color: model.color,
-    accountAlias: null,
-    asset: 'USDT',
-    balance: '0.00000000',
-    crossWalletBalance: '0.00000000',
-    crossUnPnl: '0.00000000',
-    availableBalance: '0.00000000',
-    availableCash: '0.00000000',
-    maxWithdrawAmount: '0.00000000',
-    marginAvailable: true,
-    updateTime: 0,
-    totalUsdtValue: '0.00000000',
-    uid: null,
-    walletName: null
-  }))
+  return configModels.map(model => {
+    console.log('initializeTradingModelsFromConfig', model)
+    // Get full account config to access wallet_uid and ws_uid
+    return {
+      name: model.name,
+      value: 0,
+      change: 0,
+      color: model.color,
+      accountAlias: null,
+      asset: 'USDT',
+      balance: '0.00000000',
+      crossWalletBalance: '0.00000000',
+      crossUnPnl: '0.00000000',
+      availableBalance: '0.00000000',
+      availableCash: '0.00000000',
+      maxWithdrawAmount: '0.00000000',
+      marginAvailable: true,
+      updateTime: 0,
+      totalUsdtValue: '0.00000000',
+      uid: model.uid, // Include uid for matching
+      wallet_uid: model?.wallet_uid || null, // Include wallet_uid
+      ws_uid: model?.ws_uid || null, // Include ws_uid
+      walletName: null
+    }
+  })
 }
 
 const tradingModels = ref(initializeTradingModelsFromConfig())
@@ -511,6 +518,112 @@ const loadAsterBalance = async ({ skipInit = false, skipCache = false } = {}) =>
     }
   } finally {
     asterBalanceLoading.value = false
+  }
+}
+
+// Handle WebSocket data updates
+const handleWebSocketDataUpdate = async (uid, balanceData, positionsData) => {
+  console.log(`📨 WebSocket data update received for ${uid}`)
+
+  try {
+    // Get account config by uid
+    const accountConfig = getAccountByUid(uid)
+    if (!accountConfig) {
+      console.warn(`⚠️ Account config not found for UID: ${uid}`)
+      return
+    }
+
+    // Update balance data if available
+    if (balanceData && balanceData.length > 0) {
+      const balanceItem = balanceData[0] // processBalanceData returns an array
+
+      // Find the model in tradingModels by uid
+      const modelIndex = tradingModels.value.findIndex(m => m.uid === uid)
+
+      if (modelIndex !== -1) {
+        const parseToNumber = (value) => {
+          const num = parseFloat(value ?? 0)
+          return isNaN(num) ? 0 : num
+        }
+
+        const accountValue = parseToNumber(balanceItem.totalUsdtValue ?? balanceItem.balance)
+        const initialCapital = accountConfig.initialCapital || DEFAULT_INITIAL_CAPITAL
+        const changePercent = (initialCapital > 0 && !isNaN(accountValue) && !isNaN(initialCapital))
+          ? ((accountValue - initialCapital) / initialCapital) * 100
+          : 0
+
+        tradingModels.value[modelIndex] = {
+          ...tradingModels.value[modelIndex],
+          value: accountValue,
+          change: changePercent,
+          balance: accountValue,
+          crossWalletBalance: parseToNumber(balanceItem.crossWalletBalance),
+          crossUnPnl: parseToNumber(balanceItem.crossUnPnl),
+          availableBalance: parseToNumber(balanceItem.availableBalance),
+          availableCash: parseToNumber(balanceItem.availableCash),
+          maxWithdrawAmount: parseToNumber(balanceItem.maxWithdrawAmount),
+          updateTime: balanceItem.updateTime,
+          totalUsdtValue: parseToNumber(balanceItem.totalUsdtValue ?? accountValue),
+          uid: accountConfig.uid // Ensure uid is set
+        }
+
+        // Update account balance in config
+        updateAccountBalance(accountConfig.modelName, {
+          accountAlias: balanceItem.accountAlias,
+          asset: balanceItem.asset,
+          balance: accountValue,
+          crossWalletBalance: parseToNumber(balanceItem.crossWalletBalance),
+          crossUnPnl: parseToNumber(balanceItem.crossUnPnl),
+          availableBalance: parseToNumber(balanceItem.availableBalance),
+          maxWithdrawAmount: parseToNumber(balanceItem.maxWithdrawAmount),
+          marginAvailable: balanceItem.marginAvailable,
+          updateTime: balanceItem.updateTime,
+          totalUsdtValue: parseToNumber(balanceItem.totalUsdtValue ?? accountValue),
+          uid: balanceItem.uid,
+          walletName: balanceItem.walletName
+        })
+
+        // Update asterAccountData for Positions component (check if it's not null)
+        if (asterAccountData.value && Array.isArray(asterAccountData.value)) {
+          const accountDataIndex = asterAccountData.value.findIndex(a => a.modelInfo?.uid === uid)
+          if (accountDataIndex !== -1) {
+            asterAccountData.value[accountDataIndex] = {
+              ...asterAccountData.value[accountDataIndex],
+              availableBalance: parseToNumber(balanceItem.availableBalance),
+              availableCash: parseToNumber(balanceItem.availableCash),
+              totalValue: parseToNumber(balanceItem.totalValue ?? balanceItem.totalUsdtValue ?? accountValue)
+            }
+          }
+        }
+
+        // Trigger chart update if needed
+        updateRealDataWithAnimation(tradingModels.value)
+      }
+    }
+
+    // Update positions data if available
+    if (positionsData && positionsData.length > 0) {
+      // Get model info for positions by uid
+      const modelInfo = getModelInfo().find(m => m.uid === uid)
+      if (!modelInfo) {
+        console.warn(`⚠️ Model info not found for UID: ${uid}`)
+        return
+      }
+
+      // Remove old positions for this account by uid
+      asterPositions.value = asterPositions.value.filter(p => p.modelInfo?.uid !== uid)
+
+      // Add new positions with modelInfo
+      const positionsWithModel = positionsData.map(position => ({
+        ...position,
+        modelInfo: modelInfo
+      }))
+      asterPositions.value.push(...positionsWithModel)
+
+      console.log(`✅ Positions updated for ${accountConfig.modelName}: ${positionsData.length} positions`)
+    }
+  } catch (error) {
+    console.error(`❌ Error handling WebSocket data update for ${uid}:`, error)
   }
 }
 
@@ -1521,6 +1634,9 @@ watch(selectedModel, (newVal, oldVal) => {
 // Window resize handler for icon positions
 let resizeHandler = null
 
+// WebSocket unsubscribe function
+let wsUnsubscribe = null
+
 onMounted(() => {
   setTimeout(() => { connectionStatus.value = 'connected' }, 1500)
 
@@ -1530,7 +1646,15 @@ onMounted(() => {
   // Load all data sequentially
   loadAllData()
 
+  // Initialize WebSocket connections for real-time balance and positions updates
+  console.log('🔌 Initializing WebSocket connections...')
+  initializeWebSocketConnections()
+
+  // Register callback for WebSocket data updates
+  wsUnsubscribe = onDataUpdate(handleWebSocketDataUpdate)
+
   // Start auto refresh for balance (every 15s) and crypto prices (every 5s)
+  // Note: Balance updates are now handled via WebSocket, but keeping this for fallback
   startDataUpdates()
   startPriceUpdates()
 
@@ -1556,6 +1680,14 @@ onUnmounted(() => {
   stopPriceUpdates()
   stopChartDataLongUpdates()
   stopBalanceLongUpdates()
+
+  // Close WebSocket connections
+  if (wsUnsubscribe) {
+    wsUnsubscribe()
+    wsUnsubscribe = null
+  }
+  closeAllWebSocketConnections()
+
   if (resizeHandler) {
     window.removeEventListener('resize', resizeHandler)
   }

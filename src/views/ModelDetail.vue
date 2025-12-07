@@ -168,16 +168,17 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import Header from '@/components/Header.vue'
-import { getAllModelInfo, getModelIconPath, getAccountBalanceData, getAccountByModelName, DEFAULT_INITIAL_CAPITAL } from '@/config/accounts.js'
+import { getAllModelInfo, getModelIconPath, getAccountBalanceData, getAccountByModelName, getAccountByUid, DEFAULT_INITIAL_CAPITAL } from '@/config/accounts.js'
 import { getModelBalance } from '@/utils/newBalanceService.js'
 import { getModelPositions } from '@/utils/newPositionsService.js'
 import { getModelTrades, processTradesData } from '@/utils/newTradesService.js'
 import { calculateTradingStats, calculateSharpeRatio, calculateMaxDrawdown } from '@/utils/tradingStatsCalculator.js'
 import { getCryptoIcon } from '@/utils/cryptoIcons.js'
 import { setCachedApiData } from '@/utils/dataCache.js'
+import { onDataUpdate, initializeWebSocketConnections, areConnectionsInitialized } from '@/utils/balancePositionsWebSocket.js'
 
 const route = useRoute()
 
@@ -572,8 +573,54 @@ const formatBeijingTime = (timeString) => {
 }
 
 // Load data when component mounts
+// WebSocket unsubscribe function
+let wsUnsubscribe = null
+
+// Handle WebSocket data updates for the current model
+const handleWebSocketDataUpdate = async (uid, balanceData, positionsData) => {
+  try {
+    // Get current model from route params
+    const currentModelSlug = route.params.slug
+    const currentModel = models.value.find(model => model.slug === currentModelSlug)
+    
+    if (!currentModel) {
+      return
+    }
+
+    // Get account config by uid
+    const accountConfig = getAccountByUid(uid)
+    if (!accountConfig) {
+      return
+    }
+
+    // Only process updates for the current model
+    if (accountConfig.modelName !== currentModel.name) {
+      return
+    }
+
+    console.log(`📨 WebSocket data update received for ${currentModel.name}, reloading data from cache...`)
+
+    // Reload model data - it will use cached balance and positions (updated by WebSocket)
+    // and cached trades (not updated via WebSocket)
+    await loadModelData()
+  } catch (error) {
+    console.error(`❌ Error handling WebSocket data update:`, error)
+  }
+}
+
 onMounted(() => {
+  // Check and initialize WebSocket connections if not already initialized
+  if (!areConnectionsInitialized()) {
+    console.log('🔌 WebSocket connections not initialized, initializing now...')
+    initializeWebSocketConnections()
+  } else {
+    console.log('✅ WebSocket connections already initialized')
+  }
+
   loadModelData()
+  
+  // Register WebSocket data update callback
+  wsUnsubscribe = onDataUpdate(handleWebSocketDataUpdate)
 })
 
 // Watch for route changes (when switching between models)
@@ -581,6 +628,14 @@ watch(() => route.params.slug, (newSlug, oldSlug) => {
   if (newSlug !== oldSlug) {
     console.log(`🔄 Route changed from ${oldSlug} to ${newSlug}, reloading data...`)
     loadModelData()
+  }
+})
+
+// Clean up WebSocket subscription on unmount
+onUnmounted(() => {
+  if (wsUnsubscribe) {
+    wsUnsubscribe()
+    wsUnsubscribe = null
   }
 })
 </script>
