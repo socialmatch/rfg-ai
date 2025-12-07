@@ -15,11 +15,12 @@ header.header
         .models-dropdown(:class="{ 'show': showModelsDropdown && isMobile }")
           .dropdown-title {{ $t('common.aiModels') }}
           .dropdown-separator
-          .model-item(v-for="model in models" :key="model.name" @click.stop="goToModelDetail(model)")
-            //.model-color-dot(:style="{ backgroundColor: model.color }")
-            .model-icon(:style="shouldShowBackground(model.name) ? { backgroundColor: model.color } : {}")
-              img(:src="model.icon" :alt="model.name")
-            .model-name {{ model.name }}
+          .dropdown-content
+            .model-item(v-for="model in models" :key="model.name" @click.stop="goToModelDetail(model)")
+              //.model-color-dot(:style="{ backgroundColor: model.color }")
+              .model-icon(:style="shouldShowBackground(model.name) ? { backgroundColor: model.color } : {}")
+                img(:src="model.icon" :alt="model.name")
+              .model-name {{ model.name }}
 
     .header-actions
       //LanguageSwitcher
@@ -171,7 +172,8 @@ watch(() => route.path, () => {
 @media (min-width: 961px)
   .models-nav-item
     // PC端使用CSS hover显示下拉菜单
-    &:hover .models-dropdown
+    &:hover .models-dropdown,
+    .models-dropdown:hover
       display block !important
       opacity 1
       visibility visible
@@ -214,10 +216,10 @@ watch(() => route.path, () => {
   &::before
     content ''
     position absolute
-    top -8px
+    top -16px
     left 0
     right 0
-    height 8px
+    height 16px
     background transparent
     pointer-events auto
 
@@ -227,10 +229,16 @@ watch(() => route.path, () => {
     font-size 14px
     color #f8fafc
     border-bottom 1px solid #2b3444
+    flex-shrink 0
 
   .dropdown-separator
     height 1px
     background #2b3444
+    flex-shrink 0
+
+  .dropdown-content
+    max-height 400px
+    overflow-y auto
 
   .model-item
     display flex
@@ -359,8 +367,6 @@ watch(() => route.path, () => {
     top 100px
     width calc(100% - 32px)
     min-width auto
-    max-height 45vh
-    overflow-y auto
     margin-top 0
     border-radius 12px 12px 0 0
     // 移动端使用show类控制显示
@@ -390,6 +396,10 @@ watch(() => route.path, () => {
       top 0
       background #1a2230
       z-index 10
+
+    .dropdown-content
+      max-height 200px
+      overflow-y auto
 
     .model-item
       padding 10px 16px

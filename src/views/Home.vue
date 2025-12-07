@@ -982,7 +982,7 @@ const startBalanceUpdates = () => {
   balanceUpdateInterval = setInterval(() => {
     console.log('🔄 Refreshing model balance data...')
     loadAsterBalance({ skipInit: true, skipCache: true })
-  }, 15000) // Update balance every 15 seconds
+  }, 120000) // Update balance every 15 seconds
 }
 
 const stopBalanceUpdates = () => {
@@ -996,7 +996,7 @@ const startPositionsUpdates = () => {
   positionsUpdateInterval = setInterval(() => {
     console.log('🔄 Refreshing positions data...')
     loadAsterAccountData({ skipCache: true })
-  }, 15000) // Update positions every 15 seconds
+  }, 180000) // Update positions every 15 seconds
 }
 
 const stopPositionsUpdates = () => {
@@ -1431,7 +1431,7 @@ const startPriceUpdates = () => {
   priceUpdateInterval = setInterval(() => {
     console.log('🔄 Refreshing crypto prices...')
     fetchCryptoPrices()
-  }, 30000)
+  }, 60000)
 }
 
 const stopPriceUpdates = () => {
