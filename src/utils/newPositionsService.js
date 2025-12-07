@@ -78,12 +78,14 @@ export const getModelPositions = async (uid, skipCache = false) => {
 
 /**
  * Get positions data for all enabled models
+ * @param {boolean} skipCache - Skip cache check (default: false)
+ * @param {Array} modelsToFetch - Optional array of models to fetch. If not provided, fetches all enabled models
  * @returns {Promise<Object>} Aggregated positions data for all models
  */
-export const getAllModelsPositions = async (skipCache = false) => {
+export const getAllModelsPositions = async (skipCache = false, modelsToFetch = null) => {
   try {
-    // Get all enabled models with UID
-    const enabledModels = getAllModelInfo().filter(model => model.enabled && model.uid)
+    // Get models to fetch - use provided list or all enabled models
+    const enabledModels = modelsToFetch || getAllModelInfo().filter(model => model.enabled && model.uid)
 
     if (enabledModels.length === 0) {
       console.warn('⚠️ No enabled models with UID found')
@@ -219,11 +221,13 @@ export const processPositionsData = (positionsData) => {
 
 /**
  * Get positions data for all models and process it
+ * @param {boolean} skipCache - Skip cache check (default: false)
+ * @param {Array} modelsToFetch - Optional array of models to fetch. If not provided, fetches all enabled models
  * @returns {Promise<Object>} Processed positions data for all models
  */
-export const getAllModelsProcessedPositions = async (skipCache = false) => {
+export const getAllModelsProcessedPositions = async (skipCache = false, modelsToFetch = null) => {
   try {
-    const result = await getAllModelsPositions(skipCache)
+    const result = await getAllModelsPositions(skipCache, modelsToFetch)
 
     if (!result.success) {
       return result

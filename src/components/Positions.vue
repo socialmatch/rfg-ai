@@ -45,6 +45,15 @@
 <script setup>
 import { ref, computed, watch } from 'vue'
 import { getCryptoIcon } from '@/utils/cryptoIcons.js'
+import { getAccountBalanceData } from '@/config/accounts.js'
+
+// Helper function to check if account balance is >= 500
+const isAccountBalanceValid = (modelName) => {
+  const accountData = getAccountBalanceData(modelName)
+  if (!accountData) return false
+  const balance = parseFloat(accountData.balance || 0)
+  return balance >= 500
+}
 
 // 定义props
 const props = defineProps({
@@ -166,19 +175,26 @@ const modelPositions = computed(() => {
 
   console.log('📊 Converted positions:', positions)
 
+  // Filter out accounts with balance < 500
+  const validBalancePositions = positions.filter(model => {
+    const modelName = model.name
+    if (!modelName) return false
+    return isAccountBalanceValid(modelName)
+  })
+
   // Filter based on selected model
   if (props.selectedModel && props.selectedModel !== 'ALL MODELS') {
-    const filtered = positions.filter(model => {
+    const filtered = validBalancePositions.filter(model => {
       console.log('📊 Comparing position model:', model.name, 'with selected:', props.selectedModel)
       return model.name && model.name.toLowerCase() === props.selectedModel.toLowerCase()
     })
-    console.log('📊 Filtered positions count:', filtered.length, 'from total:', positions.length)
+    console.log('📊 Filtered positions count:', filtered.length, 'from total:', validBalancePositions.length)
     // Note: Positions are not limited, show all for selected model
     return filtered
   }
 
-  console.log('📊 Final returned positions:', positions)
-  return positions
+  console.log('📊 Final returned positions:', validBalancePositions)
+  return validBalancePositions
 })
 
 // Watch props changes

@@ -6,7 +6,7 @@ header.header
 
     nav.nav
       .nav-item(@click="goToHome" :class="{ active: $route.name === 'home' }") {{ $t('common.live') }}
-      .nav-item(@click="goToLeaderboard" :class="{ active: $route.name === 'leaderboard' }") {{ $t('common.leaderboard') }}
+      .nav-item(@click="goToLeaderboard" :class="{ active: $route.name === 'leaderboard' || $route.path === '/' }") {{ $t('common.leaderboard') }}
       .nav-item.models-nav-item(@click="handleModelsClick" :class="{ active: $route.name === 'models' || $route.name === 'model-detail', 'dropdown-open': showModelsDropdown && isMobile }")
         | {{ $t('common.models') }}
         // 移动端背景遮罩
@@ -68,7 +68,7 @@ const shouldShowBackground = (modelName) => {
 
 // 导航方法
 const goToHome = () => {
-  router.push('/')
+  router.push('/home')
 }
 
 const goToLeaderboard = () => {

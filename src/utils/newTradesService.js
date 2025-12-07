@@ -97,12 +97,14 @@ export const getModelTrades = async (uid, symbol = DEFAULT_SYMBOL, limit = DEFAU
  * Get trades data for all enabled models
  * @param {string} symbol - Trading symbol (default: BTCUSDT)
  * @param {number} limit - Number of trades to fetch (default: 25)
+ * @param {boolean} skipCache - Skip cache check (default: false)
+ * @param {Array} modelsToFetch - Optional array of models to fetch. If not provided, fetches all enabled models
  * @returns {Promise<Object>} Aggregated trades data for all models
  */
-export const getAllModelsTrades = async (symbol = DEFAULT_SYMBOL, limit = DEFAULT_LIMIT, skipCache = false) => {
+export const getAllModelsTrades = async (symbol = DEFAULT_SYMBOL, limit = DEFAULT_LIMIT, skipCache = false, modelsToFetch = null) => {
   try {
-    // Get all enabled models with UID
-    const enabledModels = getAllModelInfo().filter(model => model.enabled && model.uid)
+    // Get models to fetch - use provided list or all enabled models
+    const enabledModels = modelsToFetch || getAllModelInfo().filter(model => model.enabled && model.uid)
 
     if (enabledModels.length === 0) {
       console.warn('⚠️ No enabled models with UID found')
@@ -287,11 +289,13 @@ export const processTradesData = (tradesData, modelInfo = null) => {
  * Get trades data for all models and process it
  * @param {string} symbol - Trading symbol (default: BTCUSDT)
  * @param {number} limit - Number of trades to fetch (default: 25)
+ * @param {boolean} skipCache - Skip cache check (default: false)
+ * @param {Array} modelsToFetch - Optional array of models to fetch. If not provided, fetches all enabled models
  * @returns {Promise<Object>} Processed trades data for all models
  */
-export const getAllModelsProcessedTrades = async (symbol = DEFAULT_SYMBOL, limit = DEFAULT_LIMIT, skipCache = false) => {
+export const getAllModelsProcessedTrades = async (symbol = DEFAULT_SYMBOL, limit = DEFAULT_LIMIT, skipCache = false, modelsToFetch = null) => {
   try {
-    const result = await getAllModelsTrades(symbol, limit, skipCache)
+    const result = await getAllModelsTrades(symbol, limit, skipCache, modelsToFetch)
 
     if (!result.success) {
       return result

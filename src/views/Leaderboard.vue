@@ -494,11 +494,48 @@ const loadLeaderboardData = async (silent = false) => {
       }
     }
 
-    // Fetch fresh data in background
+    // Step 1: Fetch balance data first
+    let balanceResult = null
+    try {
+      balanceResult = await getAllModelsProcessedBalance(true)
+      if (balanceResult && balanceResult.success) {
+        balanceData = balanceResult
+        setCachedData('balance', balanceResult)
+        console.log('✅ Fetched fresh balance data for leaderboard')
+      }
+    } catch (error) {
+      console.error('❌ Balance data fetch failed:', error)
+    }
+
+    // Step 2: Filter models with balance >= 500
+    let validModels = null
+    if (balanceData && balanceData.success && balanceData.accounts) {
+      validModels = balanceData.accounts
+        .filter(account => {
+          if (!account.success || !account.data || account.data.length === 0) return false
+          const usdtBalance = account.data.find(b => b.asset === 'USDT')
+          if (!usdtBalance) return false
+          const balance = parseFloat(usdtBalance.balance || usdtBalance.totalUsdtValue || 0)
+          return balance >= 500
+        })
+        .map(account => account.modelInfo)
+        .filter(model => model && model.uid)
+      
+      console.log(`✅ Found ${validModels.length} models with balance >= 500 for leaderboard`)
+    }
+
+    // Step 3: Fetch trades and positions only for valid models
     const fetchConfigs = [
-      { key: 'balance', cacheKey: 'balance', promise: getAllModelsProcessedBalance(true) },
-      { key: 'trades', cacheKey: 'trades', promise: getAllModelsProcessedTrades(undefined, undefined, true) },
-      { key: 'positions', cacheKey: 'positions', promise: getAllModelsProcessedPositions(true) }
+      { 
+        key: 'trades', 
+        cacheKey: 'trades', 
+        promise: getAllModelsProcessedTrades(undefined, undefined, true, validModels) 
+      },
+      { 
+        key: 'positions', 
+        cacheKey: 'positions', 
+        promise: getAllModelsProcessedPositions(true, validModels) 
+      }
     ]
 
     const results = await Promise.allSettled(fetchConfigs.map(p => p.promise))
@@ -510,7 +547,6 @@ const loadLeaderboardData = async (silent = false) => {
         if (data && data.success) {
           console.log(`✅ Fetched fresh ${key} data for leaderboard`)
           setCachedData(cacheKey, data)
-          if (key === 'balance') balanceData = data
           if (key === 'trades') tradesData = data
           if (key === 'positions') positionsData = data
         } else {

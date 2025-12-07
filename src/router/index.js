@@ -8,8 +8,12 @@ import About from '@/views/About.vue'
 const routes = [
   {
     path: '/',
+    redirect: '/leaderboard'
+  },
+  {
+    path: '/home',
     name: 'home',
-    component: Leaderboard
+    component: Home
   },
   {
     path: '/leaderboard',

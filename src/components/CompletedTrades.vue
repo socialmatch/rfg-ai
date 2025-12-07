@@ -45,7 +45,15 @@
 
 <script setup>
 import { ref, computed } from 'vue'
-import {getModelIconPath, getModelColor, getAccountByUid} from '@/config/accounts.js'
+import {getModelIconPath, getModelColor, getAccountByUid, getAccountBalanceData} from '@/config/accounts.js'
+
+// Helper function to check if account balance is >= 500
+const isAccountBalanceValid = (modelName) => {
+  const accountData = getAccountBalanceData(modelName)
+  if (!accountData) return false
+  const balance = parseFloat(accountData.balance || 0)
+  return balance >= 500
+}
 
 // Get model icon
 const getModelIcon = (modelName) => {
@@ -184,11 +192,18 @@ const trades = computed(() => {
   // Ensure data is sorted by time (newest first)
   allTradesData.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
 
+  // Filter out trades from accounts with balance < 500
+  const validBalanceTrades = allTradesData.filter(trade => {
+    const modelName = trade.model
+    if (!modelName) return false
+    return isAccountBalanceValid(modelName)
+  })
+
   // Filter based on selected model
   if (props.selectedModel === 'ALL MODELS') {
     // Group by model, max 5 latest records per model
     const modelGroups = {}
-    allTradesData.forEach(trade => {
+    validBalanceTrades.forEach(trade => {
       const modelName = trade.model
       if (!modelGroups[modelName]) {
         modelGroups[modelName] = []
@@ -202,7 +217,7 @@ const trades = computed(() => {
     limitedTrades.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
     return limitedTrades
   }
-  const filtered = allTradesData.filter(trade => {
+  const filtered = validBalanceTrades.filter(trade => {
     return trade.model && trade.model.toLowerCase() === props.selectedModel.toLowerCase()
   })
   // Limit to maximum 10 trades for single model
