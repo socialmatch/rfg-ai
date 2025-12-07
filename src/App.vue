@@ -1,12 +1,12 @@
 <template lang="pug">
 div
   router-view
-  TradingEndModal
+  //TradingEndModal
 </template>
 
 <script setup>
 import { onMounted } from 'vue'
-import TradingEndModal from '@/components/TradingEndModal.vue'
+// import TradingEndModal from '@/components/TradingEndModal.vue'
 
 onMounted(() => {
 })
