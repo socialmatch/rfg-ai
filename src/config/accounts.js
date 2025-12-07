@@ -186,7 +186,7 @@ export const ACCOUNT_CONFIGS = [
   },
   {
     id: 'zy11-flu',
-    modelName: 'LL11-7',
+    modelName: '自研LL11-7',
     modelSlug: 'LL11-7',
     modelColor: '#22C55E', // 绿色 (Green 500)
     modelIcon: 'Rfg_logo.png',
@@ -208,7 +208,7 @@ export const ACCOUNT_CONFIGS = [
   },
   {
     id: 'ds11-flu',
-    modelName: 'LL11-6',
+    modelName: '自研LL11-6',
     modelSlug: 'LL11-6',
     modelColor: '#10B981', // 绿色变种 (Emerald 500)
     modelIcon: 'Rfg_logo.png',
@@ -296,7 +296,7 @@ export const ACCOUNT_CONFIGS = [
   },
   {
     id: 'll_anti_martin_v2',
-    modelName: 'LL_anti_martin_V2',
+    modelName: '自研LL_anti_martin_V2',
     modelSlug: 'll_anti_martin_v2',
     modelColor: '#991B1B', // 深红色 (Red 800)
     modelIcon: 'Rfg_logo.png',
