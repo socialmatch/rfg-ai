@@ -10,7 +10,7 @@ export const DEFAULT_INITIAL_CAPITAL = 500
 export const ACCOUNT_CONFIGS = [
   {
     id: 'v4',
-    modelName: '策略-V4',
+    modelName: '策略-V4-钻石',
     modelSlug: 'v4',
     modelColor: '#22C55E', // 绿色 (Green 500)
     modelIcon: 'Rfg_logo.png',
@@ -32,7 +32,7 @@ export const ACCOUNT_CONFIGS = [
   },
   {
     id: 'v3',
-    modelName: '策略-V3',
+    modelName: '策略-V3-黄金',
     modelSlug: 'v3',
     modelColor: '#991B1B', // 深红色 (Red 800)
     modelIcon: 'Rfg_logo.png',
@@ -54,7 +54,7 @@ export const ACCOUNT_CONFIGS = [
   },
   {
     id: 'zy6-bn',
-    modelName: '策略-ZY6',
+    modelName: '策略-ZY6-白银',
     modelSlug: 'zy6-bn',
     modelColor: '#EC4899', // 粉红色 (Pink 500)
     modelIcon: 'Rfg_logo.png',
@@ -76,7 +76,7 @@ export const ACCOUNT_CONFIGS = [
   },
   {
     id: 'ds6-bn',
-    modelName: '策略-DS6',
+    modelName: '策略-DS6-青铜',
     modelSlug: 'ds6-bn',
     modelColor: '#14B8A6', // 蓝绿色 (Teal 500)
     modelIcon: 'Rfg_logo.png',
@@ -98,7 +98,7 @@ export const ACCOUNT_CONFIGS = [
   },
   {
     id: 'zy4-bn',
-    modelName: '策略-船体',
+    modelName: '策略-船体-无',
     modelSlug: 'zy4-bn',
     modelColor: '#8B5CF6', // 紫色 (Violet 500)
     modelIcon: 'Rfg_logo.png',
