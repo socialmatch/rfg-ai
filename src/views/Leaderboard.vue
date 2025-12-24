@@ -431,13 +431,7 @@ const buildLeaderboardFromData = (balanceData, tradesData, positionsData) => {
     if (!a.isPlaceholder && b.isPlaceholder) return -1
     return b.accountValue - a.accountValue
   })
-
-  // Filter out accounts with balance less than 500
-  const filteredLeaderboardItems = leaderboardItems.filter(item => {
-    const accountBalance = item.accountValue || 0
-    return accountBalance >= 500
-  })
-
+  const filteredLeaderboardItems = leaderboardItems
   filteredLeaderboardItems.forEach((item, index) => {
     item.rank = index + 1
   })
@@ -511,30 +505,19 @@ const loadLeaderboardData = async (silent = false) => {
     let validModels = null
     if (balanceData && balanceData.success && balanceData.accounts) {
       validModels = balanceData.accounts
-        .filter(account => {
-          if (!account.success || !account.data || account.data.length === 0) return false
-          const usdtBalance = account.data.find(b => b.asset === 'USDT')
-          if (!usdtBalance) return false
-          const balance = parseFloat(usdtBalance.balance || usdtBalance.totalUsdtValue || 0)
-          return balance >= 500
-        })
-        .map(account => account.modelInfo)
-        .filter(model => model && model.uid)
-      
-      console.log(`✅ Found ${validModels.length} models with balance >= 500 for leaderboard`)
     }
 
     // Step 3: Fetch trades and positions only for valid models
     const fetchConfigs = [
-      { 
-        key: 'trades', 
-        cacheKey: 'trades', 
-        promise: getAllModelsProcessedTrades(undefined, undefined, true, validModels) 
+      {
+        key: 'trades',
+        cacheKey: 'trades',
+        promise: getAllModelsProcessedTrades(undefined, undefined, true, validModels)
       },
-      { 
-        key: 'positions', 
-        cacheKey: 'positions', 
-        promise: getAllModelsProcessedPositions(true, validModels) 
+      {
+        key: 'positions',
+        cacheKey: 'positions',
+        promise: getAllModelsProcessedPositions(true, validModels)
       }
     ]
 
