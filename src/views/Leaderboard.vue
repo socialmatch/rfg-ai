@@ -501,13 +501,11 @@ const loadLeaderboardData = async (silent = false) => {
       console.error('❌ Balance data fetch failed:', error)
     }
 
-    // Step 2: Filter models with balance >= 500
-    let validModels = null
-    if (balanceData && balanceData.success && balanceData.accounts) {
-      validModels = balanceData.accounts
-    }
+    // Step 2: Get all enabled models for trades and positions (fetch for all models, not just balance >= 500)
+    const validModels = getAllModelInfo().filter(model => model.enabled && model.uid)
+    console.log(`✅ Fetching trades and positions for all ${validModels.length} enabled models`)
 
-    // Step 3: Fetch trades and positions only for valid models
+    // Step 3: Fetch trades and positions for all enabled models
     const fetchConfigs = [
       {
         key: 'trades',
