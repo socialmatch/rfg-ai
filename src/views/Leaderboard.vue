@@ -235,9 +235,9 @@ const buildLeaderboardFromData = (balanceData, tradesData, positionsData) => {
             ...modelDataMap.get(account.modelInfo.name) || {},
             modelInfo: account.modelInfo,
             balance: usdtBalance,
-            accountValue: parseFloat(usdtBalance.crossWalletBalance + usdtBalance.crossUnPnl),
-            unrealizedPnL: parseFloat(usdtBalance.crossUnPnl),
-            totalUsdtValue: parseFloat(usdtBalance.totalUsdtValue || usdtBalance.balance),
+            // accountValue will be calculated later: balance.total_value - sum of all positions unRealizedProfit
+            unrealizedPnL: parseFloat(usdtBalance.crossUnPnl || 0),
+            totalUsdtValue: parseFloat(usdtBalance.totalUsdtValue || usdtBalance.balance || 0),
             uid: usdtBalance.uid,
             walletName: usdtBalance.walletName
           })
@@ -322,7 +322,20 @@ const buildLeaderboardFromData = (balanceData, tradesData, positionsData) => {
   modelDataMap.forEach((data, modelName) => {
     const balance = data.balance
     const stats = data.stats || {}
-    const accountValue = balance ? parseFloat(balance.balance) : 0
+    const positions = data.positions || []
+    
+    // accountValue = balance API 的 total_value - positions 所有仓位的 unRealizedProfit 累加
+    // balance.totalValue 来自 balance API 的 total_value 字段
+    const balanceTotalValue = balance ? (parseFloat(balance.totalValue || balance.totalUsdtValue || balance.balance || 0)) : 0
+    
+    // 累加所有仓位的未实现盈亏
+    const totalUnrealizedProfit = positions.reduce((sum, position) => {
+      return sum + parseFloat(position.unrealPnl || 0)
+    }, 0)
+    
+    // accountValue = total_value - 未实现盈亏累加
+    const accountValue = balanceTotalValue - totalUnrealizedProfit
+    
     const initialCapital = data.modelInfo.initialCapital || DEFAULT_INITIAL_CAPITAL
     const fees = stats.totalCommission || 0
 
@@ -334,7 +347,6 @@ const buildLeaderboardFromData = (balanceData, tradesData, positionsData) => {
 
     // 计算新的胜率: (已平仓盈利订单数 + 未平仓盈利订单数) / (已平仓订单数 + 未平仓订单数)
     const closedTrades = data.trades || []
-    const positions = data.positions || []
 
     // 已平仓的盈利订单数量
     const closedWinTrades = closedTrades.filter(trade => {
