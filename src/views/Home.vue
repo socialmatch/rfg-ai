@@ -641,6 +641,22 @@ const loadChartData = async (modelsToFetch = null) => {
       
       chartData.value = processedData
 
+      // Update chart data's latest data points with dynamic accountValue (if positions data is available)
+      if (chartData.value && chartData.value.datasets && tradingModels.value.length > 0) {
+        chartData.value.datasets.forEach(dataset => {
+          if (dataset.modelInfo && dataset.data && dataset.data.length > 0) {
+            const model = tradingModels.value.find(m => m.name === dataset.modelInfo.name)
+            if (model && !model.isBtcPrice && model.name !== 'BTC BUY&HOLD') {
+              // Use dynamic accountValue for the latest data point
+              const lastIndex = dataset.data.length - 1
+              const accountValue = model.value || model.balance || 0
+              dataset.data[lastIndex] = accountValue
+              dataset.modelInfo.currentValue = accountValue
+            }
+          }
+        })
+      }
+
       // Update chart if it exists
       if (chartInstance) {
         chartInstance.data = chartData.value
@@ -921,15 +937,26 @@ const updateRealDataWithAnimation = (newBalanceData) => {
     const newModelData = newBalanceData.find(newModel => newModel.name === model.name)
     if (newModelData) {
       const oldValue = model.value
-      const newValue = newModelData.balance ? parseFloat(newModelData.balance) : newModelData.value
+      // Use accountValue (which is already calculated with positions unRealizedProfit subtracted)
+      // newModelData.value already contains the correct accountValue = total_value - unRealizedProfit
+      const newValue = newModelData.value || (newModelData.balance ? parseFloat(newModelData.balance) : 0)
 
       // Save old value for animation
       model.prevValue = oldValue
 
-      // Update model value
+      // Update model value (accountValue = total_value - unRealizedProfit)
       model.value = newValue
-      model.balance = newModelData.balance
+      model.balance = newValue // balance should also use accountValue
       model.accountAlias = newModelData.accountAlias
+      
+      // Preserve totalValue and totalUsdtValue for future recalculation
+      if (newModelData.totalValue !== undefined) {
+        model.totalValue = newModelData.totalValue
+        model.totalUsdtValue = newModelData.totalUsdtValue
+      }
+      if (newModelData.initialCapital !== undefined) {
+        model.initialCapital = newModelData.initialCapital
+      }
 
       // Add rolling animation to corresponding DOM elements
       nextTick(() => {
@@ -1378,8 +1405,12 @@ const updateAccountValueWithPositions = () => {
     return isNaN(num) ? 0 : num
   }
 
+  // Save current highest and lowest values for animation
+  const prevHighestValue = highestModel.value.value
+  const prevLowestValue = lowestModel.value.value
+
   // Update each model's accountValue
-  tradingModels.value.forEach(model => {
+  tradingModels.value.forEach((model, index) => {
     // Skip BTC BUY&HOLD model
     if (model.isBtcPrice || model.name === 'BTC BUY&HOLD') {
       return
@@ -1397,15 +1428,65 @@ const updateAccountValueWithPositions = () => {
     }, 0)
     
     // accountValue = total_value - 未实现盈亏累加
+    const oldValue = model.value
     const newAccountValue = balanceTotalValue - totalUnrealizedProfit
     
     // Update accountValue and related fields
     const initialCapital = model.initialCapital || DEFAULT_INITIAL_CAPITAL
+    model.prevValue = oldValue
     model.value = newAccountValue
-    model.balance = newAccountValue
+    model.balance = newAccountValue // balance should also use accountValue
     
     // Recalculate change and totalPnl based on new accountValue
     model.change = initialCapital > 0 ? ((newAccountValue - initialCapital) / initialCapital) * 100 : 0
+
+    // Update chart data's latest data point with new accountValue
+    if (chartData.value && chartData.value.datasets) {
+      const dataset = chartData.value.datasets.find(ds => ds.modelInfo && ds.modelInfo.name === model.name)
+      if (dataset && dataset.data && dataset.data.length > 0) {
+        // Update the last data point (current value) with new accountValue
+        const lastIndex = dataset.data.length - 1
+        const oldChartValue = dataset.data[lastIndex]
+        dataset.data[lastIndex] = newAccountValue
+        dataset.modelInfo.currentValue = newAccountValue
+        
+        // Update chart instance if it exists
+        if (chartInstance) {
+          const chartDataset = chartInstance.data.datasets.find(ds => ds.modelInfo && ds.modelInfo.name === model.name)
+          if (chartDataset && chartDataset.data && chartDataset.data.length > 0) {
+            chartDataset.data[lastIndex] = newAccountValue
+            chartDataset.modelInfo.currentValue = newAccountValue
+          }
+        }
+      }
+    }
+
+    // Add rolling animation to corresponding DOM elements (legends and chart icons)
+    nextTick(() => {
+      const modelElements = document.querySelectorAll('.model-value')
+      if (modelElements[index] && oldValue !== newAccountValue) {
+        createRollingNumber(modelElements[index], oldValue, newAccountValue, 800)
+      }
+    })
+  })
+  
+  // Update chart if it exists and data was modified
+  if (chartInstance && chartData.value) {
+    chartInstance.update('none')
+  }
+
+  // Add rolling animation to numbers in performance-summary (highest/lowest)
+  nextTick(() => {
+    const highestValueElement = document.querySelector('.performance-summary .highest .value-row .rolling-value')
+    const lowestValueElement = document.querySelector('.performance-summary .lowest .value-row .rolling-value')
+
+    if (highestValueElement && highestModel.value.value !== prevHighestValue) {
+      createRollingNumber(highestValueElement, prevHighestValue, highestModel.value.value, 800)
+    }
+
+    if (lowestValueElement && lowestModel.value.value !== prevLowestValue) {
+      createRollingNumber(lowestValueElement, prevLowestValue, lowestModel.value.value, 800)
+    }
   })
 }
 
