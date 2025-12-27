@@ -271,13 +271,12 @@ const loadModelData = async () => {
         try {
           // Process balance data - same as Leaderboard
           let balanceData = null
-          let accountValue = 0
+          let balanceTotalValue = 0
           let availableCash = 0
           if (balance && balance.status === 'fulfilled' && balance.value.success) {
             const apiData = balance.value.data
-            // Use total_value directly from API response (same as Leaderboard uses balance.balance)
-            // In processBalanceData, balance.balance = data.total_value
-            accountValue = parseFloat(apiData.total_value || 0)
+            // Get total_value from balance API response
+            balanceTotalValue = parseFloat(apiData.total_value || 0)
             availableCash = parseFloat(apiData.available_cash || 0)
 
             if (apiData.active_balances && apiData.active_balances.length > 0) {
@@ -286,8 +285,8 @@ const loadModelData = async () => {
                 // Set balance.balance to total_value (same as processBalanceData does)
                 balanceData.balance = apiData.total_value ? apiData.total_value.toString() : "0"
                 balanceData.totalUsdtValue = apiData.total_value || 0
-                balanceData.crossWalletBalance = apiData.total_value ? apiData.total_value.toString() : "0"
-                balanceData.crossUnPnl = (accountValue - availableCash) ? (accountValue - availableCash).toString() : "0"
+              balanceData.crossWalletBalance = apiData.total_value ? apiData.total_value.toString() : "0"
+              balanceData.crossUnPnl = (balanceTotalValue - availableCash) ? (balanceTotalValue - availableCash).toString() : "0"
                 balanceData.uid = apiData.uid
                 balanceData.walletName = apiData.wallet_name
                 balanceData.availableBalance = apiData.available_cash ? apiData.available_cash.toString() : "0"
@@ -320,6 +319,9 @@ const loadModelData = async () => {
               }, 0)
             }
           }
+
+          // accountValue = balance API 的 total_value - positions 所有仓位的 unRealizedProfit 累加
+          const accountValue = balanceTotalValue - totalUnrealizedPositionsPnl
 
           // Calculate statistics
           const stats = calculateTradingStats(tradesData)

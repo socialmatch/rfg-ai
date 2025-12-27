@@ -141,15 +141,6 @@ import { getAllCryptoPrices } from '@/utils/cryptoPriceService.js'
 import { getBtcPriceData } from '@/utils/btcPriceService.js'
 import { getCachedData, setCachedData } from '@/utils/dataCache.js'
 import { getCryptoIcon } from '@/utils/cryptoIcons.js'
-import { getAccountBalanceData } from '@/config/accounts.js'
-
-// Helper function to check if account balance is >= 500
-const isAccountBalanceValid = (modelName) => {
-  const accountData = getAccountBalanceData(modelName)
-  if (!accountData) return false
-  const balance = parseFloat(accountData.balance || 0)
-  return balance >= 500
-}
 
 Chart.register(...registerables, zoomPlugin)
 
@@ -178,9 +169,9 @@ const iconPositionUpdate = ref(0) // Used to trigger icon position recalculation
 const selectedModel = ref('ALL MODELS')
 const modelOptions = computed(() => {
   const allModels = ['ALL MODELS']
-  // Only include enabled models with balance >= 500 in the filter options
+  // Include all enabled models in the filter options (no balance filter)
   const configModels = getModelInfo()
-    .filter(model => isAccountBalanceValid(model.name))
+    .filter(model => model.enabled)
     .map(model => model.name)
   return [...allModels, ...configModels]
 })
@@ -329,9 +320,20 @@ const loadAsterBalance = async ({ skipInit = false, skipCache = false } = {}) =>
           // If we got data from API (even if value is 0), mark as real data
           hasRealData = true
 
-          // Use totalUsdtValue if available (converted to USDT), otherwise use balance
-          // For BTC or other non-USDT assets, totalUsdtValue should contain the USDT equivalent value
-          const accountValue = parseToNumber(balanceData.totalUsdtValue ?? balanceData.totalValue ?? balanceData.balance)
+          // accountValue = balance API 的 total_value - positions 所有仓位的 unRealizedProfit 累加
+          // Get balance total_value from API
+          const balanceTotalValue = parseToNumber(balanceData.totalValue ?? balanceData.totalUsdtValue ?? balanceData.balance)
+          
+          // Get positions for this model from asterPositions and累加 unRealizedProfit
+          const modelPositions = asterPositions.value.filter(pos => pos.modelInfo?.name === account.modelInfo.name)
+          const totalUnrealizedProfit = modelPositions.reduce((sum, position) => {
+            const pnl = parseFloat(position.unRealizedProfit ?? position.unrealPnl ?? 0)
+            return sum + (isNaN(pnl) ? 0 : pnl)
+          }, 0)
+          
+          // accountValue = total_value - 未实现盈亏累加
+          const accountValue = balanceTotalValue - totalUnrealizedProfit
+          
           const initialCapital = account.modelInfo.initialCapital || DEFAULT_INITIAL_CAPITAL
           // Calculate change as: (accountValue - initialCapital) / initialCapital * 100
           // Ensure we have valid numbers for calculation
@@ -371,9 +373,12 @@ const loadAsterBalance = async ({ skipInit = false, skipCache = false } = {}) =>
             maxWithdrawAmount: parseToNumber(balanceData.maxWithdrawAmount),
             marginAvailable: balanceData.marginAvailable,
             updateTime: balanceData.updateTime,
-            totalUsdtValue: parseToNumber(balanceData.totalUsdtValue ?? accountValue),
+            // Save original balance total_value for accountValue recalculation
+            totalValue: balanceTotalValue,
+            totalUsdtValue: balanceTotalValue,
             uid: balanceData.uid,
-            walletName: balanceData.walletName
+            walletName: balanceData.walletName,
+            initialCapital: initialCapital
           }
 
           balanceDataMap.set(account.modelInfo.name, modelData)
@@ -389,11 +394,9 @@ const loadAsterBalance = async ({ skipInit = false, skipCache = false } = {}) =>
       }
     })
 
-    // Set account data for Positions component (filter out accounts with balance < 500)
+    // Set account data for Positions component (show all accounts, no balance filter)
     asterAccountData.value = accountDataList.filter(account => {
-      const modelName = account.modelInfo?.name
-      if (!modelName) return false
-      return isAccountBalanceValid(modelName)
+      return account.modelInfo?.name // Just check if modelName exists
     })
 
     // Convert map to array and sort by value
@@ -440,15 +443,10 @@ const loadAsterBalance = async ({ skipInit = false, skipCache = false } = {}) =>
       console.warn('⚠️ Failed to load BTC price for trading models:', error)
     }
 
-    // Filter out accounts with balance less than 500 (keep BTC BUY&HOLD)
+    // Show all accounts (no balance filter, keep BTC BUY&HOLD special handling)
     const filteredBalanceData = balanceData.filter(item => {
-      // Keep BTC BUY&HOLD model
-      if (item.isBtcPrice || item.name === 'BTC BUY&HOLD') {
-        return true
-      }
-      // Filter out accounts with balance less than 500
-      const accountBalance = item.value || item.balance || 0
-      return accountBalance >= 500
+      // Keep all items (BTC BUY&HOLD is already included in balanceData)
+      return true
     })
 
     // Only update tradingModels if we have real data or it's a refresh
@@ -630,28 +628,16 @@ const loadChartData = async (modelsToFetch = null) => {
     const btcPriceData = btcPriceResult.status === 'fulfilled' ? btcPriceResult.value : { success: false, data: [] }
 
     if (result.success) {
-      // Filter out models with balance < 500 before processing chart data
+      // Include all models (no balance filter)
       const filteredModels = result.models.filter(modelData => {
-        const modelName = modelData.modelInfo?.name
-        if (!modelName) return false
-        // Keep BTC BUY&HOLD if it exists
-        if (modelName === 'BTC BUY&HOLD') return true
-        return isAccountBalanceValid(modelName)
+        return modelData.modelInfo?.name // Just check if modelName exists
       })
       
       // Process chart data with BTC price data
       const processedData = await processChartData(filteredModels, btcPriceData)
       
-      // Also filter datasets in processed data
-      if (processedData && processedData.datasets) {
-        processedData.datasets = processedData.datasets.filter(dataset => {
-          const modelName = dataset.modelInfo?.name
-          if (!modelName) return false
-          // Keep BTC BUY&HOLD
-          if (modelName === 'BTC BUY&HOLD') return true
-          return isAccountBalanceValid(modelName)
-        })
-      }
+      // Include all datasets (no balance filter)
+      // No need to filter datasets - show all models
       
       chartData.value = processedData
 
@@ -1006,22 +992,11 @@ const loadAllData = async () => {
     console.log('💰 Step 1: Loading all models balance...')
     await loadAsterBalance()
 
-    // Step 2: Get filtered models with balance >= 500
-    const validModels = tradingModels.value
-      .filter(model => {
-        // Keep BTC BUY&HOLD
-        if (model.isBtcPrice || model.name === 'BTC BUY&HOLD') return true
-        const balance = model.value || model.balance || 0
-        return balance >= 500
-      })
-      .map(model => {
-        // Get model info from config
-        const modelInfo = getModelInfo().find(m => m.name === model.name)
-        return modelInfo
-      })
-      .filter(model => model && model.uid) // Only models with UID
+    // Step 2: Get all enabled models (no balance filter)
+    const validModels = getModelInfo()
+      .filter(model => model.enabled && model.uid) // All enabled models with UID
 
-    console.log(`✅ Found ${validModels.length} models with balance >= 500`)
+    console.log(`✅ Found ${validModels.length} enabled models`)
 
     // Step 3: Load chart data and BTC price (only for valid models)
     console.log('📊 Step 2: Loading chart data and BTC price for valid models...')
@@ -1047,18 +1022,9 @@ const startBalanceUpdates = async () => {
     console.log('🔄 Refreshing model balance data...')
     await loadAsterBalance({ skipInit: true, skipCache: true })
     
-    // After balance update, refresh other data for valid models only
-    const validModels = tradingModels.value
-      .filter(model => {
-        if (model.isBtcPrice || model.name === 'BTC BUY&HOLD') return true
-        const balance = model.value || model.balance || 0
-        return balance >= 500
-      })
-      .map(model => {
-        const modelInfo = getModelInfo().find(m => m.name === model.name)
-        return modelInfo
-      })
-      .filter(model => model && model.uid)
+    // After balance update, refresh other data for all enabled models
+    const validModels = getModelInfo()
+      .filter(model => model.enabled && model.uid) // All enabled models with UID
     
     if (validModels.length > 0) {
       await loadAsterAccountData({ skipCache: true, modelsToFetch: validModels })
@@ -1077,18 +1043,9 @@ const stopBalanceUpdates = () => {
 const startPositionsUpdates = () => {
   positionsUpdateInterval = setInterval(async () => {
     console.log('🔄 Refreshing positions data...')
-    // Get valid models from current tradingModels
-    const validModels = tradingModels.value
-      .filter(model => {
-        if (model.isBtcPrice || model.name === 'BTC BUY&HOLD') return true
-        const balance = model.value || model.balance || 0
-        return balance >= 500
-      })
-      .map(model => {
-        const modelInfo = getModelInfo().find(m => m.name === model.name)
-        return modelInfo
-      })
-      .filter(model => model && model.uid)
+    // Get all enabled models (no balance filter)
+    const validModels = getModelInfo()
+      .filter(model => model.enabled && model.uid) // All enabled models with UID
     
     if (validModels.length > 0) {
       await loadAsterAccountData({ skipCache: true, modelsToFetch: validModels })
@@ -1108,18 +1065,9 @@ const startChartDataLongUpdates = () => {
   // 30 minutes = 30 * 60 * 1000 = 1800000 milliseconds
   chartDataLongInterval = setInterval(async () => {
     console.log('🔄 Refreshing chart data (30-minute interval)...')
-    // Get valid models from current tradingModels
-    const validModels = tradingModels.value
-      .filter(model => {
-        if (model.isBtcPrice || model.name === 'BTC BUY&HOLD') return true
-        const balance = model.value || model.balance || 0
-        return balance >= 500
-      })
-      .map(model => {
-        const modelInfo = getModelInfo().find(m => m.name === model.name)
-        return modelInfo
-      })
-      .filter(model => model && model.uid)
+    // Get all enabled models (no balance filter)
+    const validModels = getModelInfo()
+      .filter(model => model.enabled && model.uid) // All enabled models with UID
     
     if (validModels.length > 0) {
       await loadChartData(validModels)
@@ -1363,10 +1311,10 @@ const loadAsterUserTrades = async ({ skipCache = false, modelsToFetch = null } =
     let allTrades = []
     result.accounts.forEach(account => {
       if (account.success && account.data) {
-        // Filter out accounts with balance < 500
+        // Show all accounts (no balance filter)
         const modelName = account.modelInfo?.name
-        if (modelName && !isAccountBalanceValid(modelName)) {
-          return // Skip this account
+        if (!modelName) {
+          return // Skip if no model name
         }
         
         // Filter out trades with realizedPnl === 0
@@ -1423,6 +1371,44 @@ const loadAsterUserTrades = async ({ skipCache = false, modelsToFetch = null } =
   }
 }
 
+// Update accountValue based on balance total_value - positions unRealizedProfit
+const updateAccountValueWithPositions = () => {
+  const parseToNumber = (value) => {
+    const num = parseFloat(value ?? 0)
+    return isNaN(num) ? 0 : num
+  }
+
+  // Update each model's accountValue
+  tradingModels.value.forEach(model => {
+    // Skip BTC BUY&HOLD model
+    if (model.isBtcPrice || model.name === 'BTC BUY&HOLD') {
+      return
+    }
+
+    // Get balance total_value from model data
+    // totalValue contains the original balance API's total_value (before subtracting positions unRealizedProfit)
+    const balanceTotalValue = parseToNumber(model.totalValue ?? model.totalUsdtValue ?? 0)
+    
+    // Get positions for this model from asterPositions and累加 unRealizedProfit
+    const modelPositions = asterPositions.value.filter(pos => pos.modelInfo?.name === model.name)
+    const totalUnrealizedProfit = modelPositions.reduce((sum, position) => {
+      const pnl = parseFloat(position.unRealizedProfit ?? position.unrealPnl ?? 0)
+      return sum + (isNaN(pnl) ? 0 : pnl)
+    }, 0)
+    
+    // accountValue = total_value - 未实现盈亏累加
+    const newAccountValue = balanceTotalValue - totalUnrealizedProfit
+    
+    // Update accountValue and related fields
+    const initialCapital = model.initialCapital || DEFAULT_INITIAL_CAPITAL
+    model.value = newAccountValue
+    model.balance = newAccountValue
+    
+    // Recalculate change and totalPnl based on new accountValue
+    model.change = initialCapital > 0 ? ((newAccountValue - initialCapital) / initialCapital) * 100 : 0
+  })
+}
+
 // Get account positions data using new positions service
 const loadAsterAccountData = async ({ skipCache = false, modelsToFetch = null } = {}) => {
   // Helper function to process positions data
@@ -1430,10 +1416,10 @@ const loadAsterAccountData = async ({ skipCache = false, modelsToFetch = null } 
     const allPositions = []
     result.accounts.forEach(account => {
       if (account.success && account.data) {
-        // Filter out accounts with balance < 500
+        // Show all accounts (no balance filter)
         const modelName = account.modelInfo?.name
-        if (modelName && !isAccountBalanceValid(modelName)) {
-          return // Skip this account
+        if (!modelName) {
+          return // Skip if no model name
         }
         
         const positionsWithModel = account.data.map(position => ({
@@ -1444,6 +1430,9 @@ const loadAsterAccountData = async ({ skipCache = false, modelsToFetch = null } 
       }
     })
     asterPositions.value = allPositions
+    
+    // Update accountValue after positions data is updated
+    updateAccountValueWithPositions()
   }
 
   // Step 1: Check cache first and use it immediately
