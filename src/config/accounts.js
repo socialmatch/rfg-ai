@@ -9,16 +9,16 @@ export const DEFAULT_INITIAL_CAPITAL = 500
 // 账户配置列表（按等级排序：钻石、黄金、白银、青铜、无）
 export const ACCOUNT_CONFIGS = [
   {
-    id: 'zy4-bn',
-    modelName: '策略-船体-钻石',
-    modelSlug: 'zy4-bn',
+    id: 'zy6-bn',
+    modelName: '策略-ZY6-钻石',
+    modelSlug: 'zy6-bn',
     modelColor: '#8B5CF6', // 紫色 (Violet 500)
     modelIcon: 'Rfg_logo.png',
-    uid: 'ZY4-BN',
+    uid: 'ZY6-BN',
     initialCapital: DEFAULT_INITIAL_CAPITAL,
-    description: 'A trading model that autonomously trades any token pair listed on Aster, designed to adapt flexibly to market-wide opportunities.',
+    description: 'An intelligent trading agent that interprets complex market structures and reacts dynamically to volatility.',
     "user_address": "0x0000000000000000000000000000000000000000",
-    "signer_address": "IlDCWqHFPuhFQoAqdBPKe2sVrWrgj3CVSVBO9GeC7KP572M5jPicS3gk5TB8VgH8",
+    "signer_address": "Wjt3GW22NDyLTjtZNQ2cfRYJIhoxJgzd02lab5fD7rvl7FQ6VI6yliSe0zLULOwE",
     enabled: true,
     accountAlias: "RfgX",
     asset: "USDT",
@@ -75,16 +75,16 @@ export const ACCOUNT_CONFIGS = [
     updateTime: 0
   },
   {
-    id: 'zy6-bn',
-    modelName: '策略-ZY6-青铜',
-    modelSlug: 'zy6-bn',
+    id: 'zy4-bn',
+    modelName: '策略-船体-青铜',
+    modelSlug: 'zy4-bn',
     modelColor: '#EC4899', // 粉红色 (Pink 500)
     modelIcon: 'Rfg_logo.png',
-    uid: 'ZY6-BN',
+    uid: 'ZY4-BN',
     initialCapital: DEFAULT_INITIAL_CAPITAL,
-    description: 'An intelligent trading agent that interprets complex market structures and reacts dynamically to volatility.',
+    description: 'A trading model that autonomously trades any token pair listed on Aster, designed to adapt flexibly to market-wide opportunities.',
     "user_address": "0x0000000000000000000000000000000000000000",
-    "signer_address": "Wjt3GW22NDyLTjtZNQ2cfRYJIhoxJgzd02lab5fD7rvl7FQ6VI6yliSe0zLULOwE",
+    "signer_address": "IlDCWqHFPuhFQoAqdBPKe2sVrWrgj3CVSVBO9GeC7KP572M5jPicS3gk5TB8VgH8",
     enabled: true,
     accountAlias: "RfgX",
     asset: "USDT",
